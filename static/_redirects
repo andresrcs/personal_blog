@@ -1,0 +1,3 @@
+http://andresrcs.rbind.io/*         https://andresrcs.rbind.io/:splat  301!
+https://andresrcs.netlify.com/*     https://andresrcs.rbind.io/:splat  301!
+http://andresrcs.netlify.com/*      https://andresrcs.rbind.io/:splat  301!

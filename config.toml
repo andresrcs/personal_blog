@@ -1,5 +1,5 @@
 theme = "hugo-theme-chunky-poster"
-baseURL = "https://andresrcs.netlify.com/"
+baseURL = "https://andresrcs.rbind.io/"
 copyright = "Copyright © 2020, Andrés Castro Socolich; all rights reserved."
 paginate = 2
 languageCode = "en"
@@ -7,7 +7,7 @@ DefaultContentLanguage = "en"
 enableInlineShortcodes = true
 enableEmoji = true
 footnoteReturnLinkContents = "^"
-googleAnalytics = "UA-XXXX"
+googleAnalytics = "UA-156548187-1"
 DisqusShortname = "andresrcs"
 ignoreFiles = ["\\.Rmd$", "\\.Rmarkdown$", "_files$", "_cache$"]
 
