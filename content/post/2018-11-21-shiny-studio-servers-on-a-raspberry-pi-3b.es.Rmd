@@ -1,0 +1,397 @@
+---
+title: Instalando su propio Servidor Shiny y RStudio en una Raspberry Pi 3B+
+description: Este artículo le muestra como instalar un Servidor Shiny y RStudio en una Raspberry Pi 3B+ junto con el software complementario más común para tener un servidor completamente funcional no solo para alojar, sino también para desarrollar aplicaciones Shiny.
+author: andres-castro
+date: '2018-11-21'
+slug: shiny_rstudio_server
+categories:
+  - Data Science
+series: 
+  - R
+tags:
+  - shiny-server
+  - rstudio-server
+  - server
+  - shiny
+  - rstudio
+  - admin
+  - rapsberry pi
+  - postgresql
+  - nginx
+images: ["shiny_rstudio_server.jpg"]
+authors: ["andres-castro"]
+output:
+  blogdown::html_page:
+    toc: true
+    highlight: zenburn
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE)
+```
+
+Recientemente participé en un tema en [RStudio Community](https://community.rstudio.com/t/raspberry-pi-as-a-viable-shiny-server/18672?u=andresrcs) donde [\@jladata](https://twitter.com/jladata) estaba preguntando si una Raspberry Pi 3B+ podría funcionar como un servidor Shiny viable, actualmente uso una Raspberry Pi para ese propósito y se me hizo notar que este podría ser un tema interesante para algunas personas, así que voy a compartir con ustedes mi experiencia instalando un Servidor Shiny y RStudio en una Raspberry Pi 3B+. :thumbsup:
+
+Voy a instalar todo el software directamente en el sistema operativo (Raspbian), sé que hay otras opciones, como los contenedores Docker, pero este es el método que prefiero.
+
+Además, los pasos que voy a compartir con usted son aplicables para esta configuración específica:
+
+**"Raspberry Pi 3B+ ejecutando Raspbian Stretch Lite (aún no probado en el nuevo Raspbian Buster)"**
+ 
+>:pencil2: Tenga en cuenta que esta guía podría no ser directamente aplicable a otros SBCs, distribuciones de Linux o incluso otras versiones de SBCs Raspberry Pi.
+
+## Preparando la Raspberry Pi
+
+Primero, debemos comenzar por cargar una imagen nueva de Raspbian Stretch Lite en nuestra tarjeta SD (recomiendo al menos 32 GB clase 10), puede descargarla desde el [sitio oficial de Raspbian](https://www.raspberrypi.org/downloads/raspbian/). 
+
+Aunque no es obligatorio, recomiendo realizar las siguientes acciones utilizando la aplicación `sudo raspi-config`:
+
+* Expandir sistema de archivos (Advanced Options / Expand Filesystem).
+* Reducir la memoria de la GPU a 16 MB (Advanced Options / Memory Split).
+* Deshabilitar "Interfaces de red predecibles" (Network Options / Network interface names).
+
+También recomiendo usar una conexión a internet por cable y deshabilitar el módulo wifi/Bluetooth integrado. Puede deshabilitarlo de manera persistente editando este archivo: `sudo nano/boot/config.txt`, agregando estas dos líneas:
+
+```{bash eval=FALSE}
+dtoverlay=pi3-disable-bt
+dtoverlay=pi3-disable-wifi
+```
+
+Luego, necesitamos establecer una IP estática para nuestra Raspberry Pi, edite este archivo: `sudo nano/etc/dhcpcd.conf`, de acuerdo con sus propias necesidades. Esta es una configuración de IP de muestra:
+
+```{bash eval=FALSE}
+# Configuración IP de muestra:
+interface eth0
+static ip_address=192.168.1.101/24
+#static ip6_address=fd51:42f8:caae:d92e::ff/64
+static routers=192.168.1.1
+static domain_name_servers=192.168.1.1 8.8.8.8 fd51:42f8:caae:d92e::1
+```
+
+Habilite todos los repositorios descomentando todas las líneas en este archivo: `sudo nano /etc/apt/sources.list` y luego realice las actualizaciones obligatorias con este comando `sudo apt update && sudo apt full-upgrade`.
+
+Debe agregar al menos 1 GB de memoria de intercambio para esta instalación, pero necesitará más luego para instalar/compilar algunas bibliotecas R, por lo que con 3GB estaría bien, puede hacerlo con estos comandos:
+
+```{bash eval=FALSE}
+sudo /bin/dd if=/dev/zero of=/var/swap.1 bs=1M count=3072
+sudo /sbin/mkswap /var/swap.1
+sudo /sbin/swapon /var/swap.1
+sudo sh -c 'echo "/var/swap.1 swap swap defaults 0 0 " >> /etc/fstab'
+```
+
+Evite el uso innecesario de la memoria de intercambio para proteger su tarjeta SD:
+
+```{bash eval=FALSE}
+sudo nano /etc/sysctl.conf
+# Agregue esto al final
+    vm.swappiness=10
+```
+
+## Configurando el Servidor
+
+Para mayor comodidad, necesitamos un servidor HTML y Nginx es una muy buena opción debido a sus requisitos reducidos. Puede instalar Nginx con estos comandos:
+
+```{bash eval=FALSE}
+sudo apt install nginx
+sudo chown -R www-data:pi /var/www/html/
+sudo chmod -R 770 /var/www/html/
+```
+
+Luego, necesitamos un servidor SQL para almacenar y manipular nuestros datos, personalmente prefiero PostgreSQL ya que es de código abierto y tiene capacidades impresionantes, pero depende de usted cuál elegir. Puede instalar PostgreSQL con este comando:
+
+```{bash eval=FALSE}
+sudo apt install postgresql libpq-dev postgresql-client postgresql-client-common
+````
+
+Configure PostgreSQL para aceptar conexiones locales y remotas editando estos archivos y modifique/agregue/comente estas líneas:
+
+```{bash eval=FALSE}
+sudo nano /etc/postgresql/9.6/main/pg_hba.conf # Editar como se indica
+    local all all md5 # Modificar
+    host all all 192.168.1.0/24 trust # Agregar
+    host all all 0.0.0.0/0 password # Agregar
+
+sudo nano /etc/postgresql/9.6/main/postgresql.conf # Editar como se indica
+    #listen_addresses # Comentar 
+    listen_addresses='*' # Agregar
+```
+
+Reiniciar el servicio PostgreSQL:
+
+```{bash eval=FALSE}
+sudo systemctl restart postgresql
+```
+
+Cree el usuario pi y la base de datos en el servidor PostgreSQL:
+
+```{bash eval=FALSE}
+sudo su postgres
+createuser pi -P --interactive
+psql
+create database pi;
+\q
+exit
+```
+
+Ahora, llegamos a la parte específica R del proceso, vamos a instalar la última versión de R desde la fuente con estos comandos:
+
+```{bash eval=FALSE}
+sudo apt-get install -y gfortran libreadline6-dev libx11-dev libxt-dev \
+       libpng-dev libjpeg-dev libcairo2-dev xvfb \
+       libbz2-dev libzstd-dev liblzma-dev \
+       libcurl4-openssl-dev \
+       texinfo texlive texlive-fonts-extra \
+       screen wget openjdk-8-jdk
+cd /usr/local/src
+sudo wget https://cran.rstudio.com/src/base/R-3/R-3.6.2.tar.gz
+sudo su
+tar zxvf R-3.6.2.tar.gz
+cd R-3.6.2
+./configure --enable-R-shlib #--with-blas --with-lapack #opcional
+make
+make install
+cd ..
+rm -rf R-3.6.2*
+exit
+cd
+```
+
+:heavy_exclamation_mark: **_ADVERTENCIA: TODO LUEGO DE ESTE PUNTO CONSUME DEMASIADO TIEMPO_****, por ejemplo, instalar RStudio desde la fuente en Raspbian puede tomar alrededor de 27 horas** :open_mouth:
+
+## Instalando Shiny Server
+
+Vamos a instalar el Servidor Shiny desde la fuente, pero primero, tenemos que instalar sus dependencias.
+
+>:pencil2: Es necesario instalar paquetes R como superusuario, para que Shiny pueda usarlos.
+
+```{bash eval=FALSE}
+sudo su - -c "R -e \"install.packages('later', repos='http://cran.rstudio.com/')\""
+sudo su - -c "R -e \"install.packages('fs', repos='http://cran.rstudio.com/')\""
+sudo su - -c "R -e \"install.packages('Rcpp', repos='http://cran.rstudio.com/')\""
+sudo su - -c "R -e \"install.packages('httpuv', repos='http://cran.rstudio.com/')\""
+sudo su - -c "R -e \"install.packages('mime', repos='http://cran.rstudio.com/')\""
+sudo su - -c "R -e \"install.packages('jsonlite', repos='http://cran.rstudio.com/')\""
+sudo su - -c "R -e \"install.packages('digest', repos='http://cran.rstudio.com/')\""
+sudo su - -c "R -e \"install.packages('htmltools', repos='http://cran.rstudio.com/')\""
+sudo su - -c "R -e \"install.packages('xtable', repos='http://cran.rstudio.com/')\""
+sudo su - -c "R -e \"install.packages('R6', repos='http://cran.rstudio.com/')\""
+sudo su - -c "R -e \"install.packages('Cairo', repos='http://cran.rstudio.com/')\""
+sudo su - -c "R -e \"install.packages('sourcetools', repos='http://cran.rstudio.com/')\""
+sudo su - -c "R -e \"install.packages('shiny', repos='http://cran.rstudio.com/')\""
+```
+
+Instale cmake desde la fuente:
+
+```{bash eval=FALSE}
+wget https://cmake.org/files/v3.15/cmake-3.15.3.tar.gz # Busque la última version en https://cmake.org/files/
+tar xzf cmake-3.15.3.tar.gz
+cd cmake-3.15.3
+./configure; make
+sudo make install
+cd
+```
+
+Ahora podemos instalar Shiny Server con estos comandos:
+
+```{bash eval=FALSE}
+git clone https://github.com/rstudio/shiny-server.git
+cd shiny-server
+DIR=`pwd`
+PATH=$DIR/bin:$PATH
+mkdir tmp
+cd tmp
+PYTHON=`which python`
+sudo cmake -DCMAKE_INSTALL_PREFIX=/usr/local -DPYTHON="$PYTHON" ../
+sudo make
+mkdir ../build
+sed -i '8s/.*/NODE_SHA256=af2106b08f68e0884caa505ea7e695facc5b4cd356f1e08258899e94cc4c5df0/' ../external/node/install-node.sh # node-v10.15.3-linux-armv7l.tar.xz
+sed -i 's/linux-x64.tar.xz/linux-armv7l.tar.xz/' ../external/node/install-node.sh
+(cd .. && sudo ./external/node/install-node.sh)
+(cd .. && ./bin/npm --python="${PYTHON}" install --no-optional)
+(cd .. && ./bin/npm --python="${PYTHON}" rebuild)
+sudo make install
+```
+
+Después de instalarlo, debe configurar Shiny Server con estos comandos:
+
+```{bash eval=FALSE}
+cd
+sudo ln -s /usr/local/shiny-server/bin/shiny-server /usr/bin/shiny-server
+sudo useradd -r -m shiny
+sudo mkdir -p /var/log/shiny-server
+sudo mkdir -p /srv/shiny-server
+sudo mkdir -p /var/lib/shiny-server
+sudo chown shiny /var/log/shiny-server
+sudo mkdir -p /etc/shiny-server
+cd
+sudo wget \
+https://raw.github.com/rstudio/shiny-server/master/config/upstart/shiny-server.conf \
+-O /etc/init/shiny-server.conf
+sudo chmod 777 -R /srv
+# Configurar inicio automático de shiny-server
+sudo nano /lib/systemd/system/shiny-server.service # Pegue lo siguiente
+    #!/usr/bin/env bash
+    [Unit]
+    Description=ShinyServer
+    [Service]
+    Type=simple
+    ExecStart=/usr/bin/shiny-server
+    Restart=always
+    # Environment="LANG=en_US.UTF-8"
+    ExecReload=/bin/kill -HUP $MAINPID
+    ExecStopPost=/bin/sleep 5
+    RestartSec=1
+    [Install]
+    WantedBy=multi-user.target
+
+sudo chown shiny /lib/systemd/system/shiny-server.service
+sudo systemctl daemon-reload
+sudo systemctl enable shiny-server
+sudo systemctl start shiny-server
+
+# Configurar los permisos adecuados
+sudo groupadd shiny-apps
+sudo usermod -aG shiny-apps pi
+sudo usermod -aG shiny-apps shiny
+cd /srv/shiny-server
+sudo chown -R pi:shiny-apps .
+sudo chmod g+w .
+sudo chmod g+s .
+```
+
+## Instalando Rstudio Server
+
+Vamos a instalar el servidor RStudio desde la fuente, esto lleva mucho tiempo (aproximadamente 27 horas la última vez que lo verifiqué), así que consiga algo que hacer mientras Raspberry Pi instala las dependencias y compila todo.
+
+```{bash eval=FALSE}
+# Instalar Rust y Cargo
+sudo curl https://sh.rustup.rs -sSf | sh
+source $HOME/.cargo/env
+# Instalar sentry-cli
+sudo git clone https://github.com/getsentry/sentry-cli.git
+sudo chown -R pi ~/sentry-cli
+cd sentry-cli
+cargo build
+cd
+sudo rm -rf sentry-cli
+
+# Clonar el repositorio de RStudio
+sudo git clone https://github.com/rstudio/rstudio.git
+
+# Evitar instalar crashpad
+sudo nano /home/pi/rstudio/dependencies/common/install-common
+    # Comente estas lineas
+        # ./install-crashpad
+        # sudo ./install-crashpad
+
+# Instale las dependencias del sistema
+cd rstudio/dependencies/linux
+sudo su
+./install-dependencies-stretch --exclude-qt-sdk
+apt-get install -y openjdk-8-jdk
+apt autoremove
+
+# Configure Java
+java -Xms1800m
+
+# Instale el último compilador gwt
+cd /home/pi/rstudio
+wget http://dl.google.com/closure-compiler/compiler-latest.zip
+unzip compiler-latest.zip
+rm COPYING README.md compiler-latest.zip
+mv closure-compiler-v20*.jar /home/pi/rstudio/src/gwt/tools/compiler/compiler.jar
+
+# Compile é instale RStudio
+mkdir build
+cd build
+cmake .. -DRSTUDIO_TARGET=Server -DCMAKE_BUILD_TYPE=Release
+make install
+
+#Configure Rstudio
+cd
+useradd -r rstudio-server
+cp /usr/local/lib/rstudio-server/extras/init.d/debian/rstudio-server /etc/init.d/rstudio-server
+chmod +x /etc/init.d/rstudio-server 
+update-rc.d rstudio-server defaults
+ln -f -s /usr/local/lib/rstudio-server/bin/rstudio-server /usr/sbin/rstudio-server
+chmod 777 -R /usr/local/lib/R/site-library/
+mkdir -p /var/run/rstudio-server
+mkdir -p /var/lock/rstudio-server
+mkdir -p /var/log/rstudio-server
+mkdir -p /var/lib/rstudio-server
+rm -rf /home/pi/rstudio
+nano /etc/init.d/rstudio-server
+    # Modifique su variable PATH para que utilizar la versión compilada de R
+        # PATH=/usr/local/bin/:/sbin:/usr/sbin:/bin:/usr/bin
+systemctl daemon-reload
+rstudio-server start
+exit
+```
+
+## Pasos Adicionales
+
+Crea URLs bonitas para Shiny y Rstudio Server (Por ejemplo: `http://su-ip/shiny/su-aplicacion` en vez de `http://su-ip:3838/su-aplicacion`) editando el archivo de configuración de Nginx: `sudo nano /etc/nginx/sites-enabled/default` y agregando las siguientes líneas antes de la línea que dice `server {`
+
+```{bash eval=FALSE}
+map $http_upgrade $connection_upgrade {
+      default upgrade;
+      ''      close;
+    }
+```
+
+Agregue las siguientes líneas justo después de la línea que dice `server_name _;`
+
+```{bash eval=FALSE}
+    rewrite ^/shiny$ $scheme://$http_host/shiny/ permanent;
+
+    location /shiny/ {
+            rewrite ^/shiny/(.*)$ /$1 break;
+            proxy_pass http://localhost:3838;
+            proxy_redirect / $scheme://$http_host/shiny/;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection $connection_upgrade;
+            proxy_read_timeout 20d;
+            proxy_buffering off;
+    }
+    
+    rewrite ^/rstudio$ $scheme://$http_host/rstudio/ permanent; 
+    
+    location /rstudio/ {
+        rewrite ^/rstudio/(.*)$ /$1 break;
+        proxy_pass http://localhost:8787;
+        proxy_redirect http://localhost:8787/ $scheme://$http_host/rstudio/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+        proxy_read_timeout 20d;
+    }
+```
+
+Ahora debe reiniciar Nginx para aplicar los cambios:
+
+```{bash eval=FALSE}
+sudo service nginx restart
+```
+
+Si desea tener acceso a su servidor desde orígenes remotos (a través de Internet), debe seguir estos pasos adicionales:
+
+* Si no tiene una IP pública estática:
+    * Abra una cuenta en un servicio de DNS dinámico, por ejemplo, https://www.noip.com
+    * Configure el DNS dinámico en su enrutador/módem, si no tiene esa opción, puede instalar un cliente DDNS en su servidor.
+	* Opcionalmente, configure su nombre de dominio personal para que apunte a su servicio DDNS.
+* Configure el reenvío de puertos en su enrutador/módem:
+	* Para SSH abra el puerto TCP/UDP 22~22
+	* Para PostgreSQL abra el puerto TCP/UDP 5432
+	* Para FTP abra el puerto TCP 20~21
+	* Para VPN abra el puerto UDP 1194
+	* Para HTTP abra el puerto TCP 80
+* Asegúrese de tener "Bloquear tráfico WAN" deshabilitado en su enrutador/módem.
+
+Y ya está, está listo para comenzar a desarrollar sus aplicaciones Shiny y desplegarlas en la carpeta `/srv/shiny-server` de su propio servidor, ¡disfrute!
+
+## Comentarios Finales
+
+La principal limitación de la Raspberry Pi es la memoria RAM, así que tenga en cuenta que debe mantener sus aplicaciones lo suficientemente simples para que no necesiten más de 1 GB de RAM si su aplicación requiere algo más que eso, va a usar intercambie memoria y eso podría arruinar su tarjeta SD muy rápido.
+
+El rendimiento es relativamente lento, especialmente para el trazado, tenga en cuenta que, aunque Raspberry Pi 3B + tiene 4 núcleos, no son rápidos y la mayoría de los paquetes R no usan computación paralela.

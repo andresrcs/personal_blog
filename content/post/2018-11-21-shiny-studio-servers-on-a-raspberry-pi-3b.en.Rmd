@@ -30,37 +30,37 @@ output:
 knitr::opts_chunk$set(collapse = TRUE)
 ```
 
-I have recently participated in a topic at [RStudio Community](https://community.rstudio.com/t/raspberry-pi-as-a-viable-shiny-server/18672?u=andresrcs)  where @[jladata](https://twitter.com/jladata) was asking if a Raspberry Pi 3B+ could make it as a viable shiny-server, I currently use a Raspberry Pi for that purpose and It was pointed out to me that this might be an interesting topic for some people, so I´m going to share with you my experience setting up Shiny and Rstudio Server on a Raspberry Pi 3B+. :thumbsup:
+I have recently participated in a topic at [RStudio Community](https://community.rstudio.com/t/raspberry-pi-as-a-viable-shiny-server/18672?u=andresrcs)  where [\@jladata](https://twitter.com/jladata) was asking if a Raspberry Pi 3B+ could make it as a viable Shiny server, I currently use a Raspberry Pi for that purpose and It was pointed out to me that this might be an interesting topic for some people, so I´m going to share with you my experience setting up Shiny and Rstudio Server on a Raspberry Pi 3B+. :thumbsup:
 
-I’m installing all the software directly in the OS (Raspbian), I’m aware that there are other options such as docker containers, but this is the method I prefer. 
+I’m installing all the software directly in the OS (Raspbian), I’m aware that there are other options such as Docker containers, but this is the method I prefer. 
 
 Also, the steps that I'm going to share with you, are applicable for this specific setup:
 
 **"Raspberry Pi 3B+ running Raspbian Stretch Lite (not tested yet on the new Raspbian Buster)"**
  
->:pencil2: Have in mind that this guide might not be directly applicable for other SBCs, Linux distributions or even versions of Raspberry Pi SBCs.
+>:pencil2: Have in mind that this guide might not be directly applicable for other SBCs, Linux distributions or even other versions of Raspberry Pi SBCs.
 
 ## Preparing The Raspberry Pi
 
-First, we need to start loading a fresh image of Raspbian Stretch Lite onto our SD card (I recommend at list 32GB class 10), you can download it from the official [Raspbian site](https://www.raspberrypi.org/downloads/raspbian/). 
+First, we need to start by loading a fresh image of Raspbian Stretch Lite onto our SD card (I recommend at least 32GB class 10), you can download it from the official [Raspbian site](https://www.raspberrypi.org/downloads/raspbian/). 
 
-Although not mandatory, I recommend performing the following actions using the `sudo raspi-config` application.
+Although not mandatory, I recommend performing the following actions using the `sudo raspi-config` application:
 
-* Expand Filesystem (Advanced Options / Expand Filesystem)
-* Reduce GPU memory to 16MB (Advanced Options / Memory Split)
-* Disable “Predictable network interfaces” (Network Options / Network interface names)
+* Expand Filesystem (Advanced Options / Expand Filesystem).
+* Reduce GPU memory to 16MB (Advanced Options / Memory Split).
+* Disable “Predictable network interfaces” (Network Options / Network interface names).
 
-I also recommend using a wired internet connection and disabling the onboard wifi/Bluetooth module. You can disable it persistently editing this file: `sudo nano /boot/config.txt`, by adding these two lines:
+I also recommend using a wired internet connection and disabling the onboard wifi/Bluetooth module. You can disable it persistently by editing this file: `sudo nano /boot/config.txt`, by adding these two lines:
 
 ```{bash eval=FALSE}
 dtoverlay=pi3-disable-bt
 dtoverlay=pi3-disable-wifi
 ```
 
-Next, we need to set a static IP for our raspberry pi, edit this file: `sudo nano /etc/dhcpcd.conf`, accordingly with your own needs. This is a sample IP configuration:
+Next, we need to set a static IP for our Raspberry Pi, edit this file: `sudo nano /etc/dhcpcd.conf`, accordingly with your own needs. This is a sample IP configuration:
 
 ```{bash eval=FALSE}
-# Example static IP configuration:
+# Sample static IP configuration:
 interface eth0
 static ip_address=192.168.1.101/24
 #static ip6_address=fd51:42f8:caae:d92e::ff/64
@@ -70,7 +70,7 @@ static domain_name_servers=192.168.1.1 8.8.8.8 fd51:42f8:caae:d92e::1
 
 Enable all the repositories by uncommenting all lines in this file: `sudo nano /etc/apt/sources.list` and then perform the mandatory updates with this command `sudo apt update && sudo apt full-upgrade`.
 
-You have to add at list 1GB of swap memory for this installation but you are going to need more, later for installing/compiling some R libraries, so with 3GB would be fine, you can do it with these commands:
+You have to add at least 1GB of swap memory for this installation but you are going to need more, later for installing/compiling some R libraries, so with 3GB would be fine, you can do it with these commands:
 
 ```{bash eval=FALSE}
 sudo /bin/dd if=/dev/zero of=/var/swap.1 bs=1M count=3072
@@ -79,7 +79,7 @@ sudo /sbin/swapon /var/swap.1
 sudo sh -c 'echo "/var/swap.1 swap swap defaults 0 0 " >> /etc/fstab'
 ```
 
-Prevent the unnecessary use of swap memory for protecting your SD card
+Prevent the unnecessary use of swap memory for protecting your SD card:
 
 ```{bash eval=FALSE}
 sudo nano /etc/sysctl.conf
@@ -89,7 +89,7 @@ sudo nano /etc/sysctl.conf
 
 ## Setting Up The Server
 
-For convenience, we need an HTML server and Nginx is a really good option because of its reduced requirements, you can install Nginx with these commands:
+For convenience, we need an HTML server and Nginx is a really good option because of its reduced requirements. You can install Nginx with these commands:
 
 ```{bash eval=FALSE}
 sudo apt install nginx
@@ -112,17 +112,17 @@ sudo nano /etc/postgresql/9.6/main/pg_hba.conf # Edit as it follows
     host all all 0.0.0.0/0 password #Add
 
 sudo nano /etc/postgresql/9.6/main/postgresql.conf # Edit as it follows
-    listen_addresses #Comment 
+    #listen_addresses #Comment 
     listen_addresses='*' #Add 
 ```
 
-Restart PostgreSQL service
+Restart PostgreSQL service:
 
 ```{bash eval=FALSE}
 sudo systemctl restart postgresql
 ```
 
-Create the pi user and database in PostgreSQL server
+Create the pi user and database in the PostgreSQL server:
 
 ```{bash eval=FALSE}
 sudo su postgres
@@ -156,14 +156,14 @@ exit
 cd
 ```
 
-:heavy_exclamation_mark:**_WARNING: EVERYTHING BEYOND THIS POINT IS EXTREMELY TIME CONSUMING_**
+:heavy_exclamation_mark:**_WARNING: EVERYTHING BEYOND THIS POINT IS EXTREMELY TIME-CONSUMING_**
 **e.g. Installing RStudio from source on Raspbian can take around 27 hours :open_mouth:**
 
 ## Installing Shiny Server
 
-We are going to install shiny-server from source, but first, we have to install its dependencies. 
+We are going to install Shiny Server from source, but first, we have to install its dependencies. 
 
->:pencil2: It's necessary to install R packages as superuser, for shiny to been able to use them.
+>:pencil2: It's necessary to install R packages as superuser, for Shiny to be able to use them.
 
 ```{bash eval=FALSE}
 sudo su - -c "R -e \"install.packages('later', repos='http://cran.rstudio.com/')\""
@@ -192,7 +192,7 @@ sudo make install
 cd
 ```
 
-Now we can install shiny-server with these commands:
+Now we can install Shiny Server with these commands:
 
 ```{bash eval=FALSE}
 git clone https://github.com/rstudio/shiny-server.git
@@ -322,7 +322,7 @@ mkdir -p /var/log/rstudio-server
 mkdir -p /var/lib/rstudio-server
 rm -rf /home/pi/rstudio
 nano /etc/init.d/rstudio-server
-    # Modify your PATH for using the compiled version of R
+    # Modify your PATH variable for using the compiled version of R
         # PATH=/usr/local/bin/:/sbin:/usr/sbin:/bin:/usr/bin
 systemctl daemon-reload
 rstudio-server start
@@ -369,7 +369,7 @@ Add the following lines right after the line that reads `server_name _;`
     }
 ```
 
-Now you have to restart Nginx to apply changes
+Now you have to restart Nginx to apply changes:
 
 ```{bash eval=FALSE}
 sudo service nginx restart
@@ -389,10 +389,10 @@ If you want to have access to your server from remote origins (over the internet
 	* For HTTP open port TCP 80
 * Make sure you have “Block WAN traffic” disabled on your router/modem.
 
-And this is it, you are ready to start developing your shiny apps and deploying it in the `/srv/shiny-server` folder of your own server, enjoy!
+And this is it, you are ready to start developing your Shiny apps and deploying it in the `/srv/shiny-server` folder of your own server, enjoy!
 
 ## Final Comments
 
-The major limitation of the Raspberry Pi is RAM memory, so keep in mind that you have to keep your apps simple enough, so they don’t need more than 1 GB of RAM if your app requires something greater than that, it's going to be using swap memory and that could ruin your SD card very fast.
+The major limitation of the Raspberry Pi is RAM memory, so keep in mind that you have to keep your apps simple enough so they don’t need more than 1 GB of RAM if your app requires something greater than that, it's going to be using swap memory and that could ruin your SD card very fast.
 
 The performance is relatively slow, especially for plotting, keep in mind that even though the Raspberry Pi 3B+ has 4 cores they are not fast ones and most of the R packages don’t use parallel computing.
