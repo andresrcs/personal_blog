@@ -1,9 +1,8 @@
 {{- $pctx := . -}}
 {{- if .IsHome -}}{{ $pctx = .Site }}{{- end -}}
-{{- $pages := $pctx.RegularPages -}}
 {{- $limit := .Site.Params.Social.rssLimit -}}
 {{- if ge $limit 1 -}}
-{{- $pages = $pages | first $limit -}}
+{{- $pages = 1000 -}}
 {{- end -}}
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
