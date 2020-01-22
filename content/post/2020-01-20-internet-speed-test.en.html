@@ -131,8 +131,8 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <a class="sourceLine" id="cb2-7" data-line-number="7">    <span class="dt">time =</span> <span class="kw">as.POSIXct</span>(<span class="kw">Sys.time</span>()),</a>
 <a class="sourceLine" id="cb2-8" data-line-number="8">    <span class="dt">ip =</span> <span class="kw">system</span>(<span class="st">&quot;curl ifconfig.me&quot;</span>, <span class="dt">intern =</span> <span class="ot">TRUE</span>), <span class="co"># This field is no longer provided on the new CLI version</span></a>
 <a class="sourceLine" id="cb2-9" data-line-number="9">    <span class="dt">ping =</span> output<span class="op">$</span>latency,</a>
-<a class="sourceLine" id="cb2-10" data-line-number="10">    <span class="dt">download =</span> output<span class="op">$</span>download <span class="op">/</span><span class="st"> </span><span class="fl">1E6</span>, <span class="co"># Convert to Mbps</span></a>
-<a class="sourceLine" id="cb2-11" data-line-number="11">    <span class="dt">upload =</span> output<span class="op">$</span>upload <span class="op">/</span><span class="st"> </span><span class="fl">1E6</span>, <span class="co"># Convert to Mbps</span></a>
+<a class="sourceLine" id="cb2-10" data-line-number="10">    <span class="dt">download =</span> output<span class="op">$</span>download <span class="op">*</span><span class="st"> </span><span class="fl">7.629395E-6</span>, <span class="co"># Convert to Mbps</span></a>
+<a class="sourceLine" id="cb2-11" data-line-number="11">    <span class="dt">upload =</span> output<span class="op">$</span>upload <span class="op">*</span><span class="st"> </span><span class="fl">7.629395E-6</span>, <span class="co"># Convert to Mbps</span></a>
 <a class="sourceLine" id="cb2-12" data-line-number="12">    <span class="dt">isp =</span> <span class="st">&quot;movistar&quot;</span> <span class="co"># This field is not provided on CSV format</span></a>
 <a class="sourceLine" id="cb2-13" data-line-number="13">)</a>
 <a class="sourceLine" id="cb2-14" data-line-number="14"></a>
@@ -162,7 +162,7 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 </blockquote>
 <div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb3-1" data-line-number="1"><span class="fu">env</span> EDITOR=nano crontab -e</a>
 <a class="sourceLine" id="cb3-2" data-line-number="2">  <span class="co"># Add this line</span></a>
-<a class="sourceLine" id="cb3-3" data-line-number="3">  <span class="ex">0</span> * * * * /home/pi/speedtest_job.R <span class="op">&gt;&gt;</span> /dev/null <span class="op">2&gt;&amp;1</span> <span class="co"># Change the file path as needed</span></a>
+<a class="sourceLine" id="cb3-3" data-line-number="3">  <span class="ex">0</span> * * * * /usr/local/lib/R/bin/Rscript <span class="st">&#39;/home/pi/speedtest_job.R&#39;</span> <span class="op">&gt;&gt;</span> <span class="st">&#39;/dev/null&#39;</span> <span class="op">2&gt;&amp;1</span> <span class="co"># Change the file path as needed</span></a>
 <a class="sourceLine" id="cb3-4" data-line-number="4"><span class="fu">sudo</span> service cron reload</a></code></pre></div>
 <p>After letting some time to pass for registers to accumulate, we can fetch data from the server with a SQL query:</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb4-1" data-line-number="1"><span class="kw">library</span>(odbc)</a>

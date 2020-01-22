@@ -74,8 +74,8 @@ results <- data.frame(stringsAsFactors = FALSE,
     time = as.POSIXct(Sys.time()),
     ip = system("curl ifconfig.me", intern = TRUE), # This field is no longer provided on the new CLI version
     ping = output$latency,
-    download = output$download / 1E6, # Convert to Mbps
-    upload = output$upload / 1E6, # Convert to Mbps
+    download = output$download * 7.629395E-6, # Convert to Mbps
+    upload = output$upload * 7.629395E-6, # Convert to Mbps
     isp = "movistar" # This field is not provided on CSV format
 )
 
@@ -109,7 +109,7 @@ Now we can schedule a `cron` job to run this script on regular intervals, I'm go
 ```{bash eval=FALSE}
 env EDITOR=nano crontab -e
   # Add this line
-  0 * * * * /home/pi/speedtest_job.R >> /dev/null 2>&1 # Change the file path as needed
+  0 * * * * /usr/local/lib/R/bin/Rscript '/home/pi/speedtest_job.R' >> '/dev/null' 2>&1 # Change the file path as needed
 sudo service cron reload
 ```
 
