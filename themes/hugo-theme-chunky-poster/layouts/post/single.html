@@ -36,8 +36,24 @@
                     <div class="col-lg-8">
                         <div class="content">
                             {{ $page.Content }}
-                        </div>
+                            <!-- This code is for the GitHub edit button -->
+                            {{ if .File.Path }}
 
+                            {{ $Rmd := (print .File.BaseFileName ".Rmd") }}
+                            
+                            {{ if (where (readDir (print "content/" .File.Dir)) "Name" $Rmd) }}
+                              {{ $.Scratch.Set "FilePath" (print .File.Dir $Rmd) }}
+                            {{ else }}
+                              {{ $.Scratch.Set "FilePath" .File.Path }}
+                            {{ end }}
+                            
+                            {{ with .Site.Params.GithubEdit}}
+                            <span class="emojify">✎ </span><a href='{{ . }}{{ $.Scratch.Get "FilePath" }}'>Edit this page</a>
+                            {{ end }}
+                            <!-- end code block -->
+                        {{ end }}
+                        </div>
+                        
                         {{- with $page.Params.tags -}}
                             <div class="tags my-3">
                             {{- range . -}}
@@ -47,7 +63,6 @@
                             {{- end -}}
                             </div>
                         {{- end -}}
-
                         {{ partial "sharer.html" . }}
                     </div>
                 </div>

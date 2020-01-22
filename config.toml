@@ -59,6 +59,7 @@ author = "authors"
   share = true
   showLanguageSwitcher = true
   homepageImage = "/images/homepage-image.jpg"
+  GithubEdit = "https://github.com/andresrcs/personal_blog/edit/master/content/"
 
   [params.social]
     rss = true
