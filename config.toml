@@ -13,7 +13,7 @@ ignoreFiles = ["\\.Rmd$", "\\.Rmarkdown$", "_files$", "_cache$"]
 
 [languages]
   [languages.en]
-    title = "Andres Blog"
+    title = "Andres' Blog"
     description = "A place to showcase my personal,<br />data science related projects."
     weight = 0
     [languages.en.params]
