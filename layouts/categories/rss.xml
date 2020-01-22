@@ -1,4 +1,5 @@
-{{- $pctx := . -}}
+{{ $pctx = .Site }}
+{{- if .IsHome -}}{{ $pctx = .Site }}{{- end -}}
 {{- $pages := $pctx.RegularPages -}}
 {{- $limit := .Site.Params.Social.rssLimit -}}
 {{- if ge $limit 1 -}}
