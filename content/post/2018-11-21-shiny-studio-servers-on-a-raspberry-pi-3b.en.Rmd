@@ -8,7 +8,7 @@ categories:
   - R
   - raspberry
 series: 
-  - r_admin
+  - r-admin
 tags:
   - shiny-server
   - rstudio-server
@@ -16,7 +16,7 @@ tags:
   - shiny
   - rstudio
   - admin
-  - raspberry_pi
+  - raspberry-pi
   - postgresql
   - nginx
 draft: false

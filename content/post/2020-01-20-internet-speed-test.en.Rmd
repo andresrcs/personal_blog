@@ -14,6 +14,7 @@ tags:
   - odbc
   - speedtest
   - ookla
+  - raspberry-pi
 draft: false
 images: ["speed_test.jpg"]
 authors: ["andres-castro"]
@@ -41,7 +42,7 @@ In the next lines, I'm going to show you how to do this from R and get the resul
 
 We have to set up our working environment for this project. First, we need a machine that is constantly powered on and connected to the same internet connection you want to test so it can perform the tests and store the data, it could be any computer connected to your local network but the most practical (and cost-effective) solution I have found is using a Raspberry Pi SBC so I'm going to use one for this project.
 
-Since you are reading an R related article I'm going to assume you already have your basic R environment set, so we are going to focus on the additional stuff, we need to install the Speedtest's CLI, if you are in a Linux machine, you can do it with this commands on a system terminal: 
+Since you are reading an R related article I'm going to assume you already have your basic R environment set, so we are going to focus on the additional stuff, we need to install the Speedtest Command Line Interface (CLI), if you are in a Linux machine, you can do it with this commands on a system terminal: 
 
 >:pencil2: There are [installation instructions for other OSs](https://www.speedtest.net/apps/cli) on the Speedtest web site
 
@@ -57,27 +58,25 @@ sudo apt-get update
 sudo apt-get install speedtest
 ```
 
->:pencil2: Also, in non ARM systems, the first time you run the `speedtest` command you have to accept the license so run it once from the terminal with the `--accept-license` option.
+>:pencil2: Check if you have an older python version of the CLI installed in your system and make sure to uninstall it with this command `sudo pip uninstall speedtes-cli`, since it could cause conflicts with the newer official version. This happened to me and I didn't notice :flushed:, thanks to [\@jasongrahn](https://twitter.com/jasongrahn) for the heads up.
 
 ## Gathering Data
 
 Now we can write an R script that retrieves the test output, parses the content and stores the data. In this example I'm going to store it into a PostgreSQL database but you could choose other options like another SQL server,  Google Sheets, a CSV file, etc. I have called this script file `speedtest_job.R`.
 
->:pencil2: Be aware that the CSV output of `Speedtest CLI` is different when installed on a regular operating system (not ARM distros like Raspbian), the command options and column names are not the same so you would have to modify this script accordingly.
-
 ```{r Rscript, eval=FALSE}
 #! /usr/bin/env Rscript
 
 # Data adquisition
-output <- read.csv(text = system("speedtest --csv-header;speedtest --csv", intern = TRUE))
+output <- read.csv(text = system("speedtest -f csv --output-header --accept-license", intern = TRUE))
 
 results <- data.frame(stringsAsFactors = FALSE,
     time = as.POSIXct(Sys.time()),
-    ip = as.character(output$IP.Address),
-    ping = output$Ping,
-    download = output$Download / 1E6, # Convert to Mbps
-    upload = output$Upload / 1E6, # Convert to Mbps
-    isp = "movistar" # This field is not provided on csv output for ARM systems
+    ip = system("curl ifconfig.me", intern = TRUE), # This field is no longer provided on the new CLI version
+    ping = output$latency,
+    download = output$download / 1E6, # Convert to Mbps
+    upload = output$upload / 1E6, # Convert to Mbps
+    isp = "movistar" # This field is not provided on CSV format
 )
 
 # Data storing

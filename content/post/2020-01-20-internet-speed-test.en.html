@@ -14,6 +14,7 @@ tags:
   - odbc
   - speedtest
   - ookla
+  - raspberry-pi
 draft: false
 images: ["speed_test.jpg"]
 authors: ["andres-castro"]
@@ -101,7 +102,7 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <div id="getting-your-setup-ready" class="section level2">
 <h2>Getting Your Setup Ready</h2>
 <p>We have to set up our working environment for this project. First, we need a machine that is constantly powered on and connected to the same internet connection you want to test so it can perform the tests and store the data, it could be any computer connected to your local network but the most practical (and cost-effective) solution I have found is using a Raspberry Pi SBC so I’m going to use one for this project.</p>
-<p>Since you are reading an R related article I’m going to assume you already have your basic R environment set, so we are going to focus on the additional stuff, we need to install the Speedtest’s CLI, if you are in a Linux machine, you can do it with this commands on a system terminal:</p>
+<p>Since you are reading an R related article I’m going to assume you already have your basic R environment set, so we are going to focus on the additional stuff, we need to install the Speedtest Command Line Interface (CLI), if you are in a Linux machine, you can do it with this commands on a system terminal:</p>
 <blockquote>
 <p>:pencil2: There are <a href="https://www.speedtest.net/apps/cli">installation instructions for other OSs</a> on the Speedtest web site</p>
 </blockquote>
@@ -115,27 +116,24 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <a class="sourceLine" id="cb1-8" data-line-number="8"><span class="fu">sudo</span> apt-get update</a>
 <a class="sourceLine" id="cb1-9" data-line-number="9"><span class="fu">sudo</span> apt-get install speedtest</a></code></pre></div>
 <blockquote>
-<p>:pencil2: Also, in non ARM systems, the first time you run the <code>speedtest</code> command you have to accept the license so run it once from the terminal with the <code>--accept-license</code> option.</p>
+<p>:pencil2: Check if you have an older python version of the CLI installed in your system and make sure to uninstall it with this command <code>sudo pip uninstall speedtes-cli</code>, since it could cause conflicts with the newer official version. This happened to me and I didn’t notice :flushed:, thanks to <a href="https://twitter.com/jasongrahn">@jasongrahn</a> for the heads up.</p>
 </blockquote>
 </div>
 <div id="gathering-data" class="section level2">
 <h2>Gathering Data</h2>
 <p>Now we can write an R script that retrieves the test output, parses the content and stores the data. In this example I’m going to store it into a PostgreSQL database but you could choose other options like another SQL server, Google Sheets, a CSV file, etc. I have called this script file <code>speedtest_job.R</code>.</p>
-<blockquote>
-<p>:pencil2: Be aware that the CSV output of <code>Speedtest CLI</code> is different when installed on a regular operating system (not ARM distros like Raspbian), the command options and column names are not the same so you would have to modify this script accordingly.</p>
-</blockquote>
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="co">#! /usr/bin/env Rscript</span></a>
 <a class="sourceLine" id="cb2-2" data-line-number="2"></a>
 <a class="sourceLine" id="cb2-3" data-line-number="3"><span class="co"># Data adquisition</span></a>
-<a class="sourceLine" id="cb2-4" data-line-number="4">output &lt;-<span class="st"> </span><span class="kw">read.csv</span>(<span class="dt">text =</span> <span class="kw">system</span>(<span class="st">&quot;speedtest --csv-header;speedtest --csv&quot;</span>, <span class="dt">intern =</span> <span class="ot">TRUE</span>))</a>
+<a class="sourceLine" id="cb2-4" data-line-number="4">output &lt;-<span class="st"> </span><span class="kw">read.csv</span>(<span class="dt">text =</span> <span class="kw">system</span>(<span class="st">&quot;speedtest -f csv --output-header --accept-license&quot;</span>, <span class="dt">intern =</span> <span class="ot">TRUE</span>))</a>
 <a class="sourceLine" id="cb2-5" data-line-number="5"></a>
 <a class="sourceLine" id="cb2-6" data-line-number="6">results &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>,</a>
 <a class="sourceLine" id="cb2-7" data-line-number="7">    <span class="dt">time =</span> <span class="kw">as.POSIXct</span>(<span class="kw">Sys.time</span>()),</a>
-<a class="sourceLine" id="cb2-8" data-line-number="8">    <span class="dt">ip =</span> <span class="kw">as.character</span>(output<span class="op">$</span>IP.Address),</a>
-<a class="sourceLine" id="cb2-9" data-line-number="9">    <span class="dt">ping =</span> output<span class="op">$</span>Ping,</a>
-<a class="sourceLine" id="cb2-10" data-line-number="10">    <span class="dt">download =</span> output<span class="op">$</span>Download <span class="op">/</span><span class="st"> </span><span class="fl">1E6</span>, <span class="co"># Convert to Mbps</span></a>
-<a class="sourceLine" id="cb2-11" data-line-number="11">    <span class="dt">upload =</span> output<span class="op">$</span>Upload <span class="op">/</span><span class="st"> </span><span class="fl">1E6</span>, <span class="co"># Convert to Mbps</span></a>
-<a class="sourceLine" id="cb2-12" data-line-number="12">    <span class="dt">isp =</span> <span class="st">&quot;movistar&quot;</span> <span class="co"># This field is not provided on csv output for ARM systems</span></a>
+<a class="sourceLine" id="cb2-8" data-line-number="8">    <span class="dt">ip =</span> <span class="kw">system</span>(<span class="st">&quot;curl ifconfig.me&quot;</span>, <span class="dt">intern =</span> <span class="ot">TRUE</span>), <span class="co"># This field is no longer provided on the new CLI version</span></a>
+<a class="sourceLine" id="cb2-9" data-line-number="9">    <span class="dt">ping =</span> output<span class="op">$</span>latency,</a>
+<a class="sourceLine" id="cb2-10" data-line-number="10">    <span class="dt">download =</span> output<span class="op">$</span>download <span class="op">/</span><span class="st"> </span><span class="fl">1E6</span>, <span class="co"># Convert to Mbps</span></a>
+<a class="sourceLine" id="cb2-11" data-line-number="11">    <span class="dt">upload =</span> output<span class="op">$</span>upload <span class="op">/</span><span class="st"> </span><span class="fl">1E6</span>, <span class="co"># Convert to Mbps</span></a>
+<a class="sourceLine" id="cb2-12" data-line-number="12">    <span class="dt">isp =</span> <span class="st">&quot;movistar&quot;</span> <span class="co"># This field is not provided on CSV format</span></a>
 <a class="sourceLine" id="cb2-13" data-line-number="13">)</a>
 <a class="sourceLine" id="cb2-14" data-line-number="14"></a>
 <a class="sourceLine" id="cb2-15" data-line-number="15"><span class="co"># Data storing</span></a>
