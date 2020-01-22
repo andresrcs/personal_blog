@@ -6,7 +6,7 @@ date: '2018-11-21'
 slug: shiny_rstudio_server
 categories:
   - R
-  - rapsberry_pi
+  - raspberry
 series: 
   - r_admin
 tags:
@@ -16,7 +16,7 @@ tags:
   - shiny
   - rstudio
   - admin
-  - rapsberry_pi
+  - raspberry_pi
   - postgresql
   - nginx
 draft: false
