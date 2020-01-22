@@ -63,6 +63,7 @@ author = "authors"
 
   [params.social]
     rss = true
+    rssLimit = 100
     email = "andresrcs@outlook.com"
     facebook = "https://www.facebook.com/andresrcs"
     twitter = "https://twitter.com/Andresrcs"
