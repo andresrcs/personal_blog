@@ -1,0 +1,338 @@
+---
+title: Keeping track of your actual internet speed over time, using R and Speedtest-CLI
+description: Learn how to use Ookla's Speedtest Command Line Interface to get recurring internet speed measures, store the results and plot the data, all of this using R.
+author: andres-castro
+date: '2020-01-21'
+slug: speed_test
+categories:
+  - R
+series: 
+  - DIY
+tags:
+  - cron
+  - ggplot2
+  - odbc
+  - speedtest
+  - ookla
+draft: false
+images: ["speed_test.jpg"]
+authors: ["andres-castro"]
+output:
+  blogdown::html_page:
+    toc: true
+    highlight: zenburn
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning=FALSE, message=FALSE, collapse = TRUE)
+```
+
+I thought this just happened in my country (Perú), but it turns out it happens to people around the globe, you contract an Internet Service Plan that offers **up to** `X` Mbps, where `X` is an impressive value (relative to each country's context), but the catch is in that word, **Up to**.
+
+```{r echo=FALSE}
+blogdown::shortcode('tweet', '1217915622023147542')
+```
+
+In reality, you end up getting far slower download speeds than advertised, and ISPs (Internet Service Providers) get away with this because they only test download speed with you once when they install the service (suspiciously it works great at that moment) and most people don't bother to keep track of their download speeds over time because it would be impractical to manually perform speed tests every short period of time, luckily there is a better way, [Ookla's Speedtest](https://www.speedtest.net/) service provides a _**Command Line Interface (CLI)**_ that allows you to perform tests from your system terminal enabling you to set up automated scripts to collect connection performance data.
+
+In the next lines, I'm going to show you how to do this from R and get the results in the form of nice plots you can tweet to your ISP to annoy them a little bit. :satisfied:
+
+## Getting Your Setup Ready
+
+We have to set up our working environment for this project. First, we need a machine that is constantly powered on and connected to the same internet connection you want to test so it can perform the tests and store the data, it could be any computer connected to your local network but the most practical (and cost-effective) solution I have found is using a Raspberry Pi SBC so I'm going to use one for this project.
+
+Since you are reading an R related article I'm going to assume you already have your basic R environment set, so we are going to focus on the additional stuff, we need to install the Speedtest's CLI, if you are in a Linux machine, you can do it with this commands on a system terminal: 
+
+>:pencil2: There are [installation instructions for other OSs](https://www.speedtest.net/apps/cli) on the Speedtest web site
+
+```{bash eval=FALSE}
+sudo apt-get install gnupg1 apt-transport-https dirmngr
+export INSTALL_KEY=379CE192D401AB61
+# Ubuntu versions supported: xenial, bionic
+# Debian versions supported: jessie, stretch, buster
+export DEB_DISTRO=$(lsb_release -sc)
+sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys $INSTALL_KEY
+echo "deb https://ookla.bintray.com/debian ${DEB_DISTRO} main" | sudo tee  /etc/apt/sources.list.d/speedtest.list
+sudo apt-get update
+sudo apt-get install speedtest
+```
+
+>:pencil2: Also, in non ARM systems, the first time you run the `speedtest` command you have to accept the license so run it once from the terminal with the `--accept-license` option.
+
+## Gathering Data
+
+Now we can write an R script that retrieves the test output, parses the content and stores the data. In this example I'm going to store it into a PostgreSQL database but you could choose other options like another SQL server,  Google Sheets, a CSV file, etc. I have called this script file `speedtest_job.R`.
+
+>:pencil2: Be aware that the CSV output of `Speedtest CLI` is different when installed on a regular operating system (not ARM distros like Raspbian), the command options and column names are not the same so you would have to modify this script accordingly.
+
+```{r Rscript, eval=FALSE}
+#! /usr/bin/env Rscript
+
+# Data adquisition
+output <- read.csv(text = system("speedtest --csv-header;speedtest --csv", intern = TRUE))
+
+results <- data.frame(stringsAsFactors = FALSE,
+    time = as.POSIXct(Sys.time()),
+    ip = as.character(output$IP.Address),
+    ping = output$Ping,
+    download = output$Download / 1E6, # Convert to Mbps
+    upload = output$Upload / 1E6, # Convert to Mbps
+    isp = "movistar" # This field is not provided on csv output for ARM systems
+)
+
+# Data storing
+connection_string <- glue::glue("Driver={{PostgreSQL ANSI}};\\
+                                Uid={Sys.getenv('MY_UID')};\\
+                                Pwd={Sys.getenv('MY_PWD')};\\
+                                Server=localhost;\\
+                                Port=5432;\\
+                                Database=internet;") # Name of the database on the sql server
+
+con <- odbc::dbConnect(odbc::odbc(),
+                       .connection_string = connection_string,
+                       encoding = "utf8")
+
+DBI::dbAppendTable(conn = con,
+              name = 'speed_test', # Table name on the sql server
+              value = results)
+
+odbc::dbDisconnect(con)
+
+# Cleaning log files
+unlink(x = "*.log", force = TRUE)
+
+```
+
+Now we can schedule a `cron` job to run this script on regular intervals, I'm going to set it to run once every hour running this commands on a system terminal:
+
+>:pencil2: This can also be done from R using the `cronR` package.
+
+```{bash eval=FALSE}
+env EDITOR=nano crontab -e
+  # Add this line
+  0 * * * * /home/pi/speedtest_job.R >> /dev/null 2>&1 # Change the file path as needed
+sudo service cron reload
+```
+
+After letting some time to pass for registers to accumulate, we can fetch data from the server with a SQL query:
+
+```{r datos show, eval=FALSE}
+library(odbc)
+library(glue)
+
+connection_string <- glue("Driver={{PostgreSQL ANSI}};\\
+                              Uid={Sys.getenv('MY_UID')};\\
+                              Pwd={Sys.getenv('MY_PWD')};\\
+                              Server=localhost;\\
+                              Port=5432;\\
+                              Database=internet;")
+
+con <- dbConnect(odbc::odbc(), .connection_string = connection_string, encoding = "utf8")
+
+query <- "
+SELECT * 
+FROM public.speed_test 
+ORDER BY time
+"
+raw_data <- dbGetQuery(conn = con, query)
+dbDisconnect(con)
+```
+
+```{r datos hide, include=FALSE, cache=TRUE}
+library(odbc)
+library(glue)
+
+connection_string <- glue("Driver={{PostgreSQL ANSI}};\\
+                              Uid={Sys.getenv('MY_UID')};\\
+                              Pwd={Sys.getenv('MY_PWD')};\\
+                              Server={Sys.getenv('MY_REMOTE')};\\
+                              Port=5432;\\
+                              Database=internet;")
+
+con <- dbConnect(odbc::odbc(), .connection_string = connection_string, encoding = "utf8")
+
+query <- "
+SELECT * 
+FROM public.speed_test 
+WHERE time >= '2019-06-18 00:00:00'
+AND isp = 'movistar'
+ORDER BY time
+"
+
+raw_data <- dbGetQuery(conn = con, query)
+dbDisconnect(con)
+```
+
+## Visualizing the Data
+
+Now that we have some data to work with we can start making some plots. Since this is not an article about `ggplopt2` I’m not going to get much into details about this part, I’m just going to show you some interesting plots you can get about your internet connection speed.
+
+In Figure \@ref(fig:histogram) we can see how observed download speeds distribute, letting aside the fact that the advertised speed is already slow (for developed countries standards), this reveals a pattern that is very common, most of the time you get download speeds that are much slower than advertised by the ISP and even so slow that defaults the terms of your contract, like in my case (I actually used this image to file a complaint).
+
+```{r histogram, fig.cap='Histogram of Observed Download Speeds', fig.height=5, fig.width=8, fig.align='center', warning=FALSE, tidy=FALSE}
+library(tidyverse)
+library(xkcd)
+library(lubridate)
+library(tibbletime)
+library(scales)
+
+# These are my personal theme settings you can ignore them if you prefer
+theme_set(
+    theme_gray() +
+    theme_xkcd() +
+    theme(legend.position = "right",
+          plot.title.position = "plot",
+          axis.title.x = element_text(margin = margin(t = 10)),
+          axis.title.y = element_text(margin = margin(r = 10)),
+          axis.text.x = element_text(angle = 20, hjust = 1, vjust = 1),
+          plot.margin = margin(10, 10, 10, 10),
+          text=element_text(family = "Cloud Calligraphy"))
+)
+
+color <- c("Mode"="#008B00", "Parameters" = "orange")
+
+raw_data %>% 
+  ggplot(aes(x = download)) +
+  geom_histogram(binwidth = 0.1, fill = "#00B2EE") +
+  geom_vline(aes(xintercept = 20, color = "Parameters"),  linetype = "dashed") +
+  geom_vline(aes(xintercept = 8, color = "Parameters"),  linetype = "dashed") +
+  stat_bin(geom = "vline",
+           aes(xintercept = stat(ifelse(count == max(count), x, NA)),
+               color = "Mode"),
+           binwidth = 0.1) +
+  annotate("text",
+           x = c(8.4,20.4),
+           y = c(8, 8),
+           label = c("Guaranteed Minimum Speed", "Advertised Speed"),
+           family = "Cloud Calligraphy",
+           size=5,
+           angle = 90) +
+  stat_bin(geom = "label",
+           aes(label = stat(ifelse(count == max(count), round(x, 1), NA))),
+           binwidth = 0.1,
+           family = "xkcd",
+           color = "#008B00",
+           vjust = -0.2) +
+  labs(title = 'HISTOGRAM OF OBSERVED DOWNLOAD SPEEDS',
+       subtitle ='ISP: MOVISTAR 20 Mbps', 
+       x = 'Speed (Mbps)',
+       y = 'Frequency',
+       colour = '') +
+  scale_x_continuous(breaks = seq(0, 22, by = 2),
+                     limits = c(0, 23)) +
+  scale_colour_manual(values=color) +
+  coord_cartesian(clip = 'off') +
+  NULL
+```
+
+With figures \@ref(fig:line) and \@ref(fig:box), we can show how often the download speeds fall below the minimum guaranteed speed.
+
+```{r line, fig.cap='Observed Download Speeds', fig.height=5, fig.width=8, fig.align='center', warning=FALSE, tidy=FALSE}
+
+colors <- c("Mean Speed"="blue", "Parameters"="orange", "Fault"="red", "Download Speed"="#00B2EE")
+
+plot_data <- raw_data %>%
+    as_tbl_time(index = time) %>% 
+    collapse_by('1 hour', side = 'start', clean = TRUE)
+
+mean_speed <- plot_data %>% 
+  pull(download) %>% 
+  mean() %>%
+  round(1)
+
+plot_data %>% 
+  ggplot(aes(x = time, y = download)) +
+  geom_line(aes(color = "Download Speed")) +
+  geom_point(data = plot_data %>% filter(download < 8),
+             aes(color = "Fault")) +
+  geom_point(data = plot_data %>% filter(download < 8),
+             shape = 1,
+             color = "red",
+             size = 5) +
+  geom_hline(aes(yintercept = 20, color = "Parameters"),  linetype = "dashed") +
+  geom_hline(aes(yintercept = 8, color = "Parameters"),  linetype = "dashed") +
+  geom_hline(aes(yintercept = mean_speed, color = "Mean Speed")) +
+  annotate("text",
+           x = as.POSIXct(c("2019-06-24 11:00:00 UTC", "2019-06-24 11:00:00 UTC")),
+           y = c(7,19),
+           label = c("Guaranteed Minimum Speed", "Advertised Speed"),
+           family = "Cloud Calligraphy",
+           size=5) +
+  geom_label(x = as.POSIXct("2019-08-01 11:00:00 UTC"),
+             y = mean_speed,
+             label = mean_speed,
+             family = "xkcd",
+             show.legend = FALSE,
+             inherit.aes = FALSE,
+             color = "blue")  +
+  labs(title = 'OBSERVED DOWNLOAD SPEEDS',
+       subtitle ='ISP: MOVISTAR 20 Mbps', 
+       x = 'Date',
+       y = 'Speed (Mbps)',
+       color = 'Legend:') +
+  scale_x_datetime(date_breaks = "5 days",
+                   labels = label_date_short(), 
+                   expand = expand_scale(c(0, 0.04))) +
+  scale_y_continuous(breaks = seq(0, 22, by = 2), limits = c(0, 23)) +
+  scale_colour_manual(values = colors) +
+  coord_cartesian(clip = 'off') +
+  NULL
+```
+
+```{r box, fig.cap='Boxplot of Time Between Failures', fig.height=3, fig.width=7, fig.align='center', warning=FALSE, tidy=FALSE}
+faults <- plot_data %>%
+  mutate(event_type = ifelse(download <= 8, 'fault', 'normal')) %>% 
+  filter(event_type == 'fault') %>% 
+  mutate(tbf = as.numeric(as.period(interval(lag(time), time),
+                                    unit = 'seconds')) / (3600)) %>% 
+  tail(-1)
+
+faults %>% 
+  ggplot(aes(x = '', y = tbf)) +
+  geom_boxplot(fill = '#FF303094') +
+  coord_flip() +
+  geom_label(y = median(faults$tbf),
+             label = paste(round(median(faults$tbf),1), 'h'),
+             family = "xkcd",
+             show.legend = FALSE,
+             color = "blue")  +
+  labs(title = 'BOXPLOT OF TIME BETWEEN FAILURES',
+       subtitle ='ISP: MOVISTAR 20 Mbps',
+       x = '',
+       y = 'Hours') +
+  NULL
+```
+
+And with Figure \@ref(fig:boxes) we can find out when the peak hours occur, so we can know at what time of the day is more likely for us to experience slow internet speeds.
+
+```{r boxes, fig.cap='Boxplot of Observer Download Speeds by Hour of the Day', fig.height=5, fig.width=8, fig.align='center', warning=FALSE, tidy=FALSE}
+hour_data <- plot_data %>% 
+    collapse_by('1 hour', side = 'start', clean = TRUE) %>%
+    mutate(time = format(time, "%H:%M"))
+
+hour_data %>% 
+    ggplot(aes(x = time, y = download)) +
+    geom_boxplot(fill = "#00B2EE") +
+    geom_point(data = hour_data %>% filter(download < 8),
+               shape = 1,
+               color = "red",
+               size = 5) +
+    geom_hline(aes(yintercept = 20), color = "orange",  linetype = "dashed") +
+    geom_hline(aes(yintercept = 8), color = "orange",  linetype = "dashed") +
+    annotate("text",
+             x = c("04:00", "04:00"),
+             y = c(7,19),
+             label = c("Guaranteed Minimum Speed", "Advertised Speed"),
+             family = "Cloud Calligraphy",
+             size=5) +
+    labs(title = 'BOXPLOT OF OBSERVED DOWNLOAD SPEEDS BY HOUR OF THE DAY',
+         subtitle ='ISP: MOVISTAR 20 Mbps',
+         x = 'Hour',
+         y = 'Speed (Mbps)') +
+    scale_y_continuous(breaks = seq(0, 22, by = 2),
+                       limits = c(0, 22)) +
+    coord_cartesian(clip = 'off') +
+    NULL
+```
+
+Once you have data, plotting possibilities are only limited by your imagination, so I'm going to stop here, I hope you have enjoyed reading this article and you are motivated now to start monitoring your own internet speed. Have fun! see you soon!.
