@@ -5,7 +5,6 @@ author: andres-castro
 date: '2018-11-21'
 slug: shiny_rstudio_server
 categories:
-  - R
   - raspberry
 series: 
   - r_admin
