@@ -15,7 +15,7 @@ tags:
   - speedtest
   - ookla
   - raspberry-pi
-draft: true
+draft: false
 images: ["speed_test.jpg"]
 authors: ["andres-castro"]
 output:
