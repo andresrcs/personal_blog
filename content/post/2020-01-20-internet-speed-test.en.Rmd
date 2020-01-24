@@ -28,7 +28,7 @@ output:
 knitr::opts_chunk$set(warning=FALSE, message=FALSE, collapse = TRUE)
 ```
 
-I thought this just happened in my country (Perú), but it turns out it happens to people around the globe, you contract an Internet Service Plan that offers **up to** `X` Mbps, where `X` is an impressive value (relative to each country's context), but the catch is in that word, **Up to**.
+I thought this only happened in my country (Perú), but it turns out it happens to people around the globe, you contract an Internet Service Plan that offers **up to** `X` Mbps, where `X` is an impressive value (relative to each country's context), but the catch is in that word, **Up to**.
 
 ```{r echo=FALSE}
 blogdown::shortcode('tweet', '1217915622023147542')
@@ -68,34 +68,46 @@ Now we can write an R script that retrieves the test output, parses the content 
 #! /usr/bin/env Rscript
 
 # Data adquisition
-output <- read.csv(text = system("speedtest -f csv --output-header --accept-license", intern = TRUE))
+output <- read.csv(
+  text = system(
+    command = "speedtest -f csv --output-header --accept-license",
+    intern = TRUE
+  )
+)
 
-results <- data.frame(stringsAsFactors = FALSE,
-    time = as.POSIXct(Sys.time()),
-    ip = system("curl ifconfig.me", intern = TRUE), # This field is no longer provided on the new CLI version
-    ping = output$latency,
-    download = output$download * 7.629395E-6, # Convert to Mbps
-    upload = output$upload * 7.629395E-6, # Convert to Mbps
-    isp = "movistar" # This field is not provided on CSV format
+results <- data.frame(
+  stringsAsFactors = FALSE,
+  time = as.POSIXct(Sys.time()),
+  ip = system("curl ifconfig.me", intern = TRUE), # This field is no longer provided on the new CLI version
+  ping = output$latency,
+  download = output$download * 7.629395E-6, # Convert to Mbps
+  upload = output$upload * 7.629395E-6, # Convert to Mbps
+  isp = "movistar" # This field is not provided on CSV format
 )
 
 # Data storing
-connection_string <- glue::glue("Driver={{PostgreSQL ANSI}};\\
-                                Uid={Sys.getenv('MY_UID')};\\
-                                Pwd={Sys.getenv('MY_PWD')};\\
-                                Server=localhost;\\
-                                Port=5432;\\
-                                Database=internet;") # Name of the database on the sql server
+connection_string <- glue::glue(
+  "Driver={{PostgreSQL ANSI}};\\
+  Uid={Sys.getenv('MY_UID')};\\
+  Pwd={Sys.getenv('MY_PWD')};\\
+  Server=localhost;\\
+  Port=5432;\\
+  Database=internet;" # Name of the database on the sql server
+) 
 
-con <- odbc::dbConnect(odbc::odbc(),
-                       .connection_string = connection_string,
-                       encoding = "utf8")
+con <- odbc::dbConnect(
+  drv = odbc::odbc(),
+  .connection_string = connection_string,
+  encoding = "utf8"
+)
 
-DBI::dbAppendTable(conn = con,
-              name = 'speed_test', # Table name on the sql server
-              value = results)
+DBI::dbAppendTable(
+  conn = con,
+  name = "speed_test", # Table name on the sql server
+  value = results
+)
 
-odbc::dbDisconnect(con)
+odbc::dbDisconnect(conn = con)
 
 # Cleaning log files
 unlink(x = "*.log", force = TRUE)
@@ -119,21 +131,32 @@ After letting some time to pass for registers to accumulate, we can fetch data f
 library(odbc)
 library(glue)
 
-connection_string <- glue("Driver={{PostgreSQL ANSI}};\\
-                              Uid={Sys.getenv('MY_UID')};\\
-                              Pwd={Sys.getenv('MY_PWD')};\\
-                              Server=localhost;\\
-                              Port=5432;\\
-                              Database=internet;")
+connection_string <- glue::glue(
+  "Driver={{PostgreSQL ANSI}};\\
+  Uid={Sys.getenv('MY_UID')};\\
+  Pwd={Sys.getenv('MY_PWD')};\\
+  Server={Sys.getenv('MY_REMOTE')};\\
+  Port=5432;\\
+  Database=internet;"
+)
 
-con <- dbConnect(odbc::odbc(), .connection_string = connection_string, encoding = "utf8")
+con <- dbConnect(
+  drv = odbc::odbc(),
+  .connection_string = connection_string,
+  encoding = "utf8"
+)
 
 query <- "
 SELECT * 
 FROM public.speed_test 
 ORDER BY time
 "
-raw_data <- dbGetQuery(conn = con, query)
+
+raw_data <- dbGetQuery(
+  conn = con,
+  statement = query
+)
+
 dbDisconnect(con)
 ```
 
@@ -141,14 +164,20 @@ dbDisconnect(con)
 library(odbc)
 library(glue)
 
-connection_string <- glue("Driver={{PostgreSQL ANSI}};\\
-                              Uid={Sys.getenv('MY_UID')};\\
-                              Pwd={Sys.getenv('MY_PWD')};\\
-                              Server={Sys.getenv('MY_REMOTE')};\\
-                              Port=5432;\\
-                              Database=internet;")
+connection_string <- glue::glue(
+  "Driver={{PostgreSQL ANSI}};\\
+  Uid={Sys.getenv('MY_UID')};\\
+  Pwd={Sys.getenv('MY_PWD')};\\
+  Server={Sys.getenv('MY_REMOTE')};\\
+  Port=5432;\\
+  Database=internet;"
+)
 
-con <- dbConnect(odbc::odbc(), .connection_string = connection_string, encoding = "utf8")
+con <- dbConnect(
+  drv = odbc::odbc(),
+  .connection_string = connection_string,
+  encoding = "utf8"
+)
 
 query <- "
 SELECT * 
@@ -158,7 +187,11 @@ AND isp = 'movistar'
 ORDER BY time
 "
 
-raw_data <- dbGetQuery(conn = con, query)
+raw_data <- dbGetQuery(
+  conn = con,
+  statement = query
+)
+
 dbDisconnect(con)
 ```
 
@@ -177,7 +210,7 @@ library(scales)
 
 # These are my personal theme settings you can ignore them if you prefer
 theme_set(
-    theme_gray() +
+  theme_gray() +
     theme_xkcd() +
     theme(legend.position = "right",
           plot.title.position = "plot",
@@ -185,10 +218,10 @@ theme_set(
           axis.title.y = element_text(margin = margin(r = 10)),
           axis.text.x = element_text(angle = 20, hjust = 1, vjust = 1),
           plot.margin = margin(10, 10, 10, 10),
-          text=element_text(family = "Cloud Calligraphy"))
+          text = element_text(family = "Cloud Calligraphy"))
 )
 
-color <- c("Mode"="#008B00", "Parameters" = "orange")
+color <- c("Mode" = "#008B00", "Parameters" = "orange")
 
 raw_data %>% 
   ggplot(aes(x = download)) +
@@ -200,11 +233,11 @@ raw_data %>%
                color = "Mode"),
            binwidth = 0.1) +
   annotate("text",
-           x = c(8.4,20.4),
+           x = c(8.4, 20.4),
            y = c(8, 8),
            label = c("Guaranteed Minimum Speed", "Advertised Speed"),
            family = "Cloud Calligraphy",
-           size=5,
+           size = 5,
            angle = 90) +
   stat_bin(geom = "label",
            aes(label = stat(ifelse(count == max(count), round(x, 1), NA))),
@@ -219,7 +252,7 @@ raw_data %>%
        colour = '') +
   scale_x_continuous(breaks = seq(0, 22, by = 2),
                      limits = c(0, 23)) +
-  scale_colour_manual(values=color) +
+  scale_colour_manual(values = color) +
   coord_cartesian(clip = 'off') +
   NULL
 ```
@@ -228,11 +261,14 @@ With figures \@ref(fig:line) and \@ref(fig:box), we can show how often the downl
 
 ```{r line, fig.cap='Observed Download Speeds', fig.height=5, fig.width=8, fig.align='center', warning=FALSE, tidy=FALSE}
 
-colors <- c("Mean Speed"="blue", "Parameters"="orange", "Fault"="red", "Download Speed"="#00B2EE")
+colors <- c("Mean Speed" = "blue",
+            "Parameters" = "orange",
+            "Fault" = "red",
+            "Download Speed" = "#00B2EE")
 
 plot_data <- raw_data %>%
-    as_tbl_time(index = time) %>% 
-    collapse_by('1 hour', side = 'start', clean = TRUE)
+  as_tbl_time(index = time) %>% 
+  collapse_by('1 hour', side = 'start', clean = TRUE)
 
 mean_speed <- plot_data %>% 
   pull(download) %>% 
@@ -253,7 +289,7 @@ plot_data %>%
   geom_hline(aes(yintercept = mean_speed, color = "Mean Speed")) +
   annotate("text",
            x = as.POSIXct(c("2019-06-24 11:00:00 UTC", "2019-06-24 11:00:00 UTC")),
-           y = c(7,19),
+           y = c(7, 19),
            label = c("Guaranteed Minimum Speed", "Advertised Speed"),
            family = "Cloud Calligraphy",
            size=5) +
@@ -271,7 +307,7 @@ plot_data %>%
        color = 'Legend:') +
   scale_x_datetime(date_breaks = "5 days",
                    labels = label_date_short(), 
-                   expand = expand_scale(c(0, 0.04))) +
+                   expand = expansion(c(0, 0.04))) +
   scale_y_continuous(breaks = seq(0, 22, by = 2), limits = c(0, 23)) +
   scale_colour_manual(values = colors) +
   coord_cartesian(clip = 'off') +
@@ -294,7 +330,7 @@ faults %>%
              label = paste(round(median(faults$tbf),1), 'h'),
              family = "xkcd",
              show.legend = FALSE,
-             color = "blue")  +
+             color = "blue") +
   labs(title = 'BOXPLOT OF TIME BETWEEN FAILURES',
        subtitle ='ISP: MOVISTAR 20 Mbps',
        x = '',
@@ -306,32 +342,32 @@ And with Figure \@ref(fig:boxes) we can find out when the peak hours occur, so w
 
 ```{r boxes, fig.cap='Boxplot of Observer Download Speeds by Hour of the Day', fig.height=5, fig.width=8, fig.align='center', warning=FALSE, tidy=FALSE}
 hour_data <- plot_data %>% 
-    collapse_by('1 hour', side = 'start', clean = TRUE) %>%
-    mutate(time = format(time, "%H:%M"))
+  collapse_by('1 hour', side = 'start', clean = TRUE) %>%
+  mutate(time = format(time, "%H:%M"))
 
 hour_data %>% 
-    ggplot(aes(x = time, y = download)) +
-    geom_boxplot(fill = "#00B2EE") +
-    geom_point(data = hour_data %>% filter(download < 8),
-               shape = 1,
-               color = "red",
-               size = 5) +
-    geom_hline(aes(yintercept = 20), color = "orange",  linetype = "dashed") +
-    geom_hline(aes(yintercept = 8), color = "orange",  linetype = "dashed") +
-    annotate("text",
-             x = c("04:00", "04:00"),
-             y = c(7,19),
-             label = c("Guaranteed Minimum Speed", "Advertised Speed"),
-             family = "Cloud Calligraphy",
-             size=5) +
-    labs(title = 'BOXPLOT OF OBSERVED DOWNLOAD SPEEDS BY HOUR OF THE DAY',
-         subtitle ='ISP: MOVISTAR 20 Mbps',
-         x = 'Hour',
-         y = 'Speed (Mbps)') +
-    scale_y_continuous(breaks = seq(0, 22, by = 2),
-                       limits = c(0, 22)) +
-    coord_cartesian(clip = 'off') +
-    NULL
+  ggplot(aes(x = time, y = download)) +
+  geom_boxplot(fill = "#00B2EE") +
+  geom_point(data = hour_data %>% filter(download < 8),
+             shape = 1,
+             color = "red",
+             size = 5) +
+  geom_hline(aes(yintercept = 20), color = "orange",  linetype = "dashed") +
+  geom_hline(aes(yintercept = 8), color = "orange",  linetype = "dashed") +
+  annotate("text",
+           x = c("04:00", "04:00"),
+           y = c(7, 19),
+           label = c("Guaranteed Minimum Speed", "Advertised Speed"),
+           family = "Cloud Calligraphy",
+           size = 5) +
+  labs(title = 'BOXPLOT OF OBSERVED DOWNLOAD SPEEDS BY HOUR OF THE DAY',
+       subtitle ='ISP: MOVISTAR 20 Mbps',
+       x = 'Hour',
+       y = 'Speed (Mbps)') +
+  scale_y_continuous(breaks = seq(0, 22, by = 2),
+                     limits = c(0, 22)) +
+  coord_cartesian(clip = 'off') +
+  NULL
 ```
 
 Once you have data, plotting possibilities are only limited by your imagination, so I'm going to stop here, I hope you have enjoyed reading this article and you are motivated now to start monitoring your own internet speed. Have fun! see you soon!.

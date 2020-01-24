@@ -1,0 +1,372 @@
+---
+title: Monitoreando su velocidad real de Internet a lo largo del tiempo, utilizando R y Speedtest-CLI
+description: Aprenda a usar la Interfaz de Línea de Comandos Speedtest de Ookla para obtener medidas recurrentes de su velocidad de Internet, almacenar los resultados y hacer gráficos de los datos, todo esto utilizando R.
+author: andres-castro
+date: '2020-01-21'
+slug: speed_test
+categories:
+  - R
+series: 
+  - DIY
+tags:
+  - cron
+  - ggplot2
+  - odbc
+  - speedtest
+  - ookla
+  - raspberry-pi
+draft: true
+images: ["speed_test.jpg"]
+authors: ["andres-castro"]
+output:
+  blogdown::html_page:
+    toc: true
+    highlight: zenburn
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning=FALSE, message=FALSE, collapse = TRUE)
+```
+
+Pensé que esto solo sucedía en mi país (Perú), pero resulta que les sucede a personas en todo el mundo, uno contrata un plan de Internet que ofrece **hasta** `X` Mbps, donde `X` es un valor impresionante (relativo al contexto de cada país), pero la trampa está en esa palabra, **Hasta**.
+
+```{r echo=FALSE}
+blogdown::shortcode('tweet', '1217915622023147542')
+```
+
+En realidad, termina obteniendo velocidades de descarga mucho más lentas de lo anunciado, y los ISP (Proveedores de Servicios de Internet por sus siglas en inglés) se salen con la suya, ya que solo prueban la velocidad de descarga con usted, una vez, cuando instalan el servicio (sospechosamente funciona muy bien en ese momento) y la mayoría de personas no se molestan en realizar un seguimiento de sus velocidades de descarga a lo largo del tiempo, ya que no es práctico realizar pruebas de velocidad manualmente cada corto período de tiempo, afortunadamente hay una mejor manera, el servicio [Speedtest de Ookla](https://www.speedtest.net/) provee una _**Interfaz de Línea de Comandos (CLI por sus siglas en inglés)**_, que le permite realizar pruebas desde la terminal de su sistema, dándole la capacidad de configurar scripts automáticos para recopilar datos de rendimiento de la conexión.
+
+En las siguientes líneas, le mostraré cómo hacer esto desde R y obtener los resultados en forma de bonitos gráficos que puede twittear a su ISP para molestarlos un poco. :satisfied:
+
+## Preparando su Configuración
+
+Tenemos que configurar nuestro entorno de trabajo para este proyecto. Primero, necesitamos una máquina que esté constantemente encendida y conectada a la misma conexión de Internet que desea probar, para que pueda realizar las pruebas y almacenar los datos, podría ser cualquier computadora conectada a su red local pero la solución más práctica (y económica) que he encontrado es usando una Raspberry Pi, así que usaré una para este proyecto.
+
+Dado que está leyendo un artículo relacionado con R, voy a suponer que ya tiene su entorno de R básico configurado, por lo que nos centraremos en las cosas adicionales, necesitamos instalar la interfaz de línea de comandos (CLI) de Speedtest, si está en una máquina Linux, puede hacerlo con estos comandos en una terminal del sistema:
+
+>:pencil2: Hay [instrucciones de instalación para otros sistemas operativos](https://www.speedtest.net/apps/cli) en el sitio web de Speedtest.
+
+```{bash eval=FALSE}
+sudo apt-get install gnupg1 apt-transport-https dirmngr
+export INSTALL_KEY=379CE192D401AB61
+# Versiones de Ubuntu soportadas: xenial, bionic
+# Versiones de Debian soportadas: jessie, stretch, buster
+export DEB_DISTRO=$(lsb_release -sc)
+sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys $INSTALL_KEY
+echo "deb https://ookla.bintray.com/debian ${DEB_DISTRO} main" | sudo tee  /etc/apt/sources.list.d/speedtest.list
+sudo apt-get update
+sudo apt-get install speedtest
+```
+
+>:pencil2: Compruebe si tiene instalada una versión anterior Python de la CLI en su sistema y asegúrese de desinstalarla con este comando `sudo pip uninstall speedtes-cli`, ya que podría causar conflictos con la versión oficial más reciente. Esto me sucedió y no me di cuenta :flushed:, gracias a [\@jasongrahn](https://twitter.com/jasongrahn) por el aviso.
+
+## Reuniendo Dato
+
+Ahora podemos escribir un script R que recupere el resultado de la prueba, procese el contenido y almacene los datos. En este ejemplo, los voy a almacenar en una base de datos PostgreSQL, pero podría elegir otras opciones como otro servidor SQL, Hojas de cálculo de Google, un archivo CSV, etc. He llamado a este script `speedtest_job.R`.
+
+```{r Rscript, eval=FALSE}
+#! /usr/bin/env Rscript
+
+# Adquisición de datos
+output <- read.csv(
+  text = system(
+    command = "speedtest -f csv --output-header --accept-license",
+    intern = TRUE
+  )
+)
+
+results <- data.frame(
+  stringsAsFactors = FALSE,
+  time = as.POSIXct(Sys.time()),
+  ip = system("curl ifconfig.me", intern = TRUE), # Este campo ya no se provee en la nueva versión de la CLI.
+  ping = output$latency,
+  download = output$download * 7.629395E-6, # Convertir a Mbps
+  upload = output$upload * 7.629395E-6, # Convertir a Mbps
+  isp = "movistar" # Este campo no se provee en formato CSV.
+)
+
+# Almacenamiento de datos
+connection_string <- glue::glue(
+  "Driver={{PostgreSQL ANSI}};\\
+  Uid={Sys.getenv('MY_UID')};\\
+  Pwd={Sys.getenv('MY_PWD')};\\
+  Server=localhost;\\
+  Port=5432;\\
+  Database=internet;" # Nombre de la base de datos en el servidor SQL
+) 
+
+con <- odbc::dbConnect(
+  drv = odbc::odbc(),
+  .connection_string = connection_string,
+  encoding = "utf8"
+)
+
+DBI::dbAppendTable(
+  conn = con,
+  name = "speed_test", # Nombre de la tabla en el servidor SQL
+  value = results
+)
+
+odbc::dbDisconnect(conn = con)
+
+# Limpiando los archivos de registro
+unlink(x = "*.log", force = TRUE)
+
+```
+
+Ahora podemos programar un trabajo `cron` para ejecutar este script a intervalos regulares, voy a configurarlo para que se ejecute una vez cada hora ejecutando estos comandos en un terminal del sistema:
+
+>:pencil2: Esto también se puede hacer desde R usando el paquete `cronR`.
+
+```{bash eval=FALSE}
+env EDITOR=nano crontab -e
+  # Agregue esta línea
+  0 * * * * /usr/local/lib/R/bin/Rscript '/home/pi/speedtest_job.R' >> '/dev/null' 2>&1 # Modifique la ruta del archivo según sea necesario. 
+sudo service cron reload
+```
+
+Después de dejar pasar un tiempo para que se acumulen los registros, podemos obtener datos del servidor con una consulta SQL:
+
+```{r datos show, eval=FALSE}
+library(odbc)
+library(glue)
+
+connection_string <- glue::glue(
+  "Driver={{PostgreSQL ANSI}};\\
+  Uid={Sys.getenv('MY_UID')};\\
+  Pwd={Sys.getenv('MY_PWD')};\\
+  Server={Sys.getenv('MY_REMOTE')};\\
+  Port=5432;\\
+  Database=internet;"
+)
+
+con <- dbConnect(
+  drv = odbc::odbc(),
+  .connection_string = connection_string,
+  encoding = "utf8"
+)
+
+query <- "
+SELECT * 
+FROM public.speed_test 
+ORDER BY time
+"
+
+raw_data <- dbGetQuery(
+  conn = con,
+  statement = query
+)
+
+dbDisconnect(con)
+```
+
+```{r datos hide, include=FALSE, cache=TRUE}
+library(odbc)
+library(glue)
+
+connection_string <- glue::glue(
+  "Driver={{PostgreSQL ANSI}};\\
+  Uid={Sys.getenv('MY_UID')};\\
+  Pwd={Sys.getenv('MY_PWD')};\\
+  Server={Sys.getenv('MY_REMOTE')};\\
+  Port=5432;\\
+  Database=internet;"
+)
+
+con <- dbConnect(
+  drv = odbc::odbc(),
+  .connection_string = connection_string,
+  encoding = "utf8"
+)
+
+query <- "
+SELECT * 
+FROM public.speed_test 
+WHERE time >= '2019-06-18 00:00:00'
+AND isp = 'movistar'
+ORDER BY time
+"
+
+raw_data <- dbGetQuery(
+  conn = con,
+  statement = query
+)
+
+dbDisconnect(con)
+```
+
+## Visualizando los Datos
+
+Ahora que tenemos algunos datos para trabajar, podemos comenzar a hacer algunos gráficos. Dado que este no es un artículo sobre `ggplopt2`, no voy a entrar en detalles sobre esta parte, solo voy a mostrar algunos gráficos interesantes que puede obtener sobre la velocidad de su conexión a Internet.
+
+En la Figura \@ref(fig:histogram) podemos ver cómo se distribuyen las velocidades de descarga observadas, dejando de lado el hecho de que la velocidad anunciada ya es lenta (para los estándares de los países desarrollados), esto revela un patrón que es muy común, la mayoría de las veces usted obtiene velocidades de descarga que son mucho más lentas de lo anunciado por el ISP e incluso tan lentas que no cumplen con los términos de su contrato, como en mi caso (en realidad usé esta imagen para presentar una queja).
+
+```{r histogram, fig.cap='Histograma de Velocidades de Descarga Observadas', fig.height=5, fig.width=8, fig.align='center', warning=FALSE, tidy=FALSE}
+library(tidyverse)
+library(xkcd)
+library(lubridate)
+library(tibbletime)
+library(scales)
+
+# Estas son mis configuraciones de tema personales, puede ignorarlas si lo prefiere
+theme_set(
+  theme_gray() +
+    theme_xkcd() +
+    theme(legend.position = "right",
+          plot.title.position = "plot",
+          axis.title.x = element_text(margin = margin(t = 10)),
+          axis.title.y = element_text(margin = margin(r = 10)),
+          axis.text.x = element_text(angle = 20, hjust = 1, vjust = 1),
+          plot.margin = margin(10, 10, 10, 10),
+          text = element_text(family = "Cloud Calligraphy"))
+)
+
+color <- c("Moda" = "#008B00", "Parámetros" = "orange")
+
+raw_data %>% 
+  ggplot(aes(x = download)) +
+  geom_histogram(binwidth = 0.1, fill = "#00B2EE") +
+  geom_vline(aes(xintercept = 20, color = "Parámetros"),  linetype = "dashed") +
+  geom_vline(aes(xintercept = 8, color = "Parámetros"),  linetype = "dashed") +
+  stat_bin(geom = "vline",
+           aes(xintercept = stat(ifelse(count == max(count), x, NA)),
+               color = "Moda"),
+           binwidth = 0.1) +
+  annotate("text",
+           x = c(8.4, 20.4),
+           y = c(8, 8),
+           label = c("Velocidad Mínima Garantizada", "Velocidad Ofrecida"),
+           family = "Cloud Calligraphy",
+           size = 5,
+           angle = 90) +
+  stat_bin(geom = "label",
+           aes(label = stat(ifelse(count == max(count), round(x, 1), NA))),
+           binwidth = 0.1,
+           family = "xkcd",
+           color = "#008B00",
+           vjust = -0.2) +
+  labs(title = 'HISTOGRAMA DE VELOCIDADES DE DESCARGA OBSERVADAS',
+       subtitle ='ISP: MOVISTAR 20 Mbps', 
+       x = 'Velocidad (Mbps)',
+       y = 'Frecuencia',
+       colour = '') +
+  scale_x_continuous(breaks = seq(0, 22, by = 2),
+                     limits = c(0, 23)) +
+  scale_colour_manual(values = color) +
+  coord_cartesian(clip = 'off') +
+  NULL
+```
+
+Con las Figuras \@ref(fig:line) y \@ref(fig:box), podemos mostrar con qué frecuencia las velocidades de descarga caen por debajo de la velocidad mínima garantizada.
+
+```{r line, fig.cap='Velocidades de Descarga Observadas', fig.height=5, fig.width=8, fig.align='center', warning=FALSE, tidy=FALSE}
+
+colors <- c("Velocidad Promedio" = "blue",
+            "Parámetros" = "orange",
+            "Falla" = "red",
+            "Velocidad de Descarga" = "#00B2EE")
+
+plot_data <- raw_data %>%
+  as_tbl_time(index = time) %>% 
+  collapse_by('1 hour', side = 'start', clean = TRUE)
+
+mean_speed <- plot_data %>% 
+  pull(download) %>% 
+  mean() %>%
+  round(1)
+
+plot_data %>% 
+  ggplot(aes(x = time, y = download)) +
+  geom_line(aes(color = "Velocidad de Descarga")) +
+  geom_point(data = plot_data %>% filter(download < 8),
+             aes(color = "Falla")) +
+  geom_point(data = plot_data %>% filter(download < 8),
+             shape = 1,
+             color = "red",
+             size = 5) +
+  geom_hline(aes(yintercept = 20, color = "Parámetros"),  linetype = "dashed") +
+  geom_hline(aes(yintercept = 8, color = "Parámetros"),  linetype = "dashed") +
+  geom_hline(aes(yintercept = mean_speed, color = "Velocidad Promedio")) +
+  annotate("text",
+           x = as.POSIXct(c("2019-06-24 11:00:00 UTC", "2019-06-24 11:00:00 UTC")),
+           y = c(7, 19),
+           label = c("Velocidad Mínima Garantizada", "Velocidad Ofrecida"),
+           family = "Cloud Calligraphy",
+           size=5) +
+  geom_label(x = as.POSIXct("2019-08-01 11:00:00 UTC"),
+             y = mean_speed,
+             label = mean_speed,
+             family = "xkcd",
+             show.legend = FALSE,
+             inherit.aes = FALSE,
+             color = "blue")  +
+  labs(title = 'VELOCIDADES DE DESCARGA OBSERVADAS',
+       subtitle ='ISP: MOVISTAR 20 Mbps', 
+       x = 'Fecha',
+       y = 'Velocidad (Mbps)',
+       color = 'Leyenda:') +
+  scale_x_datetime(date_breaks = "5 days",
+                   labels = label_date_short(), 
+                   expand = expansion(c(0, 0.04))) +
+  scale_y_continuous(breaks = seq(0, 22, by = 2), limits = c(0, 23)) +
+  scale_colour_manual(values = colors) +
+  coord_cartesian(clip = 'off') +
+  NULL
+```
+
+```{r box, fig.cap='Diagrama de Caja de Tiempo Entre Fallas', fig.height=3, fig.width=7, fig.align='center', warning=FALSE, tidy=FALSE}
+faults <- plot_data %>%
+  mutate(event_type = ifelse(download <= 8, 'fault', 'normal')) %>% 
+  filter(event_type == 'fault') %>% 
+  mutate(tbf = as.numeric(as.period(interval(lag(time), time),
+                                    unit = 'seconds')) / (3600)) %>% 
+  tail(-1)
+
+faults %>% 
+  ggplot(aes(x = '', y = tbf)) +
+  geom_boxplot(fill = '#FF303094') +
+  coord_flip() +
+  geom_label(y = median(faults$tbf),
+             label = paste(round(median(faults$tbf),1), 'h'),
+             family = "xkcd",
+             show.legend = FALSE,
+             color = "blue") +
+  labs(title = 'DIAGRAMA DE CAJA DE TIEMPO ENTRE FALLAS',
+       subtitle ='ISP: MOVISTAR 20 Mbps',
+       x = '',
+       y = 'Horas') +
+  NULL
+```
+
+Y con la Figura \@ref(fig:boxes) podemos saber cuándo ocurren las horas pico, para saber a qué hora del día es más probable que experimentemos velocidades de Internet lentas.
+
+```{r boxes, fig.cap='Diagrama de Caja de Velocidades de Descarga Observadas por Hora del Día', fig.height=5, fig.width=8, fig.align='center', warning=FALSE, tidy=FALSE}
+hour_data <- plot_data %>% 
+  collapse_by('1 hour', side = 'start', clean = TRUE) %>%
+  mutate(time = format(time, "%H:%M"))
+
+hour_data %>% 
+  ggplot(aes(x = time, y = download)) +
+  geom_boxplot(fill = "#00B2EE") +
+  geom_point(data = hour_data %>% filter(download < 8),
+             shape = 1,
+             color = "red",
+             size = 5) +
+  geom_hline(aes(yintercept = 20), color = "orange",  linetype = "dashed") +
+  geom_hline(aes(yintercept = 8), color = "orange",  linetype = "dashed") +
+  annotate("text",
+           x = c("04:00", "04:00"),
+           y = c(7, 19),
+           label = c("Velocidad Mínima Garantizada", "Velocidad Ofrecida"),
+           family = "Cloud Calligraphy",
+           size = 5) +
+  labs(title = 'DIAGRAMA DE CAJA DE VELOCIDADES DES DESCARGA OBSERVADAS\nPOR HORA DEL DÍA',
+       subtitle ='ISP: MOVISTAR 20 Mbps',
+       x = 'Hora',
+       y = 'Velocidad (Mbps)') +
+  scale_y_continuous(breaks = seq(0, 22, by = 2),
+                     limits = c(0, 22)) +
+  coord_cartesian(clip = 'off') +
+  NULL
+```
+Una vez que tiene datos, las posibilidades de gráficos solo están limitadas por su imaginación, por lo que me detendré aquí, espero que haya disfrutado leyendo este artículo y ahora esté motivado para comenzar a monitorear su propia velocidad de Internet. ¡Que se divierta!, ¡lo veo pronto!.
