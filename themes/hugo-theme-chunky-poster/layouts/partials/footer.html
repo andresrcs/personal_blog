@@ -42,7 +42,9 @@
                 </ul>
                 
                 <p class="text-muted">
-                You can find more quality R blogs at <a href="https://www.r-bloggers.com/" target="_blank">R-bloggers</a>
+                    {{ if .Site.Params.Rbloggerslink }}
+                        {{ .Site.Params.Rbloggerstext }} <a href="{{ .Site.Params.Rbloggerslink | safeHTML }}" target="_blank">R-bloggers</a>
+                    {{ end }}
                 </p>
                 
                 <p class="text-muted">
