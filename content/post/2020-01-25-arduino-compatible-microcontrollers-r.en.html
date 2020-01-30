@@ -1,0 +1,268 @@
+---
+title: Alternatives for retrieving sensor data from Arduino compatible microcontrollers into R
+description: In this article we explore some alternatives for remotely acquiring sensor data from Arduino compatible microcontrollers, pointing out the advantages and disadvantages of each method and giving some simple illustrative examples based on ESP8266 boards.
+author: andres-castro
+date: '2020-01-25'
+slug: arduino_microcontroller_r
+categories:
+  - R
+series: 
+  - DIY
+tags:
+  - R
+  - arduino
+  - sensors
+  - mqtt
+  - ESP8266
+draft: true
+images: ["arduino_microcontroller_r.jpg"]
+authors: ["andres-castro"]
+output:
+  blogdown::html_page:
+    toc: true
+    highlight: zenburn
+---
+
+<style type="text/css">
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+a.sourceLine { text-indent: -1em; padding-left: 1em; }
+}
+pre.numberSource a.sourceLine
+  { position: relative; left: -4em; }
+pre.numberSource a.sourceLine::before
+  { content: attr(data-line-number);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  { color: #cccccc; background-color: #303030; }
+@media screen {
+a.sourceLine::before { text-decoration: underline; }
+}
+code span.al { color: #ffcfaf; } /* Alert */
+code span.an { color: #7f9f7f; font-weight: bold; } /* Annotation */
+code span.at { } /* Attribute */
+code span.bn { color: #dca3a3; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #f0dfaf; } /* ControlFlow */
+code span.ch { color: #dca3a3; } /* Char */
+code span.cn { color: #dca3a3; font-weight: bold; } /* Constant */
+code span.co { color: #7f9f7f; } /* Comment */
+code span.cv { color: #7f9f7f; font-weight: bold; } /* CommentVar */
+code span.do { color: #7f9f7f; } /* Documentation */
+code span.dt { color: #dfdfbf; } /* DataType */
+code span.dv { color: #dcdccc; } /* DecVal */
+code span.er { color: #c3bf9f; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #c0bed1; } /* Float */
+code span.fu { color: #efef8f; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #7f9f7f; font-weight: bold; } /* Information */
+code span.kw { color: #f0dfaf; } /* Keyword */
+code span.op { color: #f0efd0; } /* Operator */
+code span.ot { color: #efef8f; } /* Other */
+code span.pp { color: #ffcfaf; font-weight: bold; } /* Preprocessor */
+code span.sc { color: #dca3a3; } /* SpecialChar */
+code span.ss { color: #cc9393; } /* SpecialString */
+code span.st { color: #cc9393; } /* String */
+code span.va { } /* Variable */
+code span.vs { color: #cc9393; } /* VerbatimString */
+code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
+</style>
+
+<div id="TOC">
+<ul>
+<li><a href="#serial-connection">Serial Connection</a></li>
+<li><a href="#writing-to-a-sql-server">Writing to a SQL server</a></li>
+<li><a href="#using-the-mqtt-protocol">Using the MQTT protocol</a></li>
+<li><a href="#disclaimer">Disclaimer</a></li>
+</ul>
+</div>
+
+<p>Have you ever wanted to get your own real-world data using sensors? With the advent of the <a href="https://en.wikipedia.org/wiki/Open-source_hardware">Open-Source Hardware</a> movement, this has become more accessible for the general public, microcontrollers and sensors have become cheaper and easier to program with human-friendly languages like Arduino (C++) and MicroPython (Python), so now anybody can produce its own real-world sensorial data, but, there is still a problem, How do we get this data into R so we can analyze it?</p>
+<p>Depending on your application’s requirements you could choose among a plethora of options. For example, if you only need data on batches and you can have easy physical access to your device, you could simply add an SD card module to your project and log the data to a .csv file on an SD card but, that wouldn’t be fun, isn’t it? A much cooler solution would be to retrieve data remotely and preferably wirelessly, don’t you think?. Let’s explore some options.</p>
+<div id="serial-connection" class="section level2">
+<h2>Serial Connection</h2>
+<p>If you have never thought about getting data from microcontrollers before, I bet the first thought that comes to your mind, is to somehow directly connect the microcontroller with R to get the data, but this is currently the most technically challenging option, it can be done using a serial connection between the microcontroller and your computer, but as far as I know, there is only one <a href="https://github.com/r-arduino/arduinor">R package implementing this</a> and only runs on POSIX-compatible systems (so no Windows). I can’t test this approach myself since I don’t have a physical Linux or macOS machine to connect a microcontroller to, so for this case, I’m just going to link to a <a href="https://zhuhao.org/post/connect-arduino-chips-with-r/">blog post</a> by <a href="https://twitter.com/haozhu233">@haozhu233</a> (the package author) showcasing its functionality. If your application requires real-time data acquisition or very low latency this might be your only option and you may want to dive deeper into this.</p>
+{{% tweet "1088851449096880128" %}}
+</div>
+<div id="writing-to-a-sql-server" class="section level2">
+<h2>Writing to a SQL server</h2>
+<p>There are two ways of doing this, one is to directly connect the microcontroller to the database and the other is to use another service to pull data from the microcontroller and write it into the database.</p>
+<p>The first option is harder to accomplish, as far as I know, there is only one <a href="https://www.arduinolibraries.info/libraries/my-sql-connector-arduino">Arduino library</a> that provides a SQL connector for MySQL servers but, there are no already-made solutions for other SQL servers and although you could write your own connector for other Open Source SQL servers (like PostgreSQL), that would require a considerable amount of technical skills.</p>
+<p>The second option is easier to implement, and my personal favorite. The first step is to broadcast the data from the microcontroller, one way of doing this is to implement a simple web server on the microcontroller itself and serve the data on a suitable format like HTML, JSON or CSV.</p>
+<p>This is a simple example of an Arduino Sketch for an ESP8266 board (Wemos D1 mini) and DS18B20 temperature probe sensors, that serves HTML and JSON outputs over a web server.</p>
+{{% gist "andresrcs" "fa631e15f2f665335b0592fdeba20992" %}}
+<p>The second step is to pull the data out of the microcontroller and into a SQL server, there are a lot of approaches and languages you can use to implement this part but obviously we are going to use R. You can write an R script that connects to the microcontroller, retrieves the data and writes it into a SQL server, and schedule the script with a <code>cron</code> job.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="co">#! /usr/bin/env Rscript</span></a>
+<a class="sourceLine" id="cb1-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb1-3" data-line-number="3"><span class="co"># DATA ADQUISITION##############################################################</span></a>
+<a class="sourceLine" id="cb1-4" data-line-number="4">raw_data &lt;-<span class="st"> </span>rjson<span class="op">::</span><span class="kw">fromJSON</span>(<span class="dt">file=</span><span class="st">&quot;http://192.168.0.102/reading.json&quot;</span>) </a>
+<a class="sourceLine" id="cb1-5" data-line-number="5">current_time &lt;-<span class="st"> </span><span class="kw">as.character</span>(<span class="kw">Sys.time</span>())</a>
+<a class="sourceLine" id="cb1-6" data-line-number="6"></a>
+<a class="sourceLine" id="cb1-7" data-line-number="7"><span class="co"># PARAMETERS ###################################################################</span></a>
+<a class="sourceLine" id="cb1-8" data-line-number="8">current_location =<span class="st"> &quot;some_place&quot;</span></a>
+<a class="sourceLine" id="cb1-9" data-line-number="9">point_names =<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;probe0&quot;</span> =<span class="st"> &quot;measurement_point_0&quot;</span>, </a>
+<a class="sourceLine" id="cb1-10" data-line-number="10">                <span class="st">&quot;probe1&quot;</span> =<span class="st"> &quot;measurement_point_1&quot;</span>,</a>
+<a class="sourceLine" id="cb1-11" data-line-number="11">                <span class="st">&quot;probe2&quot;</span> =<span class="st"> &quot;measurement_point_2&quot;</span>)</a>
+<a class="sourceLine" id="cb1-12" data-line-number="12"></a>
+<a class="sourceLine" id="cb1-13" data-line-number="13"><span class="co"># LIBRARIES ####################################################################</span></a>
+<a class="sourceLine" id="cb1-14" data-line-number="14"><span class="kw">library</span>(dplyr)</a>
+<a class="sourceLine" id="cb1-15" data-line-number="15"></a>
+<a class="sourceLine" id="cb1-16" data-line-number="16"><span class="co"># DATA CLEANING ################################################################</span></a>
+<a class="sourceLine" id="cb1-17" data-line-number="17">tidy_data &lt;-<span class="st"> </span><span class="kw">as_tibble</span>(raw_data) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb1-18" data-line-number="18"><span class="st">    </span>tidyr<span class="op">::</span><span class="kw">gather</span>(measurement_point, value) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb1-19" data-line-number="19"><span class="st">    </span><span class="kw">mutate</span>(<span class="dt">time =</span> current_time,</a>
+<a class="sourceLine" id="cb1-20" data-line-number="20">           <span class="dt">location =</span> current_location,</a>
+<a class="sourceLine" id="cb1-21" data-line-number="21">           <span class="dt">variable =</span> stringr<span class="op">::</span><span class="kw">str_extract</span>(measurement_point, <span class="st">&quot;^.+(?=-)&quot;</span>),</a>
+<a class="sourceLine" id="cb1-22" data-line-number="22">           <span class="dt">measurement_point =</span> stringr<span class="op">::</span><span class="kw">str_extract</span>(measurement_point, <span class="st">&quot;(?&lt;=-).+$&quot;</span>),</a>
+<a class="sourceLine" id="cb1-23" data-line-number="23">           <span class="dt">measurement_point =</span> stringr<span class="op">::</span><span class="kw">str_replace_all</span>(measurement_point, point_names)</a>
+<a class="sourceLine" id="cb1-24" data-line-number="24">           ) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb1-25" data-line-number="25"><span class="st">    </span><span class="kw">select</span>(time, location, variable, measurement_point, value)</a>
+<a class="sourceLine" id="cb1-26" data-line-number="26"></a>
+<a class="sourceLine" id="cb1-27" data-line-number="27"><span class="co"># LOAD DATA ####################################################################</span></a>
+<a class="sourceLine" id="cb1-28" data-line-number="28">connection_string &lt;-<span class="st"> </span>glue<span class="op">::</span><span class="kw">glue</span>(<span class="st">&quot;Driver={{PostgreSQL ANSI}};</span><span class="ch">\\</span></a>
+<a class="sourceLine" id="cb1-29" data-line-number="29"><span class="st">                                Uid={Sys.getenv(&#39;MY_UID&#39;)};</span><span class="ch">\\</span></a>
+<a class="sourceLine" id="cb1-30" data-line-number="30"><span class="st">                                Pwd={Sys.getenv(&#39;MY_PWD&#39;)};</span><span class="ch">\\</span></a>
+<a class="sourceLine" id="cb1-31" data-line-number="31"><span class="st">                                Server=localhost;</span><span class="ch">\\</span></a>
+<a class="sourceLine" id="cb1-32" data-line-number="32"><span class="st">                                Port=5432;</span><span class="ch">\\</span></a>
+<a class="sourceLine" id="cb1-33" data-line-number="33"><span class="st">                                Database=sensors;&quot;</span>)</a>
+<a class="sourceLine" id="cb1-34" data-line-number="34"></a>
+<a class="sourceLine" id="cb1-35" data-line-number="35">con &lt;-<span class="st"> </span>odbc<span class="op">::</span><span class="kw">dbConnect</span>(odbc<span class="op">::</span><span class="kw">odbc</span>(), <span class="dt">.connection_string =</span> connection_string, <span class="dt">encoding =</span> <span class="st">&quot;utf8&quot;</span>)</a>
+<a class="sourceLine" id="cb1-36" data-line-number="36"></a>
+<a class="sourceLine" id="cb1-37" data-line-number="37">DBI<span class="op">::</span><span class="kw">dbAppendTable</span>(<span class="dt">conn =</span> con,</a>
+<a class="sourceLine" id="cb1-38" data-line-number="38">                   <span class="dt">name =</span> <span class="st">&#39;sensors_data&#39;</span>,</a>
+<a class="sourceLine" id="cb1-39" data-line-number="39">                   <span class="dt">value =</span> tidy_data)</a>
+<a class="sourceLine" id="cb1-40" data-line-number="40"></a>
+<a class="sourceLine" id="cb1-41" data-line-number="41">odbc<span class="op">::</span><span class="kw">dbDisconnect</span>(con)</a>
+<a class="sourceLine" id="cb1-42" data-line-number="42"></a>
+<a class="sourceLine" id="cb1-43" data-line-number="43"><span class="kw">unlink</span>(<span class="dt">x =</span> <span class="st">&quot;*.log&quot;</span>, <span class="dt">force =</span> <span class="ot">TRUE</span>)</a></code></pre></div>
+<p>Now that you have the data into a SQL server, you are at one SQL query away of getting it into R</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="kw">library</span>(odbc)</a>
+<a class="sourceLine" id="cb2-2" data-line-number="2"><span class="kw">library</span>(glue)</a>
+<a class="sourceLine" id="cb2-3" data-line-number="3"></a>
+<a class="sourceLine" id="cb2-4" data-line-number="4">connection_string &lt;-<span class="st"> </span>glue<span class="op">::</span><span class="kw">glue</span>(</a>
+<a class="sourceLine" id="cb2-5" data-line-number="5">  <span class="st">&quot;Driver={{PostgreSQL ANSI}};</span><span class="ch">\\</span></a>
+<a class="sourceLine" id="cb2-6" data-line-number="6"><span class="st">  Uid={Sys.getenv(&#39;MY_UID&#39;)};</span><span class="ch">\\</span></a>
+<a class="sourceLine" id="cb2-7" data-line-number="7"><span class="st">  Pwd={Sys.getenv(&#39;MY_PWD&#39;)};</span><span class="ch">\\</span></a>
+<a class="sourceLine" id="cb2-8" data-line-number="8"><span class="st">  Server={Sys.getenv(&#39;MY_REMOTE&#39;)};</span><span class="ch">\\</span></a>
+<a class="sourceLine" id="cb2-9" data-line-number="9"><span class="st">  Port=5432;</span><span class="ch">\\</span></a>
+<a class="sourceLine" id="cb2-10" data-line-number="10"><span class="st">  Database=sensors;&quot;</span></a>
+<a class="sourceLine" id="cb2-11" data-line-number="11">)</a>
+<a class="sourceLine" id="cb2-12" data-line-number="12"></a>
+<a class="sourceLine" id="cb2-13" data-line-number="13">con &lt;-<span class="st"> </span><span class="kw">dbConnect</span>(</a>
+<a class="sourceLine" id="cb2-14" data-line-number="14">  <span class="dt">drv =</span> odbc<span class="op">::</span><span class="kw">odbc</span>(),</a>
+<a class="sourceLine" id="cb2-15" data-line-number="15">  <span class="dt">.connection_string =</span> connection_string,</a>
+<a class="sourceLine" id="cb2-16" data-line-number="16">  <span class="dt">encoding =</span> <span class="st">&quot;utf8&quot;</span></a>
+<a class="sourceLine" id="cb2-17" data-line-number="17">)</a>
+<a class="sourceLine" id="cb2-18" data-line-number="18"></a>
+<a class="sourceLine" id="cb2-19" data-line-number="19">query &lt;-<span class="st"> &quot;</span></a>
+<a class="sourceLine" id="cb2-20" data-line-number="20"><span class="st">SELECT * </span></a>
+<a class="sourceLine" id="cb2-21" data-line-number="21"><span class="st">FROM public.sensors_data</span></a>
+<a class="sourceLine" id="cb2-22" data-line-number="22"><span class="st">&quot;</span></a>
+<a class="sourceLine" id="cb2-23" data-line-number="23"></a>
+<a class="sourceLine" id="cb2-24" data-line-number="24">raw_data &lt;-<span class="st"> </span><span class="kw">dbGetQuery</span>(</a>
+<a class="sourceLine" id="cb2-25" data-line-number="25">  <span class="dt">conn =</span> con,</a>
+<a class="sourceLine" id="cb2-26" data-line-number="26">  <span class="dt">statement =</span> query</a>
+<a class="sourceLine" id="cb2-27" data-line-number="27">)</a>
+<a class="sourceLine" id="cb2-28" data-line-number="28"></a>
+<a class="sourceLine" id="cb2-29" data-line-number="29"><span class="kw">dbDisconnect</span>(con)</a></code></pre></div>
+<p>What makes this approach my personal favorite is that it is fairly easy to implement, very flexible and allows you to implement almost any security measure you might need.</p>
+</div>
+<div id="using-the-mqtt-protocol" class="section level2">
+<h2>Using the MQTT protocol</h2>
+<p>For more resource-constrained applications you can use a similar approach to the previous one, but with a different technology, the MQTT protocol is ideal for low power devices over slow and unreliable connections, moreover, this is also a way to get data from LoRa networks like the publicly available <a href="https://www.thethingsnetwork.org/">TTN (The Things Network)</a> which provides an API over MQTT, giving you access to a <a href="https://en.wikipedia.org/wiki/LPWAN">low-power wide-area network</a> for remote sensor deployment over greater distances.</p>
+<p>This approach also allows you to write data to a SQL server like in the previous example but, a more interesting application for this would be to get instant status updates to show on dashboards or shiny apps. Consider this simple shiny app that receives a message from a simulated remote sensor and updates the color of a circle accordingly, you can update the temperature value of the simulated sensor by sending an MQTT message to the test topic from a system terminal on any computer with this command <code>mosquitto_pub -h test.mosquitto.org -t simulated_sensor -q 1 -m 25.9 -r</code> and see how the color changes.</p>
+<blockquote>
+<p>:pencil2: In order for this to work you need to have the <code>mosquitto</code> client installed in your system.</p>
+</blockquote>
+<pre><code>sudo apt install mosquitto-clients</code></pre>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb4-1" data-line-number="1"><span class="kw">library</span>(shiny)</a>
+<a class="sourceLine" id="cb4-2" data-line-number="2"><span class="kw">library</span>(ggplot2)</a>
+<a class="sourceLine" id="cb4-3" data-line-number="3"><span class="kw">library</span>(rmqtt)  <span class="co"># This package is just a simple wrapper for an MQTT client using</span></a>
+<a class="sourceLine" id="cb4-4" data-line-number="4">                <span class="co"># system() calls, you need to have the mosquitto client installed</span></a>
+<a class="sourceLine" id="cb4-5" data-line-number="5">                <span class="co"># in your system for this to work.</span></a>
+<a class="sourceLine" id="cb4-6" data-line-number="6"></a>
+<a class="sourceLine" id="cb4-7" data-line-number="7"><span class="co"># Initialize Simulated Sensor</span></a>
+<a class="sourceLine" id="cb4-8" data-line-number="8"><span class="kw">mqtt_topic_publish</span>(</a>
+<a class="sourceLine" id="cb4-9" data-line-number="9">    <span class="dt">topic =</span> <span class="st">&quot;simulated_sensor&quot;</span>, </a>
+<a class="sourceLine" id="cb4-10" data-line-number="10">    <span class="dt">message_to_send =</span> <span class="st">&quot;24.9&quot;</span>,</a>
+<a class="sourceLine" id="cb4-11" data-line-number="11">    <span class="dt">host =</span> <span class="st">&quot;test.mosquitto.org&quot;</span>,</a>
+<a class="sourceLine" id="cb4-12" data-line-number="12">    <span class="dt">port =</span> <span class="dv">1883</span>,</a>
+<a class="sourceLine" id="cb4-13" data-line-number="13">    <span class="dt">qos =</span> <span class="dv">1</span>, </a>
+<a class="sourceLine" id="cb4-14" data-line-number="14">    <span class="dt">retain_message =</span> <span class="ot">TRUE</span></a>
+<a class="sourceLine" id="cb4-15" data-line-number="15">)</a>
+<a class="sourceLine" id="cb4-16" data-line-number="16"></a>
+<a class="sourceLine" id="cb4-17" data-line-number="17">ui &lt;-<span class="st"> </span><span class="kw">fluidPage</span>(</a>
+<a class="sourceLine" id="cb4-18" data-line-number="18">    <span class="kw">titlePanel</span>(<span class="st">&quot;Dashboard&quot;</span>),</a>
+<a class="sourceLine" id="cb4-19" data-line-number="19">    <span class="kw">mainPanel</span>(</a>
+<a class="sourceLine" id="cb4-20" data-line-number="20">        <span class="kw">h2</span>(<span class="st">&quot;Temperature Indicator&quot;</span>),</a>
+<a class="sourceLine" id="cb4-21" data-line-number="21">        <span class="kw">plotOutput</span>(<span class="st">&quot;status_indicator&quot;</span>)</a>
+<a class="sourceLine" id="cb4-22" data-line-number="22">    )</a>
+<a class="sourceLine" id="cb4-23" data-line-number="23">)</a>
+<a class="sourceLine" id="cb4-24" data-line-number="24"></a>
+<a class="sourceLine" id="cb4-25" data-line-number="25">server &lt;-<span class="st"> </span><span class="cf">function</span>(input, output, session) {</a>
+<a class="sourceLine" id="cb4-26" data-line-number="26">    </a>
+<a class="sourceLine" id="cb4-27" data-line-number="27">    get_color &lt;-<span class="st"> </span><span class="cf">function</span>() {</a>
+<a class="sourceLine" id="cb4-28" data-line-number="28">        message &lt;-<span class="st"> </span><span class="kw">mqtt_topic_subscribe</span>(</a>
+<a class="sourceLine" id="cb4-29" data-line-number="29">            <span class="dt">topic =</span> <span class="st">&quot;simulated_sensor&quot;</span>, </a>
+<a class="sourceLine" id="cb4-30" data-line-number="30">            <span class="dt">host =</span> <span class="st">&quot;test.mosquitto.org&quot;</span>,</a>
+<a class="sourceLine" id="cb4-31" data-line-number="31">            <span class="dt">port =</span> <span class="dv">1883</span>,</a>
+<a class="sourceLine" id="cb4-32" data-line-number="32">            <span class="dt">qos =</span> <span class="dv">1</span>,</a>
+<a class="sourceLine" id="cb4-33" data-line-number="33">            <span class="dt">intern =</span> <span class="ot">TRUE</span>,</a>
+<a class="sourceLine" id="cb4-34" data-line-number="34">            <span class="dt">num.messages =</span> <span class="dv">1</span></a>
+<a class="sourceLine" id="cb4-35" data-line-number="35">        )</a>
+<a class="sourceLine" id="cb4-36" data-line-number="36">        </a>
+<a class="sourceLine" id="cb4-37" data-line-number="37">        <span class="cf">if</span> (<span class="kw">as.numeric</span>(message) <span class="op">&gt;</span><span class="st"> </span><span class="dv">25</span>) {</a>
+<a class="sourceLine" id="cb4-38" data-line-number="38">            color =<span class="st"> &#39;red&#39;</span></a>
+<a class="sourceLine" id="cb4-39" data-line-number="39">        } <span class="cf">else</span> {</a>
+<a class="sourceLine" id="cb4-40" data-line-number="40">            color =<span class="st"> &#39;green&#39;</span></a>
+<a class="sourceLine" id="cb4-41" data-line-number="41">        }</a>
+<a class="sourceLine" id="cb4-42" data-line-number="42">        </a>
+<a class="sourceLine" id="cb4-43" data-line-number="43">        <span class="kw">return</span>(color)</a>
+<a class="sourceLine" id="cb4-44" data-line-number="44">    }</a>
+<a class="sourceLine" id="cb4-45" data-line-number="45">    </a>
+<a class="sourceLine" id="cb4-46" data-line-number="46">    pollData &lt;-<span class="st"> </span><span class="kw">reactivePoll</span>(<span class="dv">100</span>, session,</a>
+<a class="sourceLine" id="cb4-47" data-line-number="47">                             <span class="dt">checkFunc =</span> get_color,</a>
+<a class="sourceLine" id="cb4-48" data-line-number="48">                             <span class="dt">valueFunc =</span> get_color</a>
+<a class="sourceLine" id="cb4-49" data-line-number="49">    )</a>
+<a class="sourceLine" id="cb4-50" data-line-number="50">    </a>
+<a class="sourceLine" id="cb4-51" data-line-number="51">    output<span class="op">$</span>status_indicator &lt;-<span class="st"> </span><span class="kw">renderPlot</span>({</a>
+<a class="sourceLine" id="cb4-52" data-line-number="52">        <span class="kw">ggplot</span>(<span class="dt">data =</span> <span class="kw">data.frame</span>(<span class="dt">x =</span> <span class="dv">1</span>, <span class="dt">y =</span> <span class="dv">1</span>), <span class="kw">aes</span>(x, y)) <span class="op">+</span></a>
+<a class="sourceLine" id="cb4-53" data-line-number="53"><span class="st">            </span><span class="kw">geom_point</span>(<span class="dt">size =</span> <span class="dv">50</span>, <span class="dt">color =</span> <span class="kw">pollData</span>()) <span class="op">+</span></a>
+<a class="sourceLine" id="cb4-54" data-line-number="54"><span class="st">            </span><span class="kw">scale_x_discrete</span>() <span class="op">+</span></a>
+<a class="sourceLine" id="cb4-55" data-line-number="55"><span class="st">            </span><span class="kw">scale_y_discrete</span>() <span class="op">+</span></a>
+<a class="sourceLine" id="cb4-56" data-line-number="56"><span class="st">            </span><span class="kw">theme_void</span>() <span class="op">+</span></a>
+<a class="sourceLine" id="cb4-57" data-line-number="57"><span class="st">            </span><span class="kw">theme</span>(<span class="dt">axis.title =</span> <span class="kw">element_blank</span>())</a>
+<a class="sourceLine" id="cb4-58" data-line-number="58">    })</a>
+<a class="sourceLine" id="cb4-59" data-line-number="59">}</a>
+<a class="sourceLine" id="cb4-60" data-line-number="60"></a>
+<a class="sourceLine" id="cb4-61" data-line-number="61"><span class="kw">shinyApp</span>(<span class="dt">ui =</span> ui, <span class="dt">server =</span> server)</a></code></pre></div>
+<p><img src="/post/2020-01-25-arduino-compatible-microcontrollers-r.en_files/shinyapp_mqtt.jpg" width="400" height="300" /></p>
+<p>If you are interested in testing this, here is a GitHub Gist with the <a href="https://gist.github.com/andresrcs/a2000bf54bf98be64351bbad34bdb838">Arduino Sketch</a> for an ESP8266 board whit a DS18B20 temperature probe sensor that can update the values in the example app.</p>
+<p>I know this doesn’t look very interesting right now but consider the implications. You could be getting instant updates in your dashboard from sensors deployed at kilometers downrange and you could even control remote actuators from your shiny app by sending an MQTT message from it with the click of a button!</p>
+<p>The downside of this method is that you need to set an MQTT broker (you should not abuse the publicly available ones that are intended for testing), but it can be done for no or little money on a Raspberry Pi or an EC2 AWS instance.</p>
+</div>
+<div id="disclaimer" class="section level2">
+<h2>Disclaimer</h2>
+<p>I want to make clear that this is by no means an exhaustive list, there are other alternatives and countless variations of the ones presented here so if none of these fitts your particular project’s needs, just keep looking, very likely someone has come up with a more suitable method.</p>
+<blockquote>
+<p>:pencil2: If you want to see a detailed example of any of these options, write it on the comments and maybe I’ll make a blog post about it.</p>
+</blockquote>
+</div>
