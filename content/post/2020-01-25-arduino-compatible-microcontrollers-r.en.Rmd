@@ -219,4 +219,4 @@ The downside of this method is that you need to set an MQTT broker (you should n
 
 I want to make clear that this is by no means an exhaustive list, there are other alternatives and countless variations of the ones presented here so if none of these fitts your particular project's needs, just keep looking, very likely someone has come up with a more suitable method.
 
->:pencil2: If you want to see a detailed example of any of these options, write it on the comments and maybe I'll make a blog post about it.
+>:pencil2: If you want to see a detailed step by step example of any of these options, write it on the comments and I'll try to make a blog post about it.
