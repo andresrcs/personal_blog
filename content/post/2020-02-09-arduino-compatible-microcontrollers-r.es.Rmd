@@ -1,0 +1,229 @@
+---
+title: Alternativas para obtener datos de sensores desde microcontroladores compatibles con Arduino en R
+description: En este artículo exploramos algunas alternativas para obtener de forma remota datos de sensores desde microcontroladores compatibles con Arduino, señalando las ventajas y desventajas de cada método y brindando algunos ejemplos ilustrativos simples basados en placas ESP8266.
+author: andres-castro
+date: '2020-02-09'
+slug: arduino_microcontroller_r
+categories:
+  - R
+series: 
+  - DIY
+tags:
+  - R
+  - arduino
+  - sensors
+  - mqtt
+  - ESP8266
+draft: false
+images: ["arduino_microcontroller_r.jpg"]
+authors: ["andres-castro"]
+output:
+  blogdown::html_page:
+    toc: true
+    highlight: zenburn
+---
+
+¿Alguna vez ha querido obtener sus propios datos del mundo real utilizando sensores? Con la llegada del movimiento de [Hardware Libre](https://es.wikipedia.org/wiki/Hardware_libre), esto se ha vuelto más accesible para el público en general, los microcontroladores y sensores se han vuelto más baratos y fáciles de programar con lenguajes amigables para los humanos como Arduino (C ++) y MicroPython (Python), por lo que ahora cualquiera puede producir sus propios datos sensoriales del mundo real, pero, todavía hay un problema, ¿cómo podemos obtener estos datos en R para poder analizarlos?
+
+Dependiendo de los requisitos de su aplicación, puede elegir entre una gran cantidad de opciones. Por ejemplo, si solo necesita datos en lotes y puede tener fácil acceso físico a su dispositivo, simplemente puede agregar un módulo de tarjeta SD a su proyecto y registrar los datos en un archivo .csv en una tarjeta SD, pero eso no sería divertido, ¿verdad? Una solución mucho mejor sería obtener datos de forma remota y preferiblemente de forma inalámbrica, ¿no cree? Exploremos algunas opciones.
+
+## Conexión Serial
+
+Si nunca antes ha pensado en obtener datos desde microcontroladores, apuesto a que el primer pensamiento que le viene a la mente es conectar directamente el microcontrolador con R para obtener los datos, pero esta es actualmente la opción más desafiante técnicamente, puede hacerse usando una conexión serial entre el microcontrolador y su computadora, pero que yo sepa, solo hay un [paquete R implementando esto](https://github.com/r-arduino/arduinor) y solo se ejecuta en sistemas compatibles con POSIX (adiós Windows).
+
+No puedo probar este enfoque yo mismo, ya que no tengo una máquina física Linux o macOS para conectar un microcontrolador, por lo que para este caso, solo voy a referirlos a una [publicación de blog](https://zhuhao.org/post/connect-arduino-chips-with-r/) por [\@haozhu233](https://twitter.com/haozhu233) (el autor del paquete) mostrando su funcionalidad.
+
+Si su aplicación requiere adquisición de datos en tiempo real o una latencia muy baja, esta podría ser su única opción y es posible que desee profundizar en esto.
+
+```{r echo=FALSE}
+blogdown::shortcode('tweet', '1088851449096880128')
+```
+
+## Guardar en un Servidor SQL
+
+Hay dos formas de hacer esto, una es conectar directamente el microcontrolador a la base de datos y la otra es usar otro servicio para extraer datos del microcontrolador y escribirlos en la base de datos.
+
+La primera opción es más difícil de lograr, que yo sepa, solo hay una [biblioteca Arduino](https://www.arduinolibraries.info/libraries/my-sql-connector-arduino) que proporciona un conector SQL para servidores MySQL, pero no hay soluciones ya hechas para otros servidores SQL y, aunque podría escribir su propio conector para otros servidores SQL de código abierto (como PostgreSQL), eso requeriría una considerable cantidad de habilidades técnicas.
+
+La segunda opción es más fácil de implementar, y mi favorito personal. 
+
+El primer paso es transmitir los datos desde el microcontrolador, una forma de hacerlo es implementar un servidor web simple en el microcontrolador y servir los datos en un formato adecuado como HTML, JSON o CSV.
+
+Este es un ejemplo simple de un Sketch Arduino para una placa ESP8266 (Wemos D1 mini) y sensores de temperatura tipo sonda DS18B20, que sirve salidas HTML y JSON a través de un servidor web.
+
+```{r echo=FALSE}
+blogdown::shortcode('gist', 'andresrcs', 'fa631e15f2f665335b0592fdeba20992')
+```
+
+El segundo paso es extraer los datos del microcontrolador y ponerlos en un servidor SQL, hay muchos enfoques y lenguages que puede usar para implementar esta parte, pero obviamente vamos a usar R. Puede escribir un script R que se conecte al microcontrolador, recupere los datos y los escriba en un servidor SQL, y programar el script con un trabajo `cron`.
+
+```{r eval=FALSE}
+#! /usr/bin/env Rscript
+
+# ADQUISICIÓN DE DATOS #########################################################
+raw_data <- rjson::fromJSON(file="http://192.168.0.102/reading.json") 
+current_time <- as.character(Sys.time())
+
+# PARAMETROS ###################################################################
+current_location = "some_place"
+point_names = c("probe0" = "measurement_point_0", 
+                "probe1" = "measurement_point_1",
+                "probe2" = "measurement_point_2")
+
+# LIBRERIAS ####################################################################
+library(dplyr)
+
+# DATA CLEANING ################################################################
+tidy_data <- as_tibble(raw_data) %>%
+    tidyr::gather(measurement_point, value) %>% 
+    mutate(time = current_time,
+           location = current_location,
+           variable = stringr::str_extract(measurement_point, "^.+(?=-)"),
+           measurement_point = stringr::str_extract(measurement_point, "(?<=-).+$"),
+           measurement_point = stringr::str_replace_all(measurement_point, point_names)
+           ) %>%
+    select(time, location, variable, measurement_point, value)
+
+# CARGAR DATOS #################################################################
+connection_string <- glue::glue("Driver={{PostgreSQL ANSI}};\\
+                                Uid={Sys.getenv('MY_UID')};\\
+                                Pwd={Sys.getenv('MY_PWD')};\\
+                                Server=localhost;\\
+                                Port=5432;\\
+                                Database=sensors;")
+
+con <- odbc::dbConnect(odbc::odbc(), .connection_string = connection_string, encoding = "utf8")
+
+DBI::dbAppendTable(conn = con,
+                   name = 'sensors_data',
+                   value = tidy_data)
+
+odbc::dbDisconnect(con)
+
+unlink(x = "*.log", force = TRUE)
+```
+
+Ahora que tiene los datos en un servidor SQL, está en una consulta SQL de distancia de tenerlos en R
+
+```{r}
+library(odbc)
+library(glue)
+
+connection_string <- glue::glue(
+  "Driver={{PostgreSQL ANSI}};\\
+  Uid={Sys.getenv('MY_UID')};\\
+  Pwd={Sys.getenv('MY_PWD')};\\
+  Server={Sys.getenv('MY_REMOTE')};\\
+  Port=5432;\\
+  Database=sensors;"
+)
+
+con <- dbConnect(
+  drv = odbc::odbc(),
+  .connection_string = connection_string,
+  encoding = "utf8"
+)
+
+query <- "
+SELECT * 
+FROM public.sensors_data
+"
+
+raw_data <- dbGetQuery(
+  conn = con,
+  statement = query
+)
+
+dbDisconnect(con)
+```
+
+Lo que hace que este enfoque sea mi favorito personal es que es fácil de implementar, muy flexible y le permite implementar casi cualquier medida de seguridad que pueda necesitar.
+
+## Usando el Protocolo MQTT
+
+Para aplicaciones con recursos más limitados, puede usar un enfoque similar al anterior, pero con una tecnología diferente, el protocolo MQTT es ideal para dispositivos de baja potencia en conexiones lentas y poco confiables, además, esta es también una forma de obtener datos de redes LoRa como la disponible públicamente [TTN (The Things Network)](https://www.thethingsnetwork.org/) que proporciona una API sobre MQTT, que le da acceso a una [red de área amplia de baja potencia](https://es.wikipedia.org/wiki/LoRaWAN) para la implementación remota de sensores a mayores distancias.
+
+Este enfoque también le permite escribir datos en un servidor SQL como en el ejemplo anterior, pero una aplicación más interesante para esto sería obtener actualizaciones de estado instantáneas para mostrar en Dashboards o aplicaciones Shiny. Considere esta sencilla aplicación Shiny que recibe un mensaje de un sensor remoto simulado y actualiza el color de un círculo en consecuencia, puede actualizar el valor de temperatura del sensor simulado enviando un mensaje MQTT al tema de prueba desde una terminal de sistema en cualquier computadora con este comando `mosquitto_pub -h test.mosquitto.org -t simulated_sensor -q 1 -m 25.9 -r` y ver cómo cambia el color.
+
+>:pencil2: Para que esto funcione, debe tener el cliente `mosquitto` instalado en su sistema.
+```
+sudo apt install mosquitto-clients
+```
+
+```{r eval=FALSE}
+library(shiny)
+library(ggplot2)
+library(rmqtt)  # Este paquete es simplemente una envoltura para un cliente MQTT que usa
+                # llamadas al sistema `system()`, necesita tener el cliente mosquitto
+                # instalado en su sistema para que esto funcione.
+
+# Inicializar el sensor simulado
+mqtt_topic_publish(
+    topic = "simulated_sensor", 
+    message_to_send = "24.9",
+    host = "test.mosquitto.org",
+    port = 1883,
+    qos = 1, 
+    retain_message = TRUE
+)
+
+ui <- fluidPage(
+    titlePanel("Dashboard"),
+    mainPanel(
+        h2("Indicador de Temperatura"),
+        plotOutput("indicator_estado")
+    )
+)
+
+server <- function(input, output, session) {
+    
+    get_color <- function() {
+        message <- mqtt_topic_subscribe(
+            topic = "simulated_sensor", 
+            host = "test.mosquitto.org",
+            port = 1883,
+            qos = 1,
+            intern = TRUE,
+            num.messages = 1
+        )
+        
+        if (as.numeric(message) > 25) {
+            color = 'red'
+        } else {
+            color = 'green'
+        }
+        
+        return(color)
+    }
+    
+    pollData <- reactivePoll(100, session,
+                             checkFunc = get_color,
+                             valueFunc = get_color
+    )
+    
+    output$indicator_estado <- renderPlot({
+        ggplot(data = data.frame(x = 1, y = 1), aes(x, y)) +
+            geom_point(size = 50, color = pollData()) +
+            scale_x_discrete() +
+            scale_y_discrete() +
+            theme_void() +
+            theme(axis.title = element_blank())
+    })
+}
+
+shinyApp(ui = ui, server = server)
+```
+
+![](/post/2020-02-09-arduino-compatible-microcontrollers-r.es_files/shiny.jpg){width=400px height=300px}
+
+Si está interesado en probar esto, aquí hay un GitHub Gist con el [Sketch Arduino](https://gist.github.com/andresrcs/a2000bf54bf98be64351bbad34bdb838) para una placa ESP8266 con un sensor de temperatura tipo sonda DS18B20 que puede actualizar los valores en la aplicación de ejemplo.
+
+Sé que esto no parece muy interesante en este momento, pero tenga en cuenta las implicaciones. ¡Podría recibir actualizaciones instantáneas en su Dashboard de sensores desplegados a kilómetros de distancia e incluso podría controlar actuadores remotos desde su aplicación Shiny enviando un mensaje MQTT desde ella con solo hacer clic en un botón!
+
+La desventaja de este método es que debe configurar un agente MQTT (no debe abusar de los disponibles públicamente que están destinados a pruebas), pero se puede hacer con poco o ningún dinero en una Raspberry Pi o una instancia EC2 AWS.
+
+## Descargo
+
+Quiero dejar en claro que esta no es una lista exhaustiva, hay otras alternativas e innumerables variaciones de las que se presentan aquí, así que si ninguna de estas se ajusta a las necesidades de su proyecto en particular, siga buscando, es muy probable que alguien haya encontrado una método más adecuado.
+
+>:pencil2: Si desea ver un ejemplo detallado paso a paso de cualquiera de estas opciones, escríbalo en los comentarios e intentaré hacer una publicación de blog al respecto.

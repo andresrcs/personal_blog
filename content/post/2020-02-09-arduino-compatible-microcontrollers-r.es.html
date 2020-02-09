@@ -1,0 +1,273 @@
+---
+title: Alternativas para obtener datos de sensores desde microcontroladores compatibles con Arduino en R
+description: En este artículo exploramos algunas alternativas para obtener de forma remota datos de sensores desde microcontroladores compatibles con Arduino, señalando las ventajas y desventajas de cada método y brindando algunos ejemplos ilustrativos simples basados en placas ESP8266.
+author: andres-castro
+date: '2020-02-09'
+slug: arduino_microcontroller_r
+categories:
+  - R
+series: 
+  - DIY
+tags:
+  - R
+  - arduino
+  - sensors
+  - mqtt
+  - ESP8266
+draft: true
+images: ["arduino_microcontroller_r.jpg"]
+authors: ["andres-castro"]
+output:
+  blogdown::html_page:
+    toc: true
+    highlight: zenburn
+---
+
+<style type="text/css">
+code.sourceCode > span { display: inline-block; line-height: 1.25; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  { color: #cccccc; background-color: #303030; }
+@media screen {
+code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ffcfaf; } /* Alert */
+code span.an { color: #7f9f7f; font-weight: bold; } /* Annotation */
+code span.at { } /* Attribute */
+code span.bn { color: #dca3a3; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #f0dfaf; } /* ControlFlow */
+code span.ch { color: #dca3a3; } /* Char */
+code span.cn { color: #dca3a3; font-weight: bold; } /* Constant */
+code span.co { color: #7f9f7f; } /* Comment */
+code span.cv { color: #7f9f7f; font-weight: bold; } /* CommentVar */
+code span.do { color: #7f9f7f; } /* Documentation */
+code span.dt { color: #dfdfbf; } /* DataType */
+code span.dv { color: #dcdccc; } /* DecVal */
+code span.er { color: #c3bf9f; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #c0bed1; } /* Float */
+code span.fu { color: #efef8f; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #7f9f7f; font-weight: bold; } /* Information */
+code span.kw { color: #f0dfaf; } /* Keyword */
+code span.op { color: #f0efd0; } /* Operator */
+code span.ot { color: #efef8f; } /* Other */
+code span.pp { color: #ffcfaf; font-weight: bold; } /* Preprocessor */
+code span.sc { color: #dca3a3; } /* SpecialChar */
+code span.ss { color: #cc9393; } /* SpecialString */
+code span.st { color: #cc9393; } /* String */
+code span.va { } /* Variable */
+code span.vs { color: #cc9393; } /* VerbatimString */
+code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
+</style>
+
+<div id="TOC">
+<ul>
+<li><a href="#conexión-serial">Conexión Serial</a></li>
+<li><a href="#guardar-en-un-servidor-sql">Guardar en un Servidor SQL</a></li>
+<li><a href="#usando-el-protocolo-mqtt">Usando el Protocolo MQTT</a></li>
+<li><a href="#descargo">Descargo</a></li>
+</ul>
+</div>
+
+<p>¿Alguna vez ha querido obtener sus propios datos del mundo real utilizando sensores? Con la llegada del movimiento de <a href="https://es.wikipedia.org/wiki/Hardware_libre">Hardware Libre</a>, esto se ha vuelto más accesible para el público en general, los microcontroladores y sensores se han vuelto más baratos y fáciles de programar con lenguajes amigables para los humanos como Arduino (C ++) y MicroPython (Python), por lo que ahora cualquiera puede producir sus propios datos sensoriales del mundo real, pero, todavía hay un problema, ¿cómo podemos obtener estos datos en R para poder analizarlos?</p>
+<p>Dependiendo de los requisitos de su aplicación, puede elegir entre una gran cantidad de opciones. Por ejemplo, si solo necesita datos en lotes y puede tener fácil acceso físico a su dispositivo, simplemente puede agregar un módulo de tarjeta SD a su proyecto y registrar los datos en un archivo .csv en una tarjeta SD, pero eso no sería divertido, ¿verdad? Una solución mucho mejor sería obtener datos de forma remota y preferiblemente de forma inalámbrica, ¿no cree? Exploremos algunas opciones.</p>
+<div id="conexión-serial" class="section level2">
+<h2>Conexión Serial</h2>
+<p>Si nunca antes ha pensado en obtener datos desde microcontroladores, apuesto a que el primer pensamiento que le viene a la mente es conectar directamente el microcontrolador con R para obtener los datos, pero esta es actualmente la opción más desafiante técnicamente, puede hacerse usando una conexión serial entre el microcontrolador y su computadora, pero que yo sepa, solo hay un <a href="https://github.com/r-arduino/arduinor">paquete R implementando esto</a> y solo se ejecuta en sistemas compatibles con POSIX (adiós Windows).</p>
+<p>No puedo probar este enfoque yo mismo, ya que no tengo una máquina física Linux o macOS para conectar un microcontrolador, por lo que para este caso, solo voy a referirlos a una <a href="https://zhuhao.org/post/connect-arduino-chips-with-r/">publicación de blog</a> por <a href="https://twitter.com/haozhu233">@haozhu233</a> (el autor del paquete) mostrando su funcionalidad.</p>
+<p>Si su aplicación requiere adquisición de datos en tiempo real o una latencia muy baja, esta podría ser su única opción y es posible que desee profundizar en esto.</p>
+{{% tweet "1088851449096880128" %}}
+</div>
+<div id="guardar-en-un-servidor-sql" class="section level2">
+<h2>Guardar en un Servidor SQL</h2>
+<p>Hay dos formas de hacer esto, una es conectar directamente el microcontrolador a la base de datos y la otra es usar otro servicio para extraer datos del microcontrolador y escribirlos en la base de datos.</p>
+<p>La primera opción es más difícil de lograr, que yo sepa, solo hay una <a href="https://www.arduinolibraries.info/libraries/my-sql-connector-arduino">biblioteca Arduino</a> que proporciona un conector SQL para servidores MySQL, pero no hay soluciones ya hechas para otros servidores SQL y, aunque podría escribir su propio conector para otros servidores SQL de código abierto (como PostgreSQL), eso requeriría una considerable cantidad de habilidades técnicas.</p>
+<p>La segunda opción es más fácil de implementar, y mi favorito personal.</p>
+<p>El primer paso es transmitir los datos desde el microcontrolador, una forma de hacerlo es implementar un servidor web simple en el microcontrolador y servir los datos en un formato adecuado como HTML, JSON o CSV.</p>
+<p>Este es un ejemplo simple de un Sketch Arduino para una placa ESP8266 (Wemos D1 mini) y sensores de temperatura tipo sonda DS18B20, que sirve salidas HTML y JSON a través de un servidor web.</p>
+{{% gist "andresrcs" "fa631e15f2f665335b0592fdeba20992" %}}
+<p>El segundo paso es extraer los datos del microcontrolador y ponerlos en un servidor SQL, hay muchos enfoques y lenguages que puede usar para implementar esta parte, pero obviamente vamos a usar R. Puede escribir un script R que se conecte al microcontrolador, recupere los datos y los escriba en un servidor SQL, y programar el script con un trabajo <code>cron</code>.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="co">#! /usr/bin/env Rscript</span></span>
+<span id="cb1-2"><a href="#cb1-2"></a></span>
+<span id="cb1-3"><a href="#cb1-3"></a><span class="co"># ADQUISICIÓN DE DATOS #########################################################</span></span>
+<span id="cb1-4"><a href="#cb1-4"></a>raw_data &lt;-<span class="st"> </span>rjson<span class="op">::</span><span class="kw">fromJSON</span>(<span class="dt">file=</span><span class="st">&quot;http://192.168.0.102/reading.json&quot;</span>) </span>
+<span id="cb1-5"><a href="#cb1-5"></a>current_time &lt;-<span class="st"> </span><span class="kw">as.character</span>(<span class="kw">Sys.time</span>())</span>
+<span id="cb1-6"><a href="#cb1-6"></a></span>
+<span id="cb1-7"><a href="#cb1-7"></a><span class="co"># PARAMETROS ###################################################################</span></span>
+<span id="cb1-8"><a href="#cb1-8"></a>current_location =<span class="st"> &quot;some_place&quot;</span></span>
+<span id="cb1-9"><a href="#cb1-9"></a>point_names =<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;probe0&quot;</span> =<span class="st"> &quot;measurement_point_0&quot;</span>, </span>
+<span id="cb1-10"><a href="#cb1-10"></a>                <span class="st">&quot;probe1&quot;</span> =<span class="st"> &quot;measurement_point_1&quot;</span>,</span>
+<span id="cb1-11"><a href="#cb1-11"></a>                <span class="st">&quot;probe2&quot;</span> =<span class="st"> &quot;measurement_point_2&quot;</span>)</span>
+<span id="cb1-12"><a href="#cb1-12"></a></span>
+<span id="cb1-13"><a href="#cb1-13"></a><span class="co"># LIBRERIAS ####################################################################</span></span>
+<span id="cb1-14"><a href="#cb1-14"></a><span class="kw">library</span>(dplyr)</span>
+<span id="cb1-15"><a href="#cb1-15"></a></span>
+<span id="cb1-16"><a href="#cb1-16"></a><span class="co"># DATA CLEANING ################################################################</span></span>
+<span id="cb1-17"><a href="#cb1-17"></a>tidy_data &lt;-<span class="st"> </span><span class="kw">as_tibble</span>(raw_data) <span class="op">%&gt;%</span></span>
+<span id="cb1-18"><a href="#cb1-18"></a><span class="st">    </span>tidyr<span class="op">::</span><span class="kw">gather</span>(measurement_point, value) <span class="op">%&gt;%</span><span class="st"> </span></span>
+<span id="cb1-19"><a href="#cb1-19"></a><span class="st">    </span><span class="kw">mutate</span>(<span class="dt">time =</span> current_time,</span>
+<span id="cb1-20"><a href="#cb1-20"></a>           <span class="dt">location =</span> current_location,</span>
+<span id="cb1-21"><a href="#cb1-21"></a>           <span class="dt">variable =</span> stringr<span class="op">::</span><span class="kw">str_extract</span>(measurement_point, <span class="st">&quot;^.+(?=-)&quot;</span>),</span>
+<span id="cb1-22"><a href="#cb1-22"></a>           <span class="dt">measurement_point =</span> stringr<span class="op">::</span><span class="kw">str_extract</span>(measurement_point, <span class="st">&quot;(?&lt;=-).+$&quot;</span>),</span>
+<span id="cb1-23"><a href="#cb1-23"></a>           <span class="dt">measurement_point =</span> stringr<span class="op">::</span><span class="kw">str_replace_all</span>(measurement_point, point_names)</span>
+<span id="cb1-24"><a href="#cb1-24"></a>           ) <span class="op">%&gt;%</span></span>
+<span id="cb1-25"><a href="#cb1-25"></a><span class="st">    </span><span class="kw">select</span>(time, location, variable, measurement_point, value)</span>
+<span id="cb1-26"><a href="#cb1-26"></a></span>
+<span id="cb1-27"><a href="#cb1-27"></a><span class="co"># CARGAR DATOS #################################################################</span></span>
+<span id="cb1-28"><a href="#cb1-28"></a>connection_string &lt;-<span class="st"> </span>glue<span class="op">::</span><span class="kw">glue</span>(<span class="st">&quot;Driver={{PostgreSQL ANSI}};</span><span class="ch">\\</span></span>
+<span id="cb1-29"><a href="#cb1-29"></a><span class="st">                                Uid={Sys.getenv(&#39;MY_UID&#39;)};</span><span class="ch">\\</span></span>
+<span id="cb1-30"><a href="#cb1-30"></a><span class="st">                                Pwd={Sys.getenv(&#39;MY_PWD&#39;)};</span><span class="ch">\\</span></span>
+<span id="cb1-31"><a href="#cb1-31"></a><span class="st">                                Server=localhost;</span><span class="ch">\\</span></span>
+<span id="cb1-32"><a href="#cb1-32"></a><span class="st">                                Port=5432;</span><span class="ch">\\</span></span>
+<span id="cb1-33"><a href="#cb1-33"></a><span class="st">                                Database=sensors;&quot;</span>)</span>
+<span id="cb1-34"><a href="#cb1-34"></a></span>
+<span id="cb1-35"><a href="#cb1-35"></a>con &lt;-<span class="st"> </span>odbc<span class="op">::</span><span class="kw">dbConnect</span>(odbc<span class="op">::</span><span class="kw">odbc</span>(), <span class="dt">.connection_string =</span> connection_string, <span class="dt">encoding =</span> <span class="st">&quot;utf8&quot;</span>)</span>
+<span id="cb1-36"><a href="#cb1-36"></a></span>
+<span id="cb1-37"><a href="#cb1-37"></a>DBI<span class="op">::</span><span class="kw">dbAppendTable</span>(<span class="dt">conn =</span> con,</span>
+<span id="cb1-38"><a href="#cb1-38"></a>                   <span class="dt">name =</span> <span class="st">&#39;sensors_data&#39;</span>,</span>
+<span id="cb1-39"><a href="#cb1-39"></a>                   <span class="dt">value =</span> tidy_data)</span>
+<span id="cb1-40"><a href="#cb1-40"></a></span>
+<span id="cb1-41"><a href="#cb1-41"></a>odbc<span class="op">::</span><span class="kw">dbDisconnect</span>(con)</span>
+<span id="cb1-42"><a href="#cb1-42"></a></span>
+<span id="cb1-43"><a href="#cb1-43"></a><span class="kw">unlink</span>(<span class="dt">x =</span> <span class="st">&quot;*.log&quot;</span>, <span class="dt">force =</span> <span class="ot">TRUE</span>)</span></code></pre></div>
+<p>Ahora que tiene los datos en un servidor SQL, está en una consulta SQL de distancia de tenerlos en R</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a><span class="kw">library</span>(odbc)</span>
+<span id="cb2-2"><a href="#cb2-2"></a><span class="kw">library</span>(glue)</span>
+<span id="cb2-3"><a href="#cb2-3"></a></span>
+<span id="cb2-4"><a href="#cb2-4"></a>connection_string &lt;-<span class="st"> </span>glue<span class="op">::</span><span class="kw">glue</span>(</span>
+<span id="cb2-5"><a href="#cb2-5"></a>  <span class="st">&quot;Driver={{PostgreSQL ANSI}};</span><span class="ch">\\</span></span>
+<span id="cb2-6"><a href="#cb2-6"></a><span class="st">  Uid={Sys.getenv(&#39;MY_UID&#39;)};</span><span class="ch">\\</span></span>
+<span id="cb2-7"><a href="#cb2-7"></a><span class="st">  Pwd={Sys.getenv(&#39;MY_PWD&#39;)};</span><span class="ch">\\</span></span>
+<span id="cb2-8"><a href="#cb2-8"></a><span class="st">  Server={Sys.getenv(&#39;MY_REMOTE&#39;)};</span><span class="ch">\\</span></span>
+<span id="cb2-9"><a href="#cb2-9"></a><span class="st">  Port=5432;</span><span class="ch">\\</span></span>
+<span id="cb2-10"><a href="#cb2-10"></a><span class="st">  Database=sensors;&quot;</span></span>
+<span id="cb2-11"><a href="#cb2-11"></a>)</span>
+<span id="cb2-12"><a href="#cb2-12"></a></span>
+<span id="cb2-13"><a href="#cb2-13"></a>con &lt;-<span class="st"> </span><span class="kw">dbConnect</span>(</span>
+<span id="cb2-14"><a href="#cb2-14"></a>  <span class="dt">drv =</span> odbc<span class="op">::</span><span class="kw">odbc</span>(),</span>
+<span id="cb2-15"><a href="#cb2-15"></a>  <span class="dt">.connection_string =</span> connection_string,</span>
+<span id="cb2-16"><a href="#cb2-16"></a>  <span class="dt">encoding =</span> <span class="st">&quot;utf8&quot;</span></span>
+<span id="cb2-17"><a href="#cb2-17"></a>)</span>
+<span id="cb2-18"><a href="#cb2-18"></a></span>
+<span id="cb2-19"><a href="#cb2-19"></a>query &lt;-<span class="st"> &quot;</span></span>
+<span id="cb2-20"><a href="#cb2-20"></a><span class="st">SELECT * </span></span>
+<span id="cb2-21"><a href="#cb2-21"></a><span class="st">FROM public.sensors_data</span></span>
+<span id="cb2-22"><a href="#cb2-22"></a><span class="st">&quot;</span></span>
+<span id="cb2-23"><a href="#cb2-23"></a></span>
+<span id="cb2-24"><a href="#cb2-24"></a>raw_data &lt;-<span class="st"> </span><span class="kw">dbGetQuery</span>(</span>
+<span id="cb2-25"><a href="#cb2-25"></a>  <span class="dt">conn =</span> con,</span>
+<span id="cb2-26"><a href="#cb2-26"></a>  <span class="dt">statement =</span> query</span>
+<span id="cb2-27"><a href="#cb2-27"></a>)</span>
+<span id="cb2-28"><a href="#cb2-28"></a></span>
+<span id="cb2-29"><a href="#cb2-29"></a><span class="kw">dbDisconnect</span>(con)</span></code></pre></div>
+<p>Lo que hace que este enfoque sea mi favorito personal es que es fácil de implementar, muy flexible y le permite implementar casi cualquier medida de seguridad que pueda necesitar.</p>
+</div>
+<div id="usando-el-protocolo-mqtt" class="section level2">
+<h2>Usando el Protocolo MQTT</h2>
+<p>Para aplicaciones con recursos más limitados, puede usar un enfoque similar al anterior, pero con una tecnología diferente, el protocolo MQTT es ideal para dispositivos de baja potencia en conexiones lentas y poco confiables, además, esta es también una forma de obtener datos de redes LoRa como la disponible públicamente <a href="https://www.thethingsnetwork.org/">TTN (The Things Network)</a> que proporciona una API sobre MQTT, que le da acceso a una <a href="https://es.wikipedia.org/wiki/LoRaWAN">red de área amplia de baja potencia</a> para la implementación remota de sensores a mayores distancias.</p>
+<p>Este enfoque también le permite escribir datos en un servidor SQL como en el ejemplo anterior, pero una aplicación más interesante para esto sería obtener actualizaciones de estado instantáneas para mostrar en Dashboards o aplicaciones Shiny. Considere esta sencilla aplicación Shiny que recibe un mensaje de un sensor remoto simulado y actualiza el color de un círculo en consecuencia, puede actualizar el valor de temperatura del sensor simulado enviando un mensaje MQTT al tema de prueba desde una terminal de sistema en cualquier computadora con este comando <code>mosquitto_pub -h test.mosquitto.org -t simulated_sensor -q 1 -m 25.9 -r</code> y ver cómo cambia el color.</p>
+<blockquote>
+<p>:pencil2: Para que esto funcione, debe tener el cliente <code>mosquitto</code> instalado en su sistema.</p>
+</blockquote>
+<pre><code>sudo apt install mosquitto-clients</code></pre>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a><span class="kw">library</span>(shiny)</span>
+<span id="cb4-2"><a href="#cb4-2"></a><span class="kw">library</span>(ggplot2)</span>
+<span id="cb4-3"><a href="#cb4-3"></a><span class="kw">library</span>(rmqtt)  <span class="co"># Este paquete es simplemente una envoltura para un cliente MQTT que usa</span></span>
+<span id="cb4-4"><a href="#cb4-4"></a>                <span class="co"># llamadas al sistema `system()`, necesita tener el cliente mosquitto</span></span>
+<span id="cb4-5"><a href="#cb4-5"></a>                <span class="co"># instalado en su sistema para que esto funcione.</span></span>
+<span id="cb4-6"><a href="#cb4-6"></a></span>
+<span id="cb4-7"><a href="#cb4-7"></a><span class="co"># Inicializar el sensor simulado</span></span>
+<span id="cb4-8"><a href="#cb4-8"></a><span class="kw">mqtt_topic_publish</span>(</span>
+<span id="cb4-9"><a href="#cb4-9"></a>    <span class="dt">topic =</span> <span class="st">&quot;simulated_sensor&quot;</span>, </span>
+<span id="cb4-10"><a href="#cb4-10"></a>    <span class="dt">message_to_send =</span> <span class="st">&quot;24.9&quot;</span>,</span>
+<span id="cb4-11"><a href="#cb4-11"></a>    <span class="dt">host =</span> <span class="st">&quot;test.mosquitto.org&quot;</span>,</span>
+<span id="cb4-12"><a href="#cb4-12"></a>    <span class="dt">port =</span> <span class="dv">1883</span>,</span>
+<span id="cb4-13"><a href="#cb4-13"></a>    <span class="dt">qos =</span> <span class="dv">1</span>, </span>
+<span id="cb4-14"><a href="#cb4-14"></a>    <span class="dt">retain_message =</span> <span class="ot">TRUE</span></span>
+<span id="cb4-15"><a href="#cb4-15"></a>)</span>
+<span id="cb4-16"><a href="#cb4-16"></a></span>
+<span id="cb4-17"><a href="#cb4-17"></a>ui &lt;-<span class="st"> </span><span class="kw">fluidPage</span>(</span>
+<span id="cb4-18"><a href="#cb4-18"></a>    <span class="kw">titlePanel</span>(<span class="st">&quot;Dashboard&quot;</span>),</span>
+<span id="cb4-19"><a href="#cb4-19"></a>    <span class="kw">mainPanel</span>(</span>
+<span id="cb4-20"><a href="#cb4-20"></a>        <span class="kw">h2</span>(<span class="st">&quot;Indicador de Temperatura&quot;</span>),</span>
+<span id="cb4-21"><a href="#cb4-21"></a>        <span class="kw">plotOutput</span>(<span class="st">&quot;indicator_estado&quot;</span>)</span>
+<span id="cb4-22"><a href="#cb4-22"></a>    )</span>
+<span id="cb4-23"><a href="#cb4-23"></a>)</span>
+<span id="cb4-24"><a href="#cb4-24"></a></span>
+<span id="cb4-25"><a href="#cb4-25"></a>server &lt;-<span class="st"> </span><span class="cf">function</span>(input, output, session) {</span>
+<span id="cb4-26"><a href="#cb4-26"></a>    </span>
+<span id="cb4-27"><a href="#cb4-27"></a>    get_color &lt;-<span class="st"> </span><span class="cf">function</span>() {</span>
+<span id="cb4-28"><a href="#cb4-28"></a>        message &lt;-<span class="st"> </span><span class="kw">mqtt_topic_subscribe</span>(</span>
+<span id="cb4-29"><a href="#cb4-29"></a>            <span class="dt">topic =</span> <span class="st">&quot;simulated_sensor&quot;</span>, </span>
+<span id="cb4-30"><a href="#cb4-30"></a>            <span class="dt">host =</span> <span class="st">&quot;test.mosquitto.org&quot;</span>,</span>
+<span id="cb4-31"><a href="#cb4-31"></a>            <span class="dt">port =</span> <span class="dv">1883</span>,</span>
+<span id="cb4-32"><a href="#cb4-32"></a>            <span class="dt">qos =</span> <span class="dv">1</span>,</span>
+<span id="cb4-33"><a href="#cb4-33"></a>            <span class="dt">intern =</span> <span class="ot">TRUE</span>,</span>
+<span id="cb4-34"><a href="#cb4-34"></a>            <span class="dt">num.messages =</span> <span class="dv">1</span></span>
+<span id="cb4-35"><a href="#cb4-35"></a>        )</span>
+<span id="cb4-36"><a href="#cb4-36"></a>        </span>
+<span id="cb4-37"><a href="#cb4-37"></a>        <span class="cf">if</span> (<span class="kw">as.numeric</span>(message) <span class="op">&gt;</span><span class="st"> </span><span class="dv">25</span>) {</span>
+<span id="cb4-38"><a href="#cb4-38"></a>            color =<span class="st"> &#39;red&#39;</span></span>
+<span id="cb4-39"><a href="#cb4-39"></a>        } <span class="cf">else</span> {</span>
+<span id="cb4-40"><a href="#cb4-40"></a>            color =<span class="st"> &#39;green&#39;</span></span>
+<span id="cb4-41"><a href="#cb4-41"></a>        }</span>
+<span id="cb4-42"><a href="#cb4-42"></a>        </span>
+<span id="cb4-43"><a href="#cb4-43"></a>        <span class="kw">return</span>(color)</span>
+<span id="cb4-44"><a href="#cb4-44"></a>    }</span>
+<span id="cb4-45"><a href="#cb4-45"></a>    </span>
+<span id="cb4-46"><a href="#cb4-46"></a>    pollData &lt;-<span class="st"> </span><span class="kw">reactivePoll</span>(<span class="dv">100</span>, session,</span>
+<span id="cb4-47"><a href="#cb4-47"></a>                             <span class="dt">checkFunc =</span> get_color,</span>
+<span id="cb4-48"><a href="#cb4-48"></a>                             <span class="dt">valueFunc =</span> get_color</span>
+<span id="cb4-49"><a href="#cb4-49"></a>    )</span>
+<span id="cb4-50"><a href="#cb4-50"></a>    </span>
+<span id="cb4-51"><a href="#cb4-51"></a>    output<span class="op">$</span>indicator_estado &lt;-<span class="st"> </span><span class="kw">renderPlot</span>({</span>
+<span id="cb4-52"><a href="#cb4-52"></a>        <span class="kw">ggplot</span>(<span class="dt">data =</span> <span class="kw">data.frame</span>(<span class="dt">x =</span> <span class="dv">1</span>, <span class="dt">y =</span> <span class="dv">1</span>), <span class="kw">aes</span>(x, y)) <span class="op">+</span></span>
+<span id="cb4-53"><a href="#cb4-53"></a><span class="st">            </span><span class="kw">geom_point</span>(<span class="dt">size =</span> <span class="dv">50</span>, <span class="dt">color =</span> <span class="kw">pollData</span>()) <span class="op">+</span></span>
+<span id="cb4-54"><a href="#cb4-54"></a><span class="st">            </span><span class="kw">scale_x_discrete</span>() <span class="op">+</span></span>
+<span id="cb4-55"><a href="#cb4-55"></a><span class="st">            </span><span class="kw">scale_y_discrete</span>() <span class="op">+</span></span>
+<span id="cb4-56"><a href="#cb4-56"></a><span class="st">            </span><span class="kw">theme_void</span>() <span class="op">+</span></span>
+<span id="cb4-57"><a href="#cb4-57"></a><span class="st">            </span><span class="kw">theme</span>(<span class="dt">axis.title =</span> <span class="kw">element_blank</span>())</span>
+<span id="cb4-58"><a href="#cb4-58"></a>    })</span>
+<span id="cb4-59"><a href="#cb4-59"></a>}</span>
+<span id="cb4-60"><a href="#cb4-60"></a></span>
+<span id="cb4-61"><a href="#cb4-61"></a><span class="kw">shinyApp</span>(<span class="dt">ui =</span> ui, <span class="dt">server =</span> server)</span></code></pre></div>
+<p><img src="/post/2020-02-09-arduino-compatible-microcontrollers-r.es_files/shiny.jpg" width="400" height="300" /></p>
+<p>Si está interesado en probar esto, aquí hay un GitHub Gist con el <a href="https://gist.github.com/andresrcs/a2000bf54bf98be64351bbad34bdb838">Sketch Arduino</a> para una placa ESP8266 con un sensor de temperatura tipo sonda DS18B20 que puede actualizar los valores en la aplicación de ejemplo.</p>
+<p>Sé que esto no parece muy interesante en este momento, pero tenga en cuenta las implicaciones. ¡Podría recibir actualizaciones instantáneas en su Dashboard de sensores desplegados a kilómetros de distancia e incluso podría controlar actuadores remotos desde su aplicación Shiny enviando un mensaje MQTT desde ella con solo hacer clic en un botón!</p>
+<p>La desventaja de este método es que debe configurar un agente MQTT (no debe abusar de los disponibles públicamente que están destinados a pruebas), pero se puede hacer con poco o ningún dinero en una Raspberry Pi o una instancia EC2 AWS.</p>
+</div>
+<div id="descargo" class="section level2">
+<h2>Descargo</h2>
+<p>Quiero dejar en claro que esta no es una lista exhaustiva, hay otras alternativas e innumerables variaciones de las que se presentan aquí, así que si ninguna de estas se ajusta a las necesidades de su proyecto en particular, siga buscando, es muy probable que alguien haya encontrado una método más adecuado.</p>
+<blockquote>
+<p>:pencil2: Si desea ver un ejemplo detallado paso a paso de cualquiera de estas opciones, escríbalo en los comentarios e intentaré hacer una publicación de blog al respecto.</p>
+</blockquote>
+</div>
