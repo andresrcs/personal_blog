@@ -145,15 +145,15 @@ sudo apt-get install -y gfortran libreadline6-dev libx11-dev libxt-dev \
        texinfo texlive texlive-fonts-extra \
        screen wget openjdk-8-jdk
 cd /usr/local/src
-sudo wget https://cran.rstudio.com/src/base/R-3/R-3.6.2.tar.gz
+sudo wget https://cran.rstudio.com/src/base/R-3/R-3.6.3.tar.gz
 sudo su
-tar zxvf R-3.6.2.tar.gz
-cd R-3.6.2
-./configure --enable-R-shlib #--with-blas --with-lapack #opcional
+tar zxvf R-3.6.3.tar.gz
+cd R-3.6.3
+./configure --enable-R-shlib #--with-blas --with-lapack #optional
 make
 make install
 cd ..
-rm -rf R-3.6.2*
+rm -rf R-3.6.3*
 exit
 cd
 ```
