@@ -185,12 +185,14 @@ sudo su - -c "R -e \"install.packages('shiny', repos='http://cran.rstudio.com/')
 Instale cmake desde la fuente:
 
 ```{bash eval=FALSE}
-wget https://cmake.org/files/v3.15/cmake-3.15.3.tar.gz # Busque la última version en https://cmake.org/files/
-tar xzf cmake-3.15.3.tar.gz
-cd cmake-3.15.3
+wget https://cmake.org/files/v3.17/cmake-3.17.0.tar.gz # Buscar la ultima version en https://cmake.org/files/
+tar xzf cmake-3.17.0.tar.gz
+cd cmake-3.17.0
 ./configure; make
 sudo make install
 cd
+rm cmake-3.17.0.tar.gz
+rm -rf cmake-3.17.0
 ```
 
 Ahora podemos instalar Shiny Server con estos comandos:
@@ -206,8 +208,9 @@ PYTHON=`which python`
 sudo cmake -DCMAKE_INSTALL_PREFIX=/usr/local -DPYTHON="$PYTHON" ../
 sudo make
 mkdir ../build
-sed -i '8s/.*/NODE_SHA256=af2106b08f68e0884caa505ea7e695facc5b4cd356f1e08258899e94cc4c5df0/' ../external/node/install-node.sh # node-v10.15.3-linux-armv7l.tar.xz
+sed -i '8s/.*/NODE_SHA256=a865e69914c568fcb28be7a1bf970236725a06a8fc66530799300181d2584a49/' ../external/node/install-node.sh # node-v12.15.0-linux-armv7l.tar.xz
 sed -i 's/linux-x64.tar.xz/linux-armv7l.tar.xz/' ../external/node/install-node.sh
+sed -i 's/https:\/\/github.com\/jcheng5\/node-centos6\/releases\/download\//https:\/\/nodejs.org\/dist\//' ../external/node/install-node.sh
 (cd .. && sudo ./external/node/install-node.sh)
 (cd .. && ./bin/npm --python="${PYTHON}" install --no-optional)
 (cd .. && ./bin/npm --python="${PYTHON}" rebuild)
