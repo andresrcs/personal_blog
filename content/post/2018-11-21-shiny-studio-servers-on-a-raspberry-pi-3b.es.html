@@ -169,21 +169,21 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <span id="cb9-6"><a href="#cb9-6"></a><span class="bu">exit</span></span></code></pre></div>
 <p>Ahora, llegamos a la parte específica R del proceso, vamos a instalar la última versión de R desde la fuente con estos comandos:</p>
 <div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1"></a><span class="fu">sudo</span> apt-get install -y gfortran libreadline6-dev libx11-dev libxt-dev \</span>
-<span id="cb10-2"><a href="#cb10-2"></a>       libpng-dev libjpeg-dev libcairo2-dev xvfb \</span>
-<span id="cb10-3"><a href="#cb10-3"></a>       libbz2-dev libzstd-dev liblzma-dev \</span>
-<span id="cb10-4"><a href="#cb10-4"></a>       libcurl4-openssl-dev \</span>
-<span id="cb10-5"><a href="#cb10-5"></a>       texinfo texlive texlive-fonts-extra \</span>
-<span id="cb10-6"><a href="#cb10-6"></a>       screen wget openjdk-8-jdk</span>
+<span id="cb10-2"><a href="#cb10-2"></a>                               libpng-dev libjpeg-dev libcairo2-dev xvfb \</span>
+<span id="cb10-3"><a href="#cb10-3"></a>                               libbz2-dev libzstd-dev liblzma-dev \</span>
+<span id="cb10-4"><a href="#cb10-4"></a>                               libcurl4-openssl-dev \</span>
+<span id="cb10-5"><a href="#cb10-5"></a>                               texinfo texlive texlive-fonts-extra \</span>
+<span id="cb10-6"><a href="#cb10-6"></a>                               screen wget libpcre2-dev</span>
 <span id="cb10-7"><a href="#cb10-7"></a><span class="bu">cd</span> /usr/local/src</span>
-<span id="cb10-8"><a href="#cb10-8"></a><span class="fu">sudo</span> wget https://cran.rstudio.com/src/base/R-3/R-3.6.3.tar.gz</span>
+<span id="cb10-8"><a href="#cb10-8"></a><span class="fu">sudo</span> wget https://cran.rstudio.com/src/base/R-4/R-4.0.0.tar.gz</span>
 <span id="cb10-9"><a href="#cb10-9"></a><span class="fu">sudo</span> su</span>
-<span id="cb10-10"><a href="#cb10-10"></a><span class="fu">tar</span> zxvf R-3.6.3.tar.gz</span>
-<span id="cb10-11"><a href="#cb10-11"></a><span class="bu">cd</span> R-3.6.3</span>
+<span id="cb10-10"><a href="#cb10-10"></a><span class="fu">tar</span> zxvf R-4.0.0.tar.gz</span>
+<span id="cb10-11"><a href="#cb10-11"></a><span class="bu">cd</span> R-4.0.0</span>
 <span id="cb10-12"><a href="#cb10-12"></a><span class="ex">./configure</span> --enable-R-shlib <span class="co">#--with-blas --with-lapack #optional</span></span>
 <span id="cb10-13"><a href="#cb10-13"></a><span class="fu">make</span></span>
 <span id="cb10-14"><a href="#cb10-14"></a><span class="fu">make</span> install</span>
 <span id="cb10-15"><a href="#cb10-15"></a><span class="bu">cd</span> ..</span>
-<span id="cb10-16"><a href="#cb10-16"></a><span class="fu">rm</span> -rf R-3.6.3*</span>
+<span id="cb10-16"><a href="#cb10-16"></a><span class="fu">rm</span> -rf R-4.0.0*</span>
 <span id="cb10-17"><a href="#cb10-17"></a><span class="bu">exit</span></span>
 <span id="cb10-18"><a href="#cb10-18"></a><span class="bu">cd</span></span></code></pre></div>
 <p>:heavy_exclamation_mark: <strong><em>ADVERTENCIA: TODO LUEGO DE ESTE PUNTO CONSUME DEMASIADO TIEMPO</em>, por ejemplo, instalar RStudio desde la fuente en Raspbian puede tomar alrededor de 27 horas</strong> :open_mouth:</p>
