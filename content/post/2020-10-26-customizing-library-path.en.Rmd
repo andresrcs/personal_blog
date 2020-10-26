@@ -1,0 +1,64 @@
+---
+title: Customizing your package-library location
+description: This is a short beginner-level article that shows how to customize the location of your package library.
+author: andres-castro
+date: '2020-10-26'
+slug: customizing_library_path
+categories:
+  - R
+series: 
+  - r-admin
+tags:
+  - admin
+  - beginner
+draft: false
+images: ["customizing_library_path.jpg"]
+authors: ["andres-castro"]
+output:
+  blogdown::html_page:
+    toc: true
+    highlight: zenburn
+---
+
+For reasonably experienced R users this simple topic might not seem worthy of a blog post, so if you are not an R beginner, you may want to skip this post. Having that said, I have had to explain this task so many times on R community forums that writing one becomes mandatory to avoid typing the same text yet once again.
+
+
+The reasons to customize your library path instead of going with the defaults could be varied, but for R beginners the most common one is to avoid package installation problems due to write permissions, non-ASCII characters on folder paths, cloud-synced folders, or network drives, which lead into error messages such as:
+
+```{r eval=FALSE}
+Warning in install.packages :
+  'lib = "/path/to/your/library"' is not writable
+Error in install.packages : unable to install packages
+```
+
+```{r eval=FALSE}
+** byte-compile and prepare package for lazy loading
+Error: unexpected symbol in "setwd('incomplete/path/to/your/library"
+Execution halted
+```
+
+Very often, the solution for these issues is to set your package library somewhere else in your system, where you have proper permissions and there are no known R incompatibilities. The way to change a package library location is to manually set it on a startup file i.e. `Rprofile.site` and `Renviron.site` files for R-version level (located at `R_HOME/etc/`) or `.Rprofile` and `.Renviron` files, for user-level (located at your `HOME` folder) or project-level (located at the current working directory).
+
+>:pencil2: For more information about R startup files, you can read the following [support article](https://support.rstudio.com/hc/en-us/articles/360047157094-Managing-R-with-Rprofile-Renviron-Rprofile-site-Renviron-site-rsession-conf-and-repos-conf).
+
+For `Renviron` type files, the corresponding environmental variable must be specified, for example, if I want to change the R library trees on a Linux system I would add a line like this to the `Renviron.site` file located at `/usr/lib/R/etc/` (On this case the `R_HOME` environmental variable gets translated to `/usr/lib/R/`).
+
+```{bash eval=FALSE}
+R_LIBS_SITE="/usr/lib/R/site-library:/usr/lib/R/library"
+```
+
+Being the first location from the left the default one, which gets used by `install.packages()` if the `lib` argument is not specified, and all of them (which are colon-separated) are scanned for packages at startup in order. Have in mind that only directories that exist at the time will be included.
+
+For `Rprofile` type files, the `.libPaths()` function must be used, since these files must contain valid R code to be executed at startup, the equivalent R command to the previous example would be:
+
+```{r eval=FALSE}
+.libPaths(c("/usr/lib/R/site-library", "/usr/lib/R/library"))
+```
+
+Obviously, the folder paths are going to be different depending on your specific operating system and setup, but I hope you get the general idea that you have to specify a folder path that is suitable for your specific needs, for example, on a Windows system the equivalent would be:
+
+```{r eval=FALSE}
+.libPaths(c("C:/Program Files/R/R-4.0.3/library"))
+```
+
+By default, the default package-library is set at the user-level (`HOME` folder), which, in some cases, can cause the aforementioned issues. Now, this is opinionated advice, but for simple individual use, I find it more practical to set the default package-library at  R-version level (`R_HOME/library/` folder) and explicitly make use of other locations, selectively, and accordingly to specific use cases. Be aware that depending on your security settings and operating system, you might need to run your R session with "administrator" rights or from a user with "sudo" rights in order for this to work.

@@ -1,0 +1,110 @@
+---
+title: Personalizando la ubicación de tu librería de paquetes
+description: Este es un artículo breve para principiantes que muestra cómo personalizar la ubicación de su biblioteca de paquetes.
+author: andres-castro
+date: '2020-10-26'
+slug: customizing_library_path
+categories:
+  - R
+series: 
+  - r-admin
+tags:
+  - admin
+  - beginner
+draft: false
+images: ["customizing_library_path.jpg"]
+authors: ["andres-castro"]
+output:
+  blogdown::html_page:
+    toc: true
+    highlight: zenburn
+---
+
+<script src="/rmarkdown-libs/header-attrs/header-attrs.js"></script>
+<link href="/rmarkdown-libs/anchor-sections/anchor-sections.css" rel="stylesheet" />
+<script src="/rmarkdown-libs/anchor-sections/anchor-sections.js"></script>
+<style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  { color: #cccccc; background-color: #303030; }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ffcfaf; } /* Alert */
+code span.an { color: #7f9f7f; font-weight: bold; } /* Annotation */
+code span.at { } /* Attribute */
+code span.bn { color: #dca3a3; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #f0dfaf; } /* ControlFlow */
+code span.ch { color: #dca3a3; } /* Char */
+code span.cn { color: #dca3a3; font-weight: bold; } /* Constant */
+code span.co { color: #7f9f7f; } /* Comment */
+code span.cv { color: #7f9f7f; font-weight: bold; } /* CommentVar */
+code span.do { color: #7f9f7f; } /* Documentation */
+code span.dt { color: #dfdfbf; } /* DataType */
+code span.dv { color: #dcdccc; } /* DecVal */
+code span.er { color: #c3bf9f; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #c0bed1; } /* Float */
+code span.fu { color: #efef8f; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #7f9f7f; font-weight: bold; } /* Information */
+code span.kw { color: #f0dfaf; } /* Keyword */
+code span.op { color: #f0efd0; } /* Operator */
+code span.ot { color: #efef8f; } /* Other */
+code span.pp { color: #ffcfaf; font-weight: bold; } /* Preprocessor */
+code span.sc { color: #dca3a3; } /* SpecialChar */
+code span.ss { color: #cc9393; } /* SpecialString */
+code span.st { color: #cc9393; } /* String */
+code span.va { } /* Variable */
+code span.vs { color: #cc9393; } /* VerbatimString */
+code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
+</style>
+
+
+<p>Para los usuarios de R razonablemente experimentados, este simple tema puede no parecer digno de una publicación de blog, por lo que si no eres un principiante de R, es posible que desees omitir esta publicación. Dicho esto, he tenido que explicar esta tarea tantas veces en los foros de la comunidad R, que escribir una se vuelve obligatorio para evitar escribir el mismo texto una vez más.</p>
+<p>Las razones para personalizar la ruta de tu biblioteca en lugar de seguir los valores predeterminados pueden ser variadas, pero para los principiantes de R, la más común es evitar problemas de instalación de paquetes debido a permisos de escritura, caracteres no ASCII en rutas de carpetas, carpetas sincronizadas en la nube o unidades de red, que conducen a mensajes de error como:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>Warning <span class="cf">in</span> install.packages <span class="sc">:</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">&#39;lib = &quot;/path/to/your/library&quot;&#39;</span> is not writable</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>Error <span class="cf">in</span> install.packages <span class="sc">:</span> unable to install packages</span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="sc">**</span> byte<span class="sc">-</span>compile and prepare package <span class="cf">for</span> lazy loading</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>Error<span class="sc">:</span> unexpected symbol <span class="cf">in</span> <span class="st">&quot;setwd(&#39;incomplete/path/to/your/library&quot;</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>Execution halted</span></code></pre></div>
+<p>Muy a menudo, la solución a estos problemas es configurar tu biblioteca de paquetes en algún otro lugar de tu sistema, donde tengas los permisos adecuados y no existan incompatibilidades con R conocidas. La forma de cambiar la ubicación de una biblioteca de paquetes es configurarla manualmente en un archivo de inicio, es decir, archivos <code>Rprofile.site</code> y <code>Renviron.site</code> a nivel de versión R (ubicado en <code>R_HOME/etc/</code>) o archivos <code>.Rprofile</code> y <code>.Renviron</code>, a nivel de usuario (ubicado en su carpeta <code>HOME</code>) o a nivel de proyecto (ubicado en el directorio de trabajo actual).</p>
+<blockquote>
+<p>:pencil2: Para obtener más información sobre los archivos de inicio de R, puedes leer el siguiente <a href="https://support.rstudio.com/hc/en-us/articles/360047157094-Managing-R-with-Rprofile-Renviron-Rprofile-site-Renviron-site-rsession-conf-and-repos-conf">artículo de soporte</a>.</p>
+</blockquote>
+<p>Para archivos de tipo <code>Renviron</code>, se debe especificar la variable de entorno correspondiente, por ejemplo, si quiero cambiar los árboles de la biblioteca R en un sistema Linux, agregaría una línea como esta al archivo <code>Renviron.site</code> ubicado en <code>/usr/lib/R/etc/</code> (En este caso, la variable de entorno <code>R_HOME</code> se traduce a <code>/usr/lib/R/</code>).</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="va">R_LIBS_SITE=</span><span class="st">&quot;/usr/lib/R/site-library:/usr/lib/R/library&quot;</span></span></code></pre></div>
+<p>Siendo la primera ubicación desde la izquierda la predeterminada, que es utilizada por <code>install.packages()</code> si no se especifica el argumento <code>lib</code>, y todas ellas (que están separadas por dos puntos) se escanean en orden en busca de paquetes al iniciar R. Ten en cuenta que solo se incluirán los directorios que existan en ese momento.</p>
+<p>Para archivos de tipo <code>Rprofile</code>, se debe usar la función <code>.libPaths()</code>, ya que estos archivos deben contener código R válido para ser ejecutados al inicar R. El comando R equivalente al ejemplo anterior sería:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">.libPaths</span>(<span class="fu">c</span>(<span class="st">&quot;/usr/lib/R/site-library&quot;</span>, <span class="st">&quot;/usr/lib/R/library&quot;</span>))</span></code></pre></div>
+<p>Obviamente, las rutas de las carpetas serán diferentes según tu sistema operativo y configuración específicos, pero espero que se entienda la idea general de que debes especificar una ruta de carpeta que sea adecuada para tus necesidades específicas, por ejemplo, en un sistema Windows el equivalente sería:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">.libPaths</span>(<span class="fu">c</span>(<span class="st">&quot;C:/Program Files/R/R-4.0.3/library&quot;</span>))</span></code></pre></div>
+<p>De forma predeterminada, la biblioteca de paquetes predeterminada se establece a nivel de usuario (carpeta <code>HOME</code>), lo que en algunos casos, puede causar los problemas mencionados anteriormente. Ahora, este es un consejo sesgado, pero para un uso individual simple, me resulta más práctico establecer la biblioteca de paquetes predeterminada a nivel de la versión R (carpeta <code>R_HOME/library/</code>) y hacer uso explícito de otras ubicaciones, de forma selectiva, y según los casos de uso específicos. Ten en cuenta que dependiendo de tu configuración de seguridad y sistema operativo, es posible que debas ejecutar tu sesión R con derechos de “administrador” o desde un usuario con derechos “sudo” para que esto funcione.</p>

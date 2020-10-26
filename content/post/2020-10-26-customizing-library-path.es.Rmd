@@ -1,0 +1,64 @@
+---
+title: Personalizando la ubicación de tu librería de paquetes
+description: Este es un artículo breve para principiantes que muestra cómo personalizar la ubicación de su biblioteca de paquetes.
+author: andres-castro
+date: '2020-10-26'
+slug: customizing_library_path
+categories:
+  - R
+series: 
+  - r-admin
+tags:
+  - admin
+  - beginner
+draft: false
+images: ["customizing_library_path.jpg"]
+authors: ["andres-castro"]
+output:
+  blogdown::html_page:
+    toc: true
+    highlight: zenburn
+---
+
+Para los usuarios de R razonablemente experimentados, este simple tema puede no parecer digno de una publicación de blog, por lo que si no eres un principiante de R, es posible que desees omitir esta publicación. Dicho esto, he tenido que explicar esta tarea tantas veces en los foros de la comunidad R, que escribir una se vuelve obligatorio para evitar escribir el mismo texto una vez más.
+
+Las razones para personalizar la ruta de tu biblioteca en lugar de seguir los valores predeterminados pueden ser variadas, pero para los principiantes de R, la más común es evitar problemas de instalación de paquetes debido a permisos de escritura, caracteres no ASCII en rutas de carpetas, carpetas sincronizadas en la nube o unidades de red, que conducen a mensajes de error como:
+
+```{r eval=FALSE}
+Warning in install.packages :
+  'lib = "/path/to/your/library"' is not writable
+Error in install.packages : unable to install packages
+```
+
+```{r eval=FALSE}
+** byte-compile and prepare package for lazy loading
+Error: unexpected symbol in "setwd('incomplete/path/to/your/library"
+Execution halted
+```
+
+Muy a menudo, la solución a estos problemas es configurar tu biblioteca de paquetes en algún otro lugar de tu sistema, donde tengas los permisos adecuados y no existan incompatibilidades con R conocidas. La forma de cambiar la ubicación de una biblioteca de paquetes es configurarla manualmente en un archivo de inicio, es decir, archivos `Rprofile.site` y `Renviron.site` a nivel de versión R (ubicado en `R_HOME/etc/`) o archivos `.Rprofile` y `.Renviron`, a nivel de usuario (ubicado en su carpeta `HOME`) o a nivel de proyecto (ubicado en el directorio de trabajo actual).
+
+>:pencil2: Para obtener más información sobre los archivos de inicio de R, puedes leer el siguiente [artículo de soporte](https://support.rstudio.com/hc/en-us/articles/360047157094-Managing-R-with-Rprofile-Renviron-Rprofile-site-Renviron-site-rsession-conf-and-repos-conf).
+
+Para archivos de tipo `Renviron`, se debe especificar la variable de entorno correspondiente, por ejemplo, si quiero cambiar los árboles de la biblioteca R en un sistema Linux, agregaría una línea como esta al archivo `Renviron.site` ubicado en `/usr/lib/R/etc/` (En este caso, la variable de entorno `R_HOME` se traduce a `/usr/lib/R/`).
+
+```{bash eval=FALSE}
+R_LIBS_SITE="/usr/lib/R/site-library:/usr/lib/R/library"
+```
+
+
+Siendo la primera ubicación desde la izquierda la predeterminada, que es utilizada por `install.packages()` si no se especifica el argumento `lib`, y todas ellas (que están separadas por dos puntos) se escanean en orden en busca de paquetes al iniciar R. Ten en cuenta que solo se incluirán los directorios que existan en ese momento.
+
+Para archivos de tipo `Rprofile`, se debe usar la función `.libPaths()`, ya que estos archivos deben contener código R válido para ser ejecutados al inicar R. El comando R equivalente al ejemplo anterior sería:
+
+```{r eval=FALSE}
+.libPaths(c("/usr/lib/R/site-library", "/usr/lib/R/library"))
+```
+
+Obviamente, las rutas de las carpetas serán diferentes según tu sistema operativo y configuración específicos, pero espero que se entienda la idea general de que debes especificar una ruta de carpeta que sea adecuada para tus necesidades específicas, por ejemplo, en un sistema Windows el equivalente sería:
+
+```{r eval=FALSE}
+.libPaths(c("C:/Program Files/R/R-4.0.3/library"))
+```
+
+De forma predeterminada, la biblioteca de paquetes predeterminada se establece a nivel de usuario (carpeta `HOME`), lo que en algunos casos, puede causar los problemas mencionados anteriormente. Ahora, este es un consejo sesgado, pero para un uso individual simple, me resulta más práctico establecer la biblioteca de paquetes predeterminada a nivel de la versión R (carpeta `R_HOME/library/`) y hacer uso explícito de otras ubicaciones, de forma selectiva, y según los casos de uso específicos. Ten en cuenta que dependiendo de tu configuración de seguridad y sistema operativo, es posible que debas ejecutar tu sesión R con derechos de "administrador" o desde un usuario con derechos "sudo" para que esto funcione.
