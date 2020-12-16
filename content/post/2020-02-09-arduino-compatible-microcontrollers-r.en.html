@@ -23,20 +23,20 @@ output:
     highlight: zenburn
 ---
 
+<script src="/rmarkdown-libs/header-attrs/header-attrs.js"></script>
 <style type="text/css">
-code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
-code.sourceCode > span:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode { white-space: pre; position: relative; }
 div.sourceCode { margin: 1em 0; }
 pre.sourceCode { margin: 0; }
 @media screen {
 div.sourceCode { overflow: auto; }
 }
 @media print {
-code.sourceCode { white-space: pre-wrap; }
-code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
   { counter-reset: source-line 0; }
@@ -55,7 +55,7 @@ pre.numberSource { margin-left: 3em;  padding-left: 4px; }
 div.sourceCode
   { color: #cccccc; background-color: #303030; }
 @media screen {
-code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 code span.al { color: #ffcfaf; } /* Alert */
 code span.an { color: #7f9f7f; font-weight: bold; } /* Annotation */
@@ -115,79 +115,79 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <p>This is a simple example of an Arduino Sketch for an ESP8266 board (Wemos D1 mini) and DS18B20 temperature probe sensors, that serves HTML and JSON outputs over a web server.</p>
 {{% gist "andresrcs" "fa631e15f2f665335b0592fdeba20992" %}}
 <p>The second step is to pull the data out of the microcontroller and into a SQL server, there are a lot of approaches and languages you can use to implement this part but obviously we are going to use R. You can write an R script that connects to the microcontroller, retrieves the data and writes it into a SQL server, and schedule the script with a <code>cron</code> job.</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a><span class="co">#! /usr/bin/env Rscript</span></span>
-<span id="cb1-2"><a href="#cb1-2"></a></span>
-<span id="cb1-3"><a href="#cb1-3"></a><span class="co"># DATA ADQUISITION##############################################################</span></span>
-<span id="cb1-4"><a href="#cb1-4"></a>raw_data &lt;-<span class="st"> </span>rjson<span class="op">::</span><span class="kw">fromJSON</span>(<span class="dt">file=</span><span class="st">&quot;http://192.168.0.102/reading.json&quot;</span>) </span>
-<span id="cb1-5"><a href="#cb1-5"></a>current_time &lt;-<span class="st"> </span><span class="kw">as.character</span>(<span class="kw">Sys.time</span>())</span>
-<span id="cb1-6"><a href="#cb1-6"></a></span>
-<span id="cb1-7"><a href="#cb1-7"></a><span class="co"># PARAMETERS ###################################################################</span></span>
-<span id="cb1-8"><a href="#cb1-8"></a>current_location =<span class="st"> &quot;some_place&quot;</span></span>
-<span id="cb1-9"><a href="#cb1-9"></a>point_names =<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;probe0&quot;</span> =<span class="st"> &quot;measurement_point_0&quot;</span>, </span>
-<span id="cb1-10"><a href="#cb1-10"></a>                <span class="st">&quot;probe1&quot;</span> =<span class="st"> &quot;measurement_point_1&quot;</span>,</span>
-<span id="cb1-11"><a href="#cb1-11"></a>                <span class="st">&quot;probe2&quot;</span> =<span class="st"> &quot;measurement_point_2&quot;</span>)</span>
-<span id="cb1-12"><a href="#cb1-12"></a></span>
-<span id="cb1-13"><a href="#cb1-13"></a><span class="co"># LIBRARIES ####################################################################</span></span>
-<span id="cb1-14"><a href="#cb1-14"></a><span class="kw">library</span>(dplyr)</span>
-<span id="cb1-15"><a href="#cb1-15"></a></span>
-<span id="cb1-16"><a href="#cb1-16"></a><span class="co"># DATA CLEANING ################################################################</span></span>
-<span id="cb1-17"><a href="#cb1-17"></a>tidy_data &lt;-<span class="st"> </span><span class="kw">as_tibble</span>(raw_data) <span class="op">%&gt;%</span></span>
-<span id="cb1-18"><a href="#cb1-18"></a><span class="st">    </span>tidyr<span class="op">::</span><span class="kw">gather</span>(measurement_point, value) <span class="op">%&gt;%</span><span class="st"> </span></span>
-<span id="cb1-19"><a href="#cb1-19"></a><span class="st">    </span><span class="kw">mutate</span>(<span class="dt">time =</span> current_time,</span>
-<span id="cb1-20"><a href="#cb1-20"></a>           <span class="dt">location =</span> current_location,</span>
-<span id="cb1-21"><a href="#cb1-21"></a>           <span class="dt">variable =</span> stringr<span class="op">::</span><span class="kw">str_extract</span>(measurement_point, <span class="st">&quot;^.+(?=-)&quot;</span>),</span>
-<span id="cb1-22"><a href="#cb1-22"></a>           <span class="dt">measurement_point =</span> stringr<span class="op">::</span><span class="kw">str_extract</span>(measurement_point, <span class="st">&quot;(?&lt;=-).+$&quot;</span>),</span>
-<span id="cb1-23"><a href="#cb1-23"></a>           <span class="dt">measurement_point =</span> stringr<span class="op">::</span><span class="kw">str_replace_all</span>(measurement_point, point_names)</span>
-<span id="cb1-24"><a href="#cb1-24"></a>           ) <span class="op">%&gt;%</span></span>
-<span id="cb1-25"><a href="#cb1-25"></a><span class="st">    </span><span class="kw">select</span>(time, location, variable, measurement_point, value)</span>
-<span id="cb1-26"><a href="#cb1-26"></a></span>
-<span id="cb1-27"><a href="#cb1-27"></a><span class="co"># LOAD DATA ####################################################################</span></span>
-<span id="cb1-28"><a href="#cb1-28"></a>connection_string &lt;-<span class="st"> </span>glue<span class="op">::</span><span class="kw">glue</span>(<span class="st">&quot;Driver={{PostgreSQL ANSI}};</span><span class="ch">\\</span></span>
-<span id="cb1-29"><a href="#cb1-29"></a><span class="st">                                Uid={Sys.getenv(&#39;MY_UID&#39;)};</span><span class="ch">\\</span></span>
-<span id="cb1-30"><a href="#cb1-30"></a><span class="st">                                Pwd={Sys.getenv(&#39;MY_PWD&#39;)};</span><span class="ch">\\</span></span>
-<span id="cb1-31"><a href="#cb1-31"></a><span class="st">                                Server=localhost;</span><span class="ch">\\</span></span>
-<span id="cb1-32"><a href="#cb1-32"></a><span class="st">                                Port=5432;</span><span class="ch">\\</span></span>
-<span id="cb1-33"><a href="#cb1-33"></a><span class="st">                                Database=sensors;&quot;</span>)</span>
-<span id="cb1-34"><a href="#cb1-34"></a></span>
-<span id="cb1-35"><a href="#cb1-35"></a>con &lt;-<span class="st"> </span>odbc<span class="op">::</span><span class="kw">dbConnect</span>(odbc<span class="op">::</span><span class="kw">odbc</span>(), <span class="dt">.connection_string =</span> connection_string, <span class="dt">encoding =</span> <span class="st">&quot;utf8&quot;</span>)</span>
-<span id="cb1-36"><a href="#cb1-36"></a></span>
-<span id="cb1-37"><a href="#cb1-37"></a>DBI<span class="op">::</span><span class="kw">dbAppendTable</span>(<span class="dt">conn =</span> con,</span>
-<span id="cb1-38"><a href="#cb1-38"></a>                   <span class="dt">name =</span> <span class="st">&#39;sensors_data&#39;</span>,</span>
-<span id="cb1-39"><a href="#cb1-39"></a>                   <span class="dt">value =</span> tidy_data)</span>
-<span id="cb1-40"><a href="#cb1-40"></a></span>
-<span id="cb1-41"><a href="#cb1-41"></a>odbc<span class="op">::</span><span class="kw">dbDisconnect</span>(con)</span>
-<span id="cb1-42"><a href="#cb1-42"></a></span>
-<span id="cb1-43"><a href="#cb1-43"></a><span class="kw">unlink</span>(<span class="dt">x =</span> <span class="st">&quot;*.log&quot;</span>, <span class="dt">force =</span> <span class="ot">TRUE</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">#! /usr/bin/env Rscript</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># DATA ADQUISITION##############################################################</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>raw_data <span class="ot">&lt;-</span> rjson<span class="sc">::</span><span class="fu">fromJSON</span>(<span class="at">file=</span><span class="st">&quot;http://192.168.0.102/reading.json&quot;</span>) </span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>current_time <span class="ot">&lt;-</span> <span class="fu">as.character</span>(<span class="fu">Sys.time</span>())</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="co"># PARAMETERS ###################################################################</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>current_location <span class="ot">=</span> <span class="st">&quot;some_place&quot;</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>point_names <span class="ot">=</span> <span class="fu">c</span>(<span class="st">&quot;probe0&quot;</span> <span class="ot">=</span> <span class="st">&quot;measurement_point_0&quot;</span>, </span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>                <span class="st">&quot;probe1&quot;</span> <span class="ot">=</span> <span class="st">&quot;measurement_point_1&quot;</span>,</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>                <span class="st">&quot;probe2&quot;</span> <span class="ot">=</span> <span class="st">&quot;measurement_point_2&quot;</span>)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co"># LIBRARIES ####################################################################</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="co"># DATA CLEANING ################################################################</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>tidy_data <span class="ot">&lt;-</span> <span class="fu">as_tibble</span>(raw_data) <span class="sc">%&gt;%</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    tidyr<span class="sc">::</span><span class="fu">gather</span>(measurement_point, value) <span class="sc">%&gt;%</span> </span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">time =</span> current_time,</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>           <span class="at">location =</span> current_location,</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>           <span class="at">variable =</span> stringr<span class="sc">::</span><span class="fu">str_extract</span>(measurement_point, <span class="st">&quot;^.+(?=-)&quot;</span>),</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>           <span class="at">measurement_point =</span> stringr<span class="sc">::</span><span class="fu">str_extract</span>(measurement_point, <span class="st">&quot;(?&lt;=-).+$&quot;</span>),</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>           <span class="at">measurement_point =</span> stringr<span class="sc">::</span><span class="fu">str_replace_all</span>(measurement_point, point_names)</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>           ) <span class="sc">%&gt;%</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>    <span class="fu">select</span>(time, location, variable, measurement_point, value)</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a><span class="co"># LOAD DATA ####################################################################</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>connection_string <span class="ot">&lt;-</span> glue<span class="sc">::</span><span class="fu">glue</span>(<span class="st">&quot;Driver={{PostgreSQL ANSI}};</span><span class="sc">\\</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a><span class="st">                                Uid={Sys.getenv(&#39;MY_UID&#39;)};</span><span class="sc">\\</span></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a><span class="st">                                Pwd={Sys.getenv(&#39;MY_PWD&#39;)};</span><span class="sc">\\</span></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a><span class="st">                                Server=localhost;</span><span class="sc">\\</span></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a><span class="st">                                Port=5432;</span><span class="sc">\\</span></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a><span class="st">                                Database=sensors;&quot;</span>)</span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>con <span class="ot">&lt;-</span> odbc<span class="sc">::</span><span class="fu">dbConnect</span>(odbc<span class="sc">::</span><span class="fu">odbc</span>(), <span class="at">.connection_string =</span> connection_string, <span class="at">encoding =</span> <span class="st">&quot;utf8&quot;</span>)</span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbAppendTable</span>(<span class="at">conn =</span> con,</span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>                   <span class="at">name =</span> <span class="st">&#39;sensors_data&#39;</span>,</span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>                   <span class="at">value =</span> tidy_data)</span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>odbc<span class="sc">::</span><span class="fu">dbDisconnect</span>(con)</span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a><span class="fu">unlink</span>(<span class="at">x =</span> <span class="st">&quot;*.log&quot;</span>, <span class="at">force =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
 <p>Now that you have the data into a SQL server, you are at one SQL query away of getting it into R</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a><span class="kw">library</span>(odbc)</span>
-<span id="cb2-2"><a href="#cb2-2"></a><span class="kw">library</span>(glue)</span>
-<span id="cb2-3"><a href="#cb2-3"></a></span>
-<span id="cb2-4"><a href="#cb2-4"></a>connection_string &lt;-<span class="st"> </span>glue<span class="op">::</span><span class="kw">glue</span>(</span>
-<span id="cb2-5"><a href="#cb2-5"></a>  <span class="st">&quot;Driver={{PostgreSQL ANSI}};</span><span class="ch">\\</span></span>
-<span id="cb2-6"><a href="#cb2-6"></a><span class="st">  Uid={Sys.getenv(&#39;MY_UID&#39;)};</span><span class="ch">\\</span></span>
-<span id="cb2-7"><a href="#cb2-7"></a><span class="st">  Pwd={Sys.getenv(&#39;MY_PWD&#39;)};</span><span class="ch">\\</span></span>
-<span id="cb2-8"><a href="#cb2-8"></a><span class="st">  Server={Sys.getenv(&#39;MY_REMOTE&#39;)};</span><span class="ch">\\</span></span>
-<span id="cb2-9"><a href="#cb2-9"></a><span class="st">  Port=5432;</span><span class="ch">\\</span></span>
-<span id="cb2-10"><a href="#cb2-10"></a><span class="st">  Database=sensors;&quot;</span></span>
-<span id="cb2-11"><a href="#cb2-11"></a>)</span>
-<span id="cb2-12"><a href="#cb2-12"></a></span>
-<span id="cb2-13"><a href="#cb2-13"></a>con &lt;-<span class="st"> </span><span class="kw">dbConnect</span>(</span>
-<span id="cb2-14"><a href="#cb2-14"></a>  <span class="dt">drv =</span> odbc<span class="op">::</span><span class="kw">odbc</span>(),</span>
-<span id="cb2-15"><a href="#cb2-15"></a>  <span class="dt">.connection_string =</span> connection_string,</span>
-<span id="cb2-16"><a href="#cb2-16"></a>  <span class="dt">encoding =</span> <span class="st">&quot;utf8&quot;</span></span>
-<span id="cb2-17"><a href="#cb2-17"></a>)</span>
-<span id="cb2-18"><a href="#cb2-18"></a></span>
-<span id="cb2-19"><a href="#cb2-19"></a>query &lt;-<span class="st"> &quot;</span></span>
-<span id="cb2-20"><a href="#cb2-20"></a><span class="st">SELECT * </span></span>
-<span id="cb2-21"><a href="#cb2-21"></a><span class="st">FROM public.sensors_data</span></span>
-<span id="cb2-22"><a href="#cb2-22"></a><span class="st">&quot;</span></span>
-<span id="cb2-23"><a href="#cb2-23"></a></span>
-<span id="cb2-24"><a href="#cb2-24"></a>raw_data &lt;-<span class="st"> </span><span class="kw">dbGetQuery</span>(</span>
-<span id="cb2-25"><a href="#cb2-25"></a>  <span class="dt">conn =</span> con,</span>
-<span id="cb2-26"><a href="#cb2-26"></a>  <span class="dt">statement =</span> query</span>
-<span id="cb2-27"><a href="#cb2-27"></a>)</span>
-<span id="cb2-28"><a href="#cb2-28"></a></span>
-<span id="cb2-29"><a href="#cb2-29"></a><span class="kw">dbDisconnect</span>(con)</span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(odbc)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(glue)</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>connection_string <span class="ot">&lt;-</span> glue<span class="sc">::</span><span class="fu">glue</span>(</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Driver={{PostgreSQL ANSI}};</span><span class="sc">\\</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="st">  Uid={Sys.getenv(&#39;MY_UID&#39;)};</span><span class="sc">\\</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="st">  Pwd={Sys.getenv(&#39;MY_PWD&#39;)};</span><span class="sc">\\</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="st">  Server={Sys.getenv(&#39;MY_REMOTE&#39;)};</span><span class="sc">\\</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="st">  Port=5432;</span><span class="sc">\\</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="st">  Database=sensors;&quot;</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>con <span class="ot">&lt;-</span> <span class="fu">dbConnect</span>(</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">drv =</span> odbc<span class="sc">::</span><span class="fu">odbc</span>(),</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">.connection_string =</span> connection_string,</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">encoding =</span> <span class="st">&quot;utf8&quot;</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>query <span class="ot">&lt;-</span> <span class="st">&quot;</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="st">SELECT * </span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="st">FROM public.sensors_data</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>raw_data <span class="ot">&lt;-</span> <span class="fu">dbGetQuery</span>(</span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>  <span class="at">conn =</span> con,</span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>  <span class="at">statement =</span> query</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a><span class="fu">dbDisconnect</span>(con)</span></code></pre></div>
 <p>What makes this approach my personal favorite is that it is fairly easy to implement, very flexible and allows you to implement almost any security measure you might need.</p>
 </div>
 <div id="using-the-mqtt-protocol" class="section level2">
@@ -198,67 +198,67 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <p>:pencil2: In order for this to work you need to have the <code>mosquitto</code> client installed in your system.</p>
 </blockquote>
 <pre><code>sudo apt install mosquitto-clients</code></pre>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1"></a><span class="kw">library</span>(shiny)</span>
-<span id="cb4-2"><a href="#cb4-2"></a><span class="kw">library</span>(ggplot2)</span>
-<span id="cb4-3"><a href="#cb4-3"></a><span class="kw">library</span>(rmqtt)  <span class="co"># This package is just a simple wrapper for an MQTT client using</span></span>
-<span id="cb4-4"><a href="#cb4-4"></a>                <span class="co"># system() calls, you need to have the mosquitto client installed</span></span>
-<span id="cb4-5"><a href="#cb4-5"></a>                <span class="co"># in your system for this to work.</span></span>
-<span id="cb4-6"><a href="#cb4-6"></a></span>
-<span id="cb4-7"><a href="#cb4-7"></a><span class="co"># Initialize Simulated Sensor</span></span>
-<span id="cb4-8"><a href="#cb4-8"></a><span class="kw">mqtt_topic_publish</span>(</span>
-<span id="cb4-9"><a href="#cb4-9"></a>    <span class="dt">topic =</span> <span class="st">&quot;simulated_sensor&quot;</span>, </span>
-<span id="cb4-10"><a href="#cb4-10"></a>    <span class="dt">message_to_send =</span> <span class="st">&quot;24.9&quot;</span>,</span>
-<span id="cb4-11"><a href="#cb4-11"></a>    <span class="dt">host =</span> <span class="st">&quot;test.mosquitto.org&quot;</span>,</span>
-<span id="cb4-12"><a href="#cb4-12"></a>    <span class="dt">port =</span> <span class="dv">1883</span>,</span>
-<span id="cb4-13"><a href="#cb4-13"></a>    <span class="dt">qos =</span> <span class="dv">1</span>, </span>
-<span id="cb4-14"><a href="#cb4-14"></a>    <span class="dt">retain_message =</span> <span class="ot">TRUE</span></span>
-<span id="cb4-15"><a href="#cb4-15"></a>)</span>
-<span id="cb4-16"><a href="#cb4-16"></a></span>
-<span id="cb4-17"><a href="#cb4-17"></a>ui &lt;-<span class="st"> </span><span class="kw">fluidPage</span>(</span>
-<span id="cb4-18"><a href="#cb4-18"></a>    <span class="kw">titlePanel</span>(<span class="st">&quot;Dashboard&quot;</span>),</span>
-<span id="cb4-19"><a href="#cb4-19"></a>    <span class="kw">mainPanel</span>(</span>
-<span id="cb4-20"><a href="#cb4-20"></a>        <span class="kw">h2</span>(<span class="st">&quot;Temperature Indicator&quot;</span>),</span>
-<span id="cb4-21"><a href="#cb4-21"></a>        <span class="kw">plotOutput</span>(<span class="st">&quot;status_indicator&quot;</span>)</span>
-<span id="cb4-22"><a href="#cb4-22"></a>    )</span>
-<span id="cb4-23"><a href="#cb4-23"></a>)</span>
-<span id="cb4-24"><a href="#cb4-24"></a></span>
-<span id="cb4-25"><a href="#cb4-25"></a>server &lt;-<span class="st"> </span><span class="cf">function</span>(input, output, session) {</span>
-<span id="cb4-26"><a href="#cb4-26"></a>    </span>
-<span id="cb4-27"><a href="#cb4-27"></a>    get_color &lt;-<span class="st"> </span><span class="cf">function</span>() {</span>
-<span id="cb4-28"><a href="#cb4-28"></a>        message &lt;-<span class="st"> </span><span class="kw">mqtt_topic_subscribe</span>(</span>
-<span id="cb4-29"><a href="#cb4-29"></a>            <span class="dt">topic =</span> <span class="st">&quot;simulated_sensor&quot;</span>, </span>
-<span id="cb4-30"><a href="#cb4-30"></a>            <span class="dt">host =</span> <span class="st">&quot;test.mosquitto.org&quot;</span>,</span>
-<span id="cb4-31"><a href="#cb4-31"></a>            <span class="dt">port =</span> <span class="dv">1883</span>,</span>
-<span id="cb4-32"><a href="#cb4-32"></a>            <span class="dt">qos =</span> <span class="dv">1</span>,</span>
-<span id="cb4-33"><a href="#cb4-33"></a>            <span class="dt">intern =</span> <span class="ot">TRUE</span>,</span>
-<span id="cb4-34"><a href="#cb4-34"></a>            <span class="dt">num.messages =</span> <span class="dv">1</span></span>
-<span id="cb4-35"><a href="#cb4-35"></a>        )</span>
-<span id="cb4-36"><a href="#cb4-36"></a>        </span>
-<span id="cb4-37"><a href="#cb4-37"></a>        <span class="cf">if</span> (<span class="kw">as.numeric</span>(message) <span class="op">&gt;</span><span class="st"> </span><span class="dv">25</span>) {</span>
-<span id="cb4-38"><a href="#cb4-38"></a>            color =<span class="st"> &#39;red&#39;</span></span>
-<span id="cb4-39"><a href="#cb4-39"></a>        } <span class="cf">else</span> {</span>
-<span id="cb4-40"><a href="#cb4-40"></a>            color =<span class="st"> &#39;green&#39;</span></span>
-<span id="cb4-41"><a href="#cb4-41"></a>        }</span>
-<span id="cb4-42"><a href="#cb4-42"></a>        </span>
-<span id="cb4-43"><a href="#cb4-43"></a>        <span class="kw">return</span>(color)</span>
-<span id="cb4-44"><a href="#cb4-44"></a>    }</span>
-<span id="cb4-45"><a href="#cb4-45"></a>    </span>
-<span id="cb4-46"><a href="#cb4-46"></a>    pollData &lt;-<span class="st"> </span><span class="kw">reactivePoll</span>(<span class="dv">100</span>, session,</span>
-<span id="cb4-47"><a href="#cb4-47"></a>                             <span class="dt">checkFunc =</span> get_color,</span>
-<span id="cb4-48"><a href="#cb4-48"></a>                             <span class="dt">valueFunc =</span> get_color</span>
-<span id="cb4-49"><a href="#cb4-49"></a>    )</span>
-<span id="cb4-50"><a href="#cb4-50"></a>    </span>
-<span id="cb4-51"><a href="#cb4-51"></a>    output<span class="op">$</span>status_indicator &lt;-<span class="st"> </span><span class="kw">renderPlot</span>({</span>
-<span id="cb4-52"><a href="#cb4-52"></a>        <span class="kw">ggplot</span>(<span class="dt">data =</span> <span class="kw">data.frame</span>(<span class="dt">x =</span> <span class="dv">1</span>, <span class="dt">y =</span> <span class="dv">1</span>), <span class="kw">aes</span>(x, y)) <span class="op">+</span></span>
-<span id="cb4-53"><a href="#cb4-53"></a><span class="st">            </span><span class="kw">geom_point</span>(<span class="dt">size =</span> <span class="dv">50</span>, <span class="dt">color =</span> <span class="kw">pollData</span>()) <span class="op">+</span></span>
-<span id="cb4-54"><a href="#cb4-54"></a><span class="st">            </span><span class="kw">scale_x_discrete</span>() <span class="op">+</span></span>
-<span id="cb4-55"><a href="#cb4-55"></a><span class="st">            </span><span class="kw">scale_y_discrete</span>() <span class="op">+</span></span>
-<span id="cb4-56"><a href="#cb4-56"></a><span class="st">            </span><span class="kw">theme_void</span>() <span class="op">+</span></span>
-<span id="cb4-57"><a href="#cb4-57"></a><span class="st">            </span><span class="kw">theme</span>(<span class="dt">axis.title =</span> <span class="kw">element_blank</span>())</span>
-<span id="cb4-58"><a href="#cb4-58"></a>    })</span>
-<span id="cb4-59"><a href="#cb4-59"></a>}</span>
-<span id="cb4-60"><a href="#cb4-60"></a></span>
-<span id="cb4-61"><a href="#cb4-61"></a><span class="kw">shinyApp</span>(<span class="dt">ui =</span> ui, <span class="dt">server =</span> server)</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(shiny)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rmqtt)  <span class="co"># This package is just a simple wrapper for an MQTT client using</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>                <span class="co"># system() calls, you need to have the mosquitto client installed</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>                <span class="co"># in your system for this to work.</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Initialize Simulated Sensor</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="fu">mqtt_topic_publish</span>(</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">topic =</span> <span class="st">&quot;simulated_sensor&quot;</span>, </span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">message_to_send =</span> <span class="st">&quot;24.9&quot;</span>,</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">host =</span> <span class="st">&quot;test.mosquitto.org&quot;</span>,</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">port =</span> <span class="dv">1883</span>,</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">qos =</span> <span class="dv">1</span>, </span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">retain_message =</span> <span class="cn">TRUE</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>ui <span class="ot">&lt;-</span> <span class="fu">fluidPage</span>(</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">titlePanel</span>(<span class="st">&quot;Dashboard&quot;</span>),</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mainPanel</span>(</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>        <span class="fu">h2</span>(<span class="st">&quot;Temperature Indicator&quot;</span>),</span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>        <span class="fu">plotOutput</span>(<span class="st">&quot;status_indicator&quot;</span>)</span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>server <span class="ot">&lt;-</span> <span class="cf">function</span>(input, output, session) {</span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>    get_color <span class="ot">&lt;-</span> <span class="cf">function</span>() {</span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>        message <span class="ot">&lt;-</span> <span class="fu">mqtt_topic_subscribe</span>(</span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>            <span class="at">topic =</span> <span class="st">&quot;simulated_sensor&quot;</span>, </span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>            <span class="at">host =</span> <span class="st">&quot;test.mosquitto.org&quot;</span>,</span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>            <span class="at">port =</span> <span class="dv">1883</span>,</span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>            <span class="at">qos =</span> <span class="dv">1</span>,</span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a>            <span class="at">intern =</span> <span class="cn">TRUE</span>,</span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>            <span class="at">num.messages =</span> <span class="dv">1</span></span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> (<span class="fu">as.numeric</span>(message) <span class="sc">&gt;</span> <span class="dv">25</span>) {</span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a>            color <span class="ot">=</span> <span class="st">&#39;red&#39;</span></span>
+<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a>        } <span class="cf">else</span> {</span>
+<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a>            color <span class="ot">=</span> <span class="st">&#39;green&#39;</span></span>
+<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a>        <span class="fu">return</span>(color)</span>
+<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a>    pollData <span class="ot">&lt;-</span> <span class="fu">reactivePoll</span>(<span class="dv">100</span>, session,</span>
+<span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a>                             <span class="at">checkFunc =</span> get_color,</span>
+<span id="cb4-48"><a href="#cb4-48" aria-hidden="true" tabindex="-1"></a>                             <span class="at">valueFunc =</span> get_color</span>
+<span id="cb4-49"><a href="#cb4-49" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb4-50"><a href="#cb4-50" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb4-51"><a href="#cb4-51" aria-hidden="true" tabindex="-1"></a>    output<span class="sc">$</span>status_indicator <span class="ot">&lt;-</span> <span class="fu">renderPlot</span>({</span>
+<span id="cb4-52"><a href="#cb4-52" aria-hidden="true" tabindex="-1"></a>        <span class="fu">ggplot</span>(<span class="at">data =</span> <span class="fu">data.frame</span>(<span class="at">x =</span> <span class="dv">1</span>, <span class="at">y =</span> <span class="dv">1</span>), <span class="fu">aes</span>(x, y)) <span class="sc">+</span></span>
+<span id="cb4-53"><a href="#cb4-53" aria-hidden="true" tabindex="-1"></a>            <span class="fu">geom_point</span>(<span class="at">size =</span> <span class="dv">50</span>, <span class="at">color =</span> <span class="fu">pollData</span>()) <span class="sc">+</span></span>
+<span id="cb4-54"><a href="#cb4-54" aria-hidden="true" tabindex="-1"></a>            <span class="fu">scale_x_discrete</span>() <span class="sc">+</span></span>
+<span id="cb4-55"><a href="#cb4-55" aria-hidden="true" tabindex="-1"></a>            <span class="fu">scale_y_discrete</span>() <span class="sc">+</span></span>
+<span id="cb4-56"><a href="#cb4-56" aria-hidden="true" tabindex="-1"></a>            <span class="fu">theme_void</span>() <span class="sc">+</span></span>
+<span id="cb4-57"><a href="#cb4-57" aria-hidden="true" tabindex="-1"></a>            <span class="fu">theme</span>(<span class="at">axis.title =</span> <span class="fu">element_blank</span>())</span>
+<span id="cb4-58"><a href="#cb4-58" aria-hidden="true" tabindex="-1"></a>    })</span>
+<span id="cb4-59"><a href="#cb4-59" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb4-60"><a href="#cb4-60" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-61"><a href="#cb4-61" aria-hidden="true" tabindex="-1"></a><span class="fu">shinyApp</span>(<span class="at">ui =</span> ui, <span class="at">server =</span> server)</span></code></pre></div>
 <p><img src="/post/2020-01-25-arduino-compatible-microcontrollers-r.en_files/shinyapp_mqtt.jpg" width="400" height="300" /></p>
 <p>If you are interested in testing this, here is a GitHub Gist with the <a href="https://gist.github.com/andresrcs/a2000bf54bf98be64351bbad34bdb838">Arduino Sketch</a> for an ESP8266 board whit a DS18B20 temperature probe sensor that can update the values in the example app.</p>
 <p>I know this doesn’t look very interesting right now but consider the implications. You could be getting instant updates in your dashboard from sensors deployed at kilometers downrange and you could even control remote actuators from your shiny app by sending an MQTT message from it with the click of a button!</p>
