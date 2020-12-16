@@ -2,7 +2,7 @@
 title: Alternatives for retrieving sensor data from Arduino compatible microcontrollers into R
 description: In this article we explore some alternatives for remotely acquiring sensor data from Arduino compatible microcontrollers, pointing out the advantages and disadvantages of each method and giving some simple illustrative examples based on ESP8266 boards.
 author: andres-castro
-date: '2020-01-25'
+date: '2020-02-09'
 slug: arduino_microcontroller_r
 categories:
   - R
@@ -29,7 +29,11 @@ Depending on your application's requirements you could choose among a plethora o
 
 ## Serial Connection
 
-If you have never thought about getting data from microcontrollers before, I bet the first thought that comes to your mind, is to somehow directly connect the microcontroller with R to get the data, but this is currently the most technically challenging option, it can be done using a serial connection between the microcontroller and your computer, but as far as I know, there is only one [R package implementing this](https://github.com/r-arduino/arduinor) and only runs on POSIX-compatible systems (so no Windows). I can't test this approach myself since I don't have a physical Linux or macOS machine to connect a microcontroller to, so for this case, I'm just going to link to a [blog post](https://zhuhao.org/post/connect-arduino-chips-with-r/) by [\@haozhu233](https://twitter.com/haozhu233) (the package author) showcasing its functionality. If your application requires real-time data acquisition or very low latency this might be your only option and you may want to dive deeper into this.
+If you have never thought about getting data from microcontrollers before, I bet the first thought that comes to your mind, is to somehow directly connect the microcontroller with R to get the data, but this is currently the most technically challenging option, it can be done using a serial connection between the microcontroller and your computer, but as far as I know, there is only one [R package implementing this](https://github.com/r-arduino/arduinor) and only runs on POSIX-compatible systems (so no Windows).
+
+I can't test this approach myself since I don't have a physical Linux or macOS machine to connect a microcontroller to, so for this case, I'm just going to link to a [blog post](https://zhuhao.org/post/connect-arduino-chips-with-r/) by [\@haozhu233](https://twitter.com/haozhu233) (the package author) showcasing its functionality.
+
+If your application requires real-time data acquisition or very low latency this might be your only option and you may want to dive deeper into this.
 
 ```{r echo=FALSE}
 blogdown::shortcode('tweet', '1088851449096880128')
@@ -41,7 +45,9 @@ There are two ways of doing this, one is to directly connect the microcontroller
 
 The first option is harder to accomplish, as far as I know, there is only one [Arduino library](https://www.arduinolibraries.info/libraries/my-sql-connector-arduino) that provides a SQL connector for MySQL servers but, there are no already-made solutions for other SQL servers and although you could write your own connector for other Open Source SQL servers (like PostgreSQL), that would require a considerable amount of technical skills.
 
-The second option is easier to implement, and my personal favorite. The first step is to broadcast the data from the microcontroller, one way of doing this is to implement a simple web server on the microcontroller itself and serve the data on a suitable format like HTML, JSON or CSV.
+The second option is easier to implement, and my personal favorite. 
+
+The first step is to broadcast the data from the microcontroller, one way of doing this is to implement a simple web server on the microcontroller itself and serve the data on a suitable format like HTML, JSON or CSV.
 
 This is a simple example of an Arduino Sketch for an ESP8266 board (Wemos D1 mini) and DS18B20 temperature probe sensors, that serves HTML and JSON outputs over a web server.
 

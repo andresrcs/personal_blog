@@ -139,21 +139,21 @@ Ahora, llegamos a la parte específica R del proceso, vamos a instalar la últim
 
 ```{bash eval=FALSE}
 sudo apt-get install -y gfortran libreadline6-dev libx11-dev libxt-dev \
-       libpng-dev libjpeg-dev libcairo2-dev xvfb \
-       libbz2-dev libzstd-dev liblzma-dev \
-       libcurl4-openssl-dev \
-       texinfo texlive texlive-fonts-extra \
-       screen wget openjdk-8-jdk
+                               libpng-dev libjpeg-dev libcairo2-dev xvfb \
+                               libbz2-dev libzstd-dev liblzma-dev \
+                               libcurl4-openssl-dev \
+                               texinfo texlive texlive-fonts-extra \
+                               screen wget libpcre2-dev
 cd /usr/local/src
-sudo wget https://cran.rstudio.com/src/base/R-3/R-3.6.2.tar.gz
+sudo wget https://cran.rstudio.com/src/base/R-4/R-4.0.3.tar.gz
 sudo su
-tar zxvf R-3.6.2.tar.gz
-cd R-3.6.2
-./configure --enable-R-shlib #--with-blas --with-lapack #opcional
+tar zxvf R-4.0.3.tar.gz
+cd R-4.0.3
+./configure --enable-R-shlib #--with-blas --with-lapack #optional
 make
 make install
 cd ..
-rm -rf R-3.6.2*
+rm -rf R-4.0.3*
 exit
 cd
 ```
@@ -185,12 +185,14 @@ sudo su - -c "R -e \"install.packages('shiny', repos='http://cran.rstudio.com/')
 Instale cmake desde la fuente:
 
 ```{bash eval=FALSE}
-wget https://cmake.org/files/v3.15/cmake-3.15.3.tar.gz # Busque la última version en https://cmake.org/files/
-tar xzf cmake-3.15.3.tar.gz
-cd cmake-3.15.3
+wget https://cmake.org/files/v3.19/cmake-3.19.1.tar.gz # Buscar la ultima version en https://cmake.org/files/
+tar xzf cmake-3.19.1.tar.gz
+cd cmake-3.19.1
 ./configure; make
 sudo make install
 cd
+rm cmake-3.19.1.tar.gz
+rm -rf cmake-3.19.1
 ```
 
 Ahora podemos instalar Shiny Server con estos comandos:
@@ -206,12 +208,15 @@ PYTHON=`which python`
 sudo cmake -DCMAKE_INSTALL_PREFIX=/usr/local -DPYTHON="$PYTHON" ../
 sudo make
 mkdir ../build
-sed -i '8s/.*/NODE_SHA256=af2106b08f68e0884caa505ea7e695facc5b4cd356f1e08258899e94cc4c5df0/' ../external/node/install-node.sh # node-v10.15.3-linux-armv7l.tar.xz
+sed -i '8s/.*/NODE_SHA256=d26f81800cafcec54d35d9a79bfe9f2e3bf008c21c9653abe2493161bbffad92/' ../external/node/install-node.sh # node-v12.19.0-linux-armv7l.tar.xz
 sed -i 's/linux-x64.tar.xz/linux-armv7l.tar.xz/' ../external/node/install-node.sh
+sed -i 's/https:\/\/github.com\/jcheng5\/node-centos6\/releases\/download\//https:\/\/nodejs.org\/dist\//' ../external/node/install-node.sh
 (cd .. && sudo ./external/node/install-node.sh)
 (cd .. && ./bin/npm --python="${PYTHON}" install --no-optional)
 (cd .. && ./bin/npm --python="${PYTHON}" rebuild)
 sudo make install
+cd
+sudo rm -rf shiny-server
 ```
 
 Después de instalarlo, debe configurar Shiny Server con estos comandos:
@@ -383,11 +388,11 @@ Si desea tener acceso a su servidor desde orígenes remotos (a través de Intern
     * Configure el DNS dinámico en su enrutador/módem, si no tiene esa opción, puede instalar un cliente DDNS en su servidor.
 	* Opcionalmente, configure su nombre de dominio personal para que apunte a su servicio DDNS.
 * Configure el reenvío de puertos en su enrutador/módem:
-	* Para SSH abra el puerto TCP/UDP 22~22
+	* Para SSH, SCP, SFTP abra el puerto TCP/UDP 22
 	* Para PostgreSQL abra el puerto TCP/UDP 5432
-	* Para FTP abra el puerto TCP 20~21
-	* Para VPN abra el puerto UDP 1194
 	* Para HTTP abra el puerto TCP 80
+	* Si no ha configurado Nginx, abra el puerto 8787 para RStudio.
+	* Si no ha configurado Nginx, abra el puerto 3838 para el servidor Shiny.
 * Asegúrese de tener "Bloquear tráfico WAN" deshabilitado en su enrutador/módem.
 
 Y ya está, está listo para comenzar a desarrollar sus aplicaciones Shiny y desplegarlas en la carpeta `/srv/shiny-server` de su propio servidor, ¡disfrute!
