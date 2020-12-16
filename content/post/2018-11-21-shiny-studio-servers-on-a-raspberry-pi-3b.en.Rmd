@@ -186,14 +186,14 @@ sudo su - -c "R -e \"install.packages('shiny', repos='http://cran.rstudio.com/')
 Install cmake from source:
 
 ```{bash eval=FALSE}
-wget https://cmake.org/files/v3.19/cmake-3.19.0.tar.gz # Check for the latest version at  https://cmake.org/files/
-tar xzf cmake-3.19.0.tar.gz
-cd cmake-3.19.0
+wget https://cmake.org/files/v3.19/cmake-3.19.1.tar.gz # Check for the latest version at  https://cmake.org/files/
+tar xzf cmake-3.19.1.tar.gz
+cd cmake-3.19.1
 ./configure; make
 sudo make install
 cd
-rm cmake-3.19.0.tar.gz
-rm -rf cmake-3.19.0
+rm cmake-3.19.1.tar.gz
+rm -rf cmake-3.19.1
 ```
 
 Now we can install Shiny Server with these commands:
@@ -389,11 +389,11 @@ If you want to have access to your server from remote origins (over the internet
   	* Configure Dynamic DNS in your router/modem, if you don’t have that option, you can install a DDNS client on your server.
 	* Optionally configure your personal domain name to point to your DDNS service
 * Configure port forwarding in your router/modem:
-	* For SSH open port TCP/UDP 22~22
+	* For SSH, SCP and SFPT open port TCP/UDP 22
 	* For PostgreSQL open port TCP/UDP 5432
-	* For FTP open port TCP 20~21
-	* For VPN open port UDP 1194
 	* For HTTP open port TCP 80
+	* If you haven't configured Nginx, open port 8787 for RStudio.
+	* If you haven't configured Nginx, open port 3838 for Shiny server.
 * Make sure you have “Block WAN traffic” disabled on your router/modem.
 
 And this is it, you are ready to start developing your Shiny apps and deploying it in the `/srv/shiny-server` folder of your own server, enjoy!

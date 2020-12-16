@@ -185,14 +185,14 @@ sudo su - -c "R -e \"install.packages('shiny', repos='http://cran.rstudio.com/')
 Instale cmake desde la fuente:
 
 ```{bash eval=FALSE}
-wget https://cmake.org/files/v3.19/cmake-3.19.0.tar.gz # Buscar la ultima version en https://cmake.org/files/
-tar xzf cmake-3.19.0.tar.gz
-cd cmake-3.19.0
+wget https://cmake.org/files/v3.19/cmake-3.19.1.tar.gz # Buscar la ultima version en https://cmake.org/files/
+tar xzf cmake-3.19.1.tar.gz
+cd cmake-3.19.1
 ./configure; make
 sudo make install
 cd
-rm cmake-3.19.0.tar.gz
-rm -rf cmake-3.19.0
+rm cmake-3.19.1.tar.gz
+rm -rf cmake-3.19.1
 ```
 
 Ahora podemos instalar Shiny Server con estos comandos:
@@ -388,11 +388,11 @@ Si desea tener acceso a su servidor desde orígenes remotos (a través de Intern
     * Configure el DNS dinámico en su enrutador/módem, si no tiene esa opción, puede instalar un cliente DDNS en su servidor.
 	* Opcionalmente, configure su nombre de dominio personal para que apunte a su servicio DDNS.
 * Configure el reenvío de puertos en su enrutador/módem:
-	* Para SSH abra el puerto TCP/UDP 22~22
+	* Para SSH, SCP, SFTP abra el puerto TCP/UDP 22
 	* Para PostgreSQL abra el puerto TCP/UDP 5432
-	* Para FTP abra el puerto TCP 20~21
-	* Para VPN abra el puerto UDP 1194
 	* Para HTTP abra el puerto TCP 80
+	* Si no ha configurado Nginx, abra el puerto 8787 para RStudio.
+	* Si no ha configurado Nginx, abra el puerto 3838 para el servidor Shiny.
 * Asegúrese de tener "Bloquear tráfico WAN" deshabilitado en su enrutador/módem.
 
 Y ya está, está listo para comenzar a desarrollar sus aplicaciones Shiny y desplegarlas en la carpeta `/srv/shiny-server` de su propio servidor, ¡disfrute!

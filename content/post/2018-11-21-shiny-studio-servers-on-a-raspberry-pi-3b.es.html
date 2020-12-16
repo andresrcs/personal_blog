@@ -29,8 +29,6 @@ output:
 ---
 
 <script src="/rmarkdown-libs/header-attrs/header-attrs.js"></script>
-<link href="/rmarkdown-libs/anchor-sections/anchor-sections.css" rel="stylesheet" />
-<script src="/rmarkdown-libs/anchor-sections/anchor-sections.js"></script>
 <style type="text/css">
 pre > code.sourceCode { white-space: pre; position: relative; }
 pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
@@ -210,14 +208,14 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> su - -c <span class="st">&quot;R -e </span><span class="dt">\&quot;</span><span class="st">install.packages(&#39;sourcetools&#39;, repos=&#39;http://cran.rstudio.com/&#39;)</span><span class="dt">\&quot;</span><span class="st">&quot;</span></span>
 <span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> su - -c <span class="st">&quot;R -e </span><span class="dt">\&quot;</span><span class="st">install.packages(&#39;shiny&#39;, repos=&#39;http://cran.rstudio.com/&#39;)</span><span class="dt">\&quot;</span><span class="st">&quot;</span></span></code></pre></div>
 <p>Instale cmake desde la fuente:</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">wget</span> https://cmake.org/files/v3.19/cmake-3.19.0.tar.gz <span class="co"># Buscar la ultima version en https://cmake.org/files/</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">tar</span> xzf cmake-3.19.0.tar.gz</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> cmake-3.19.0</span>
+<div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">wget</span> https://cmake.org/files/v3.19/cmake-3.19.1.tar.gz <span class="co"># Buscar la ultima version en https://cmake.org/files/</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">tar</span> xzf cmake-3.19.1.tar.gz</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> cmake-3.19.1</span>
 <span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="ex">./configure</span>; <span class="fu">make</span></span>
 <span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> make install</span>
 <span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span></span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> cmake-3.19.0.tar.gz</span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> -rf cmake-3.19.0</span></code></pre></div>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> cmake-3.19.1.tar.gz</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> -rf cmake-3.19.1</span></code></pre></div>
 <p>Ahora podemos instalar Shiny Server con estos comandos:</p>
 <div class="sourceCode" id="cb13"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone https://github.com/rstudio/shiny-server.git</span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> shiny-server</span>
@@ -392,11 +390,11 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 </ul></li>
 <li>Configure el reenvío de puertos en su enrutador/módem:
 <ul>
-<li>Para SSH abra el puerto TCP/UDP 22~22</li>
+<li>Para SSH, SCP, SFTP abra el puerto TCP/UDP 22</li>
 <li>Para PostgreSQL abra el puerto TCP/UDP 5432</li>
-<li>Para FTP abra el puerto TCP 20~21</li>
-<li>Para VPN abra el puerto UDP 1194</li>
 <li>Para HTTP abra el puerto TCP 80</li>
+<li>Si no ha configurado Nginx, abra el puerto 8787 para RStudio.</li>
+<li>Si no ha configurado Nginx, abra el puerto 3838 para el servidor Shiny.</li>
 </ul></li>
 <li>Asegúrese de tener “Bloquear tráfico WAN” deshabilitado en su enrutador/módem.</li>
 </ul>
