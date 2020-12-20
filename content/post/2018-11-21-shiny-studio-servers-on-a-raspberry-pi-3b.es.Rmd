@@ -301,7 +301,7 @@ apt autoremove
 # Configure Java
 java -Xms1800m
 
-# Install latest Closure compiler (no longer updated)
+# Instale la ultima version de Closure compiler (ya no se actualiza)
 cd /home/pi/rstudio
 wget https://dl.google.com/closure-compiler/compiler-20200719.zip
 unzip compiler-20200719.zip
