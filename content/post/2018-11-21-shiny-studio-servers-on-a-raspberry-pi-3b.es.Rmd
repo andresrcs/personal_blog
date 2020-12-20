@@ -301,12 +301,12 @@ apt autoremove
 # Configure Java
 java -Xms1800m
 
-# Instale el último compilador gwt
+# Install latest Closure compiler (no longer updated)
 cd /home/pi/rstudio
-wget http://dl.google.com/closure-compiler/compiler-latest.zip
-unzip compiler-latest.zip
-rm COPYING README.md compiler-latest.zip
-mv closure-compiler-v20*.jar /home/pi/rstudio/src/gwt/tools/compiler/compiler.jar
+wget https://dl.google.com/closure-compiler/compiler-20200719.zip
+unzip compiler-20200719.zip
+rm COPYING README.md compiler-20200719.zip
+mv closure-compiler-v20200719.jar /home/pi/rstudio/src/gwt/tools/compiler/compiler.jar
 
 # Compile é instale RStudio
 mkdir build
