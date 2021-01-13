@@ -2,7 +2,7 @@
 title: Automatically installing Shiny and RStudio server on Raspberry Pi OS with Ansible
 description: "In this post, I'll give you step-by-step instructions to automatically install and configure a fully-fledged R-based data science server including support services as Nginx and PostgreSQL on a Raspberry Pi SBC using a provided Ansible playbook. No prior Ansible knowledge needed."
 author: andres-castro
-date: '2021-01-11'
+date: '2021-01-13'
 slug: raspberry_pi_server
 categories:
   - R
