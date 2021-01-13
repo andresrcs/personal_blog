@@ -232,10 +232,12 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> -i <span class="st">&#39;s/https:\/\/github.com\/jcheng5\/node-centos6\/releases\/download\//https:\/\/nodejs.org\/dist\//&#39;</span> ../external/node/install-node.sh</span>
 <span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a><span class="kw">(</span><span class="bu">cd</span> .. <span class="kw">&amp;&amp;</span> <span class="fu">sudo</span> ./external/node/install-node.sh<span class="kw">)</span></span>
 <span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a><span class="kw">(</span><span class="bu">cd</span> .. <span class="kw">&amp;&amp;</span> <span class="ex">./bin/npm</span> --python=<span class="st">&quot;</span><span class="va">${PYTHON}</span><span class="st">&quot;</span> install --no-optional<span class="kw">)</span></span>
-<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a><span class="kw">(</span><span class="bu">cd</span> .. <span class="kw">&amp;&amp;</span> <span class="ex">./bin/npm</span> --python=<span class="st">&quot;</span><span class="va">${PYTHON}</span><span class="st">&quot;</span> rebuild<span class="kw">)</span></span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a><span class="kw">(</span><span class="bu">cd</span> .. <span class="kw">&amp;&amp;</span> <span class="ex">./bin/node</span> ./ext/node/lib/node_modules/npm/node_modules/node-gyp/bin/node-gyp.js --python=<span class="st">&quot;</span><span class="va">${PYTHON}</span><span class="st">&quot;</span> rebuild<span class="kw">)</span></span>
 <span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> make install</span>
-<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span></span>
-<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> rm -rf shiny-server</span></code></pre></div>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> mkdir -p /etc/shiny-server</span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> cp ../config/default.config /etc/shiny-server/shiny-server.conf</span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span></span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> rm -rf shiny-server</span></code></pre></div>
 <p>Después de instalarlo, debe configurar Shiny Server con estos comandos:</p>
 <div class="sourceCode" id="cb14"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span></span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ln -s /usr/local/shiny-server/bin/shiny-server /usr/bin/shiny-server</span>
