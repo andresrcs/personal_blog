@@ -91,9 +91,9 @@ Esta es una configuración de IP de muestra para la interfaz ethernet:
 ```{bash static_ip, eval=FALSE}
 # Ejemplo de configuración de IP estática
 interface eth0
-static ip_address=192.168.0.101/24
+static ip_address=192.168.0.10/24
 static routers=192.168.0.1
-static domain_name_servers=192.168.1.1 8.8.8.8 fd51:42f8:caae:d92e::1
+static domain_name_servers=192.168.0.1 8.8.8.8
 ```
 
 Ahora tu Pi está lista para funcionar, desconecta el teclado y el monitor, conecta la Raspberry Pi a tu red (recomiendo usar una conexión por cable) y reiníciala.
@@ -209,7 +209,7 @@ postgresql_rules:
 r_version: '4.0.3'
 
 # Versión de shiny-server para instalar
-shiny_server_version: 'v1.5.15.953'
+shiny_server_version: 'v1.5.16.958'
 
 # Versión del servidor rstudio-server para instalar
 rstudio_version: 'v1.3.1093'
