@@ -245,7 +245,7 @@ The only things you most certainly want to change here are the email address for
 <span id="cb8-53"><a href="#cb8-53" aria-hidden="true" tabindex="-1"></a><span class="ex">shiny_server_version</span>: <span class="st">&#39;v1.5.16.958&#39;</span></span>
 <span id="cb8-54"><a href="#cb8-54" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-55"><a href="#cb8-55" aria-hidden="true" tabindex="-1"></a><span class="co"># rstudio-server version to install</span></span>
-<span id="cb8-56"><a href="#cb8-56" aria-hidden="true" tabindex="-1"></a><span class="ex">rstudio_version</span>: <span class="st">&#39;v1.3.1093&#39;</span></span></code></pre></div>
+<span id="cb8-56"><a href="#cb8-56" aria-hidden="true" tabindex="-1"></a><span class="ex">rstudio_version</span>: <span class="st">&#39;v1.4.1103&#39;</span></span></code></pre></div>
 </div>
 <div id="run-the-playbooks" class="section level2">
 <h2>Run the Playbooks</h2>
@@ -257,7 +257,7 @@ The only things you most certainly want to change here are the email address for
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible-playbook</span> install_basic_services.yml</span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible-playbook</span> install_shiny_server.yml</span>
 <span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible-playbook</span> install_rstudio_server.yml</span></code></pre></div>
-<p>Each one still takes a long time to complete but it is a more reasonable waiting time (this is not entirely true, installing RStudio server may take up to 15 hours, depending on your specific setup), also, if you decide that you only need Shiny server or RStudio server but not the other, or you already have the support services you need to be installed, you can run only the playbooks you want.</p>
+<p>Each one still takes a long time to complete but it is a more reasonable waiting time (this is no longer true, installing the latest version of RStudio server, i.e. v1.4.1103, may take more than 24 hours depending on your specific setup), also, if you decide that you only need Shiny server or RStudio server but not the other, or you already have the support services you need to be installed, you can run only the playbooks you want.</p>
 <p>If you want to update something in the future, like R, RStudio, or Shiny server (I can’t guaranty that is going to work out of the box), you can simply change the version in the config file and run the specific part of the playbook by taking advantage of the defined “tags”.</p>
 <p>For example, this will only install the R version defined in the config file and nothing more:</p>
 <div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> raspberry_pi_playbooks</span>

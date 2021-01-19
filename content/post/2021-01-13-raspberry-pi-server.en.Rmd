@@ -212,7 +212,7 @@ r_version: '4.0.3'
 shiny_server_version: 'v1.5.16.958'
 
 # rstudio-server version to install
-rstudio_version: 'v1.3.1093'
+rstudio_version: 'v1.4.1103'
 ```
 
 ## Run the Playbooks
@@ -233,7 +233,7 @@ ansible-playbook install_shiny_server.yml
 ansible-playbook install_rstudio_server.yml
 ```
 
-Each one still takes a long time to complete but it is a more reasonable waiting time (this is not entirely true, installing RStudio server may take up to 15 hours, depending on your specific setup), also, if you decide that you only need Shiny server or RStudio server but not the other, or you already have the support services you need to be installed, you can run only the playbooks you want.
+Each one still takes a long time to complete but it is a more reasonable waiting time (this is no longer true, installing the latest version of RStudio server, i.e. v1.4.1103, may take more than 24 hours depending on your specific setup), also, if you decide that you only need Shiny server or RStudio server but not the other, or you already have the support services you need to be installed, you can run only the playbooks you want.
 
 If you want to update something in the future, like R, RStudio, or Shiny server (I can't guaranty that is going to work out of the box), you can simply change the version in the config file and run the specific part of the playbook by taking advantage of the defined "tags".
 
