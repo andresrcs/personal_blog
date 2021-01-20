@@ -132,10 +132,10 @@ Los playbooks están en un repositorio público en GitHub, puedes clonar el repo
 # Instala git si aún no lo tienes
 sudo apt install git
 # Clonar el último commit del repositorio
-git clone https://github.com/andresrcs/raspberry_pi_playbooks.git -–depth 1
+git clone https://github.com/andresrcs/raspberry_pi_server.git -–depth 1
 ```
 
-Para configurar los playbooks, primero debes definir tu "inventario", esta es una lista de los hosts a los que te vas a conectar, edita el archivo `raspberry_pi_playbooks/inventory.ini` y agrega la IP de tu(s) Raspberry Pi(s):
+Para configurar los playbooks, primero debes definir tu "inventario", esta es una lista de los hosts a los que te vas a conectar, edita el archivo `raspberry_pi_server/inventory.ini` y agrega la IP de tu(s) Raspberry Pi(s):
 
 ```{bash inventory, eval=FALSE}
 [raspberries] # Esto representa un grupo de Raspberries
@@ -143,7 +143,7 @@ raspberry_01 ansible_host=192.168.0.10 # Este es el nombre de host y la IP de un
 # Puedes agregar tantas Raspberries como necesites
 ```
 
-Luego, configura las variables comunes para el grupo `[raspberries]` editando el archivo `raspberry_pi_playbooks/group_vars/raspberries.yml`, lo más importante para verificar aquí es la ruta a tu clave ssh.
+Luego, configura las variables comunes para el grupo `[raspberries]` editando el archivo `raspberry_pi_server/group_vars/raspberries.yml`, lo más importante para verificar aquí es la ruta a tu clave ssh.
 
 ```{bash group_vars, eval=FALSE}
 ---
@@ -153,7 +153,7 @@ ansible_python_interpreter: /usr/bin/python3 # También funciona con python2 per
 ansible_ssh_private_key_file: ~/.ssh/raspberrypi_key # La ubicación de la clave ssh en tu PC local.
 ```
 
-Ahora, si deseas cambiar la configuración predeterminada de instalación, puedes hacerlo editando las variables en el archivo `raspberry_pi_playbooks/vars/config_vars.yml`, aunque las opciones predeterminadas están bien para la mayoría de casos de uso, incluida una configuración de seguridad razonable para usar en aplicaciones reales.
+Ahora, si deseas cambiar la configuración predeterminada de instalación, puedes hacerlo editando las variables en el archivo `raspberry_pi_server/vars/config_vars.yml`, aunque las opciones predeterminadas están bien para la mayoría de casos de uso, incluida una configuración de seguridad razonable para usar en aplicaciones reales.
 Lo único que sin duda desea cambiar aquí es la dirección de correo electrónico para las notificaciones de seguridad y la contraseña del usuario principal de PostgreSQL.
 
 ```{bash config_vars, eval=FALSE}
@@ -217,17 +217,17 @@ rstudio_version: 'v1.4.1103'
 
 ## Ejecuta los Playbooks
 
-En teoría, simplemente podrías acceder a la carpeta `raspberry_pi_playbooks` y ejecutar el playbook `main.yml` para instalar todo a la vez, pero esto tomaría mucho, mucho, mucho tiempo en completarse, así que creo que no es práctico, el uso real para este playbook es verificar la configuración correcta de tu servidor si has realizado algunos cambios posteriormente, ya que las tareas son "idempotentes", lo que significa que se pueden aplicar varias veces sin realizar cambios más allá de la aplicación inicial.
+En teoría, simplemente podrías acceder a la carpeta `raspberry_pi_server` y ejecutar el playbook `main.yml` para instalar todo a la vez, pero esto tomaría mucho, mucho, mucho tiempo en completarse, así que creo que no es práctico, el uso real para este playbook es verificar la configuración correcta de tu servidor si has realizado algunos cambios posteriormente, ya que las tareas son "idempotentes", lo que significa que se pueden aplicar varias veces sin realizar cambios más allá de la aplicación inicial.
 
 ```{bash main_playbook, eval=FALSE}
-cd raspberry_pi_playbooks
+cd raspberry_pi_server
 ansible-playbook main.yml
 ```
 
 Para mitigar este problema y hacer que el proceso de instalación sea más flexible, he dividido el proceso en tres playbooks individuales:
 
 ```{bash playbooks, eval=FALSE}
-cd raspberry_pi_playbooks
+cd raspberry_pi_server
 ansible-playbook install_basic_services.yml
 ansible-playbook install_shiny_server.yml
 ansible-playbook install_rstudio_server.yml
@@ -240,7 +240,7 @@ Si deseas actualizar algo en el futuro, como R, RStudio o Shiny server (no puedo
 Por ejemplo, esto solo instalará la versión R definida en el archivo de configuración y nada más:
 
 ```{bash tags, eval=FALSE}
-cd raspberry_pi_playbooks
+cd raspberry_pi_server
 ansible-playbook install_basic_services.yml --tags "r"
 ```
 
@@ -260,7 +260,7 @@ Las etiquetas disponibles son:
 También puedes hacer lo contrario y omitir partes específicas de los playbooks usando la opción `--skip-tags`, por ejemplo, si no necesitas PostgreSQL, puedes evitar instalarlo ejecutando el playbook de esta manera:
 
 ```{bash skip_tags, eval=FALSE}
-cd raspberry_pi_playbooks
+cd raspberry_pi_server
 ansible-playbook install_basic_services.yml --skip-tags "postgresql"
 ```
 

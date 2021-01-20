@@ -177,18 +177,18 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Install git if you don&#39;t have it already</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install git</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Clone the latest commit from the repository</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone https://github.com/andresrcs/raspberry_pi_playbooks.git -–depth 1</span></code></pre></div>
-<p>To configure the playbooks, you first need to define your “inventory”, this is a list of the hosts you are going to connect to, edit the <code>raspberry_pi_playbooks/inventory.ini</code> file and add the IP of your Raspberry Pi(s):</p>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone https://github.com/andresrcs/raspberry_pi_server.git -–depth 1</span></code></pre></div>
+<p>To configure the playbooks, you first need to define your “inventory”, this is a list of the hosts you are going to connect to, edit the <code>raspberry_pi_server/inventory.ini</code> file and add the IP of your Raspberry Pi(s):</p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>[<span class="ex">raspberries</span>] # This represents a group of Raspberries</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ex">raspberry_01</span> ansible_host=192.168.0.10 # This is the hostname and IP for an individual Raspberry Pi</span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co"># You can add as many Raspberries as you need</span></span></code></pre></div>
-<p>Then set common variables for your <code>[raspberries]</code> group by editing the <code>raspberry_pi_playbooks/group_vars/raspberries.yml</code> file, the most important thing to check here is the path to your ssh key.</p>
+<p>Then set common variables for your <code>[raspberries]</code> group by editing the <code>raspberry_pi_server/group_vars/raspberries.yml</code> file, the most important thing to check here is the path to your ssh key.</p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">---</span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible_user</span>: pi # This is the default user for Raspberry Pi OS</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible_become_method</span>: sudo</span>
 <span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible_python_interpreter</span>: /usr/bin/python3 # It also works with python2 but is not recommended.</span>
 <span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible_ssh_private_key_file</span>: ~/.ssh/raspberrypi_key # The location of the ssh key in your local PC.</span></code></pre></div>
-<p>Now, if you want to change the default installation settings, you can do it by editing the variables on the <code>raspberry_pi_playbooks/vars/config_vars.yml</code> file, although, the default options are fine for most use case scenarios, including reasonable security settings to use on real-world applications.
+<p>Now, if you want to change the default installation settings, you can do it by editing the variables on the <code>raspberry_pi_server/vars/config_vars.yml</code> file, although, the default options are fine for most use case scenarios, including reasonable security settings to use on real-world applications.
 The only things you most certainly want to change here are the email address for security notifications and the password for the PostgreSQL main user.</p>
 <div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">---</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co"># System Configurations ########################################################</span></span>
@@ -249,18 +249,18 @@ The only things you most certainly want to change here are the email address for
 </div>
 <div id="run-the-playbooks" class="section level2">
 <h2>Run the Playbooks</h2>
-<p>In theory, you could simply access the <code>raspberry_pi_playbooks</code> folder and run the <code>main.yml</code> playbook to install everything at once, but this would take a very, very, long time to complete so I think is not practical, the real use for this playbook is to verify the correct configuration of your server if you have made some changes afterward since the tasks are “idempotent”, which means that can be applied multiple times without making changes beyond the initial application.</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> raspberry_pi_playbooks</span>
+<p>In theory, you could simply access the <code>raspberry_pi_server</code> folder and run the <code>main.yml</code> playbook to install everything at once, but this would take a very, very, long time to complete so I think is not practical, the real use for this playbook is to verify the correct configuration of your server if you have made some changes afterward since the tasks are “idempotent”, which means that can be applied multiple times without making changes beyond the initial application.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> raspberry_pi_server</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible-playbook</span> main.yml</span></code></pre></div>
 <p>To mitigate this issue and to make the installation process more flexible, I have divided the process into three individual playbooks:</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> raspberry_pi_playbooks</span>
+<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> raspberry_pi_server</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible-playbook</span> install_basic_services.yml</span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible-playbook</span> install_shiny_server.yml</span>
 <span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible-playbook</span> install_rstudio_server.yml</span></code></pre></div>
 <p>Each one still takes a long time to complete but it is a more reasonable waiting time (this is no longer true, installing the latest version of RStudio server, i.e. v1.4.1103, may take more than 24 hours depending on your specific setup), also, if you decide that you only need Shiny server or RStudio server but not the other, or you already have the support services you need to be installed, you can run only the playbooks you want.</p>
 <p>If you want to update something in the future, like R, RStudio, or Shiny server (I can’t guaranty that is going to work out of the box), you can simply change the version in the config file and run the specific part of the playbook by taking advantage of the defined “tags”.</p>
 <p>For example, this will only install the R version defined in the config file and nothing more:</p>
-<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> raspberry_pi_playbooks</span>
+<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> raspberry_pi_server</span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible-playbook</span> install_basic_services.yml --tags <span class="st">&quot;r&quot;</span></span></code></pre></div>
 <p>The available tags are:</p>
 <ul>
@@ -276,7 +276,7 @@ The only things you most certainly want to change here are the email address for
 <li><code>configure_rstudio</code>: Configure RStudio server</li>
 </ul>
 <p>You can also go the other way and skip specific parts of the playbooks by using the <code>--skip-tags</code> option, for example, if you don’t need PostgreSQL, you can avoid installing it by running the playbook this way:</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> raspberry_pi_playbooks</span>
+<div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> raspberry_pi_server</span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible-playbook</span> install_basic_services.yml --skip-tags <span class="st">&quot;postgresql&quot;</span></span></code></pre></div>
 <p>After successfully running all the playbooks, you will have a fully functional installation ready to be used, so you could simply open an RStudio session at <code>http://your_server_ip/rstudio</code> and/or publish your Shiny apps in the <code>/srv/shiny-server</code> folder and access them at <code>http://your_server_ip/shiny/your_app_name</code>.</p>
 </div>
