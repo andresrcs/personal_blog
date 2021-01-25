@@ -266,6 +266,8 @@ ansible-playbook install_basic_services.yml --skip-tags "postgresql"
 
 Después de ejecutar con éxito todos los playbooks, tendrás una instalación completamente funcional lista para ser utilizada, por lo que podras simplemente abrir una sesión de RStudio en `http://ip_de_tu_servidor/rstudio` y/o publicar tus aplicaciones Shiny en la carpeta `/srv/shiny-server` y acceder a ellas en `http://ip_de_tu_servidor/shiny/nombre_de_tu_app`.
 
+>:warning: Si la configuración de Nginx no ha sido establecida por el playbook `install_basic_services.yml` porque lo has omitido, debes configurar el proxy inverso manualmente o acceder a los servicios con el puerto específico (por ejemplo,`http://your_server_ip/3838/your_app_name`)
+
 ## Notas Finales
 
 Incluso con la automatización, la instalación de forma nativa llevará mucho más tiempo que, por ejemplo, con el uso de contenedores, pero como está automatizado, simplemente puedes dejar que se ejecute y volver más tarde, y disfrutarás de la facilidad de gestión de una instalación nativa.

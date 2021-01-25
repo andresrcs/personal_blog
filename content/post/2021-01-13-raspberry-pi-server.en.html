@@ -279,6 +279,9 @@ The only things you most certainly want to change here are the email address for
 <div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> raspberry_pi_server</span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible-playbook</span> install_basic_services.yml --skip-tags <span class="st">&quot;postgresql&quot;</span></span></code></pre></div>
 <p>After successfully running all the playbooks, you will have a fully functional installation ready to be used, so you could simply open an RStudio session at <code>http://your_server_ip/rstudio</code> and/or publish your Shiny apps in the <code>/srv/shiny-server</code> folder and access them at <code>http://your_server_ip/shiny/your_app_name</code>.</p>
+<blockquote>
+<p>:warning: If the Nginx configuration hasn’t been set by the <code>install_basic_services.yml</code> playbook because you have omitted it, you have to configure the reverse proxy manually or access the services with the specific port (e.g. <code>http://your_server_ip/3838/your_app_name</code>)</p>
+</blockquote>
 </div>
 <div id="final-notes" class="section level2">
 <h2>Final Notes</h2>
