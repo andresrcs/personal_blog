@@ -188,8 +188,7 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible_become_method</span>: sudo</span>
 <span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible_python_interpreter</span>: /usr/bin/python3 # It also works with python2 but is not recommended.</span>
 <span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible_ssh_private_key_file</span>: ~/.ssh/raspberrypi_key # The location of the ssh key in your local PC.</span></code></pre></div>
-<p>Now, if you want to change the default installation settings, you can do it by editing the variables on the <code>raspberry_pi_server/vars/config_vars.yml</code> file, although, the default options are fine for most use case scenarios, including reasonable security settings to use on real-world applications.
-The only things you most certainly want to change here are the email address for security notifications and the password for the PostgreSQL main user.</p>
+<p>Now, if you want to change the default installation settings, you can do it by editing the variables on the <code>raspberry_pi_server/vars/config_vars.yml</code> file, although, the default options are fine for most use case scenarios, including reasonable security settings to use on real-world applications. The only things you most certainly want to change here are the email address for security notifications and the password for the PostgreSQL main user.</p>
 <div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">---</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co"># System Configurations ########################################################</span></span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -264,23 +263,32 @@ The only things you most certainly want to change here are the email address for
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible-playbook</span> install_basic_services.yml --tags <span class="st">&quot;r&quot;</span></span></code></pre></div>
 <p>The available tags are:</p>
 <ul>
+<li>install_basic_services.yml
+<ul>
 <li><code>secure</code>: Set security settings on the server</li>
 <li><code>swap</code>: Add swap memory to the server</li>
 <li><code>nginx</code>: Install and configure Nginx + PHP</li>
 <li><code>postgresql</code>: Install and configure PostgreSQL</li>
 <li><code>r</code>: Install R from source</li>
 <li><code>disable_wifi</code>: Disable Wifi and Bluetooth module</li>
+</ul></li>
+<li>install_shiny_server.yml
+<ul>
 <li><code>shiny-server</code>: Install shiny-server from source</li>
 <li><code>configure_shiny</code>: Configure shiny-server</li>
+</ul></li>
+<li>install_rstudio_server.yml
+<ul>
 <li><code>rstudio</code>: Install RStudio server from source</li>
 <li><code>configure_rstudio</code>: Configure RStudio server</li>
+</ul></li>
 </ul>
 <p>You can also go the other way and skip specific parts of the playbooks by using the <code>--skip-tags</code> option, for example, if you don’t need PostgreSQL, you can avoid installing it by running the playbook this way:</p>
 <div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> raspberry_pi_server</span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible-playbook</span> install_basic_services.yml --skip-tags <span class="st">&quot;postgresql&quot;</span></span></code></pre></div>
 <p>After successfully running all the playbooks, you will have a fully functional installation ready to be used, so you could simply open an RStudio session at <code>http://your_server_ip/rstudio</code> and/or publish your Shiny apps in the <code>/srv/shiny-server</code> folder and access them at <code>http://your_server_ip/shiny/your_app_name</code>.</p>
 <blockquote>
-<p>:warning: If the Nginx configuration hasn’t been set by the <code>install_basic_services.yml</code> playbook because you have omitted it, you have to configure the reverse proxy manually or access the services with the specific port (e.g. <code>http://your_server_ip/3838/your_app_name</code>)</p>
+<p>:warning: If the Nginx configuration hasn’t been set by the <code>install_basic_services.yml</code> playbook because you have omitted it, you have to configure the reverse proxy manually or access the services with the specific port, e.g. <code>http://your_server_ip/3838/your_app_name</code>, this would also require you to open the port on the firewall.</p>
 </blockquote>
 </div>
 <div id="final-notes" class="section level2">

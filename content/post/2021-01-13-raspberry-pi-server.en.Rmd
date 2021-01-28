@@ -26,14 +26,13 @@ output:
     highlight: zenburn
 ---
 
-I have a [previous post](/2018/11/21/shiny_rstudio_server/) about installing Shiny and RStudio server natively on Raspbian Stretch but since it was written for this old version of the operating system, it is outdated now and it only works as a general guideline instead of a working installation guide, so I decided to come up with an updated version for the new Raspberry Pi OS Lite (32-bit) but in the process, I realized that going through a bunch of commands that take a very long time to execute is a mood killer, so, What can I do about it? well… Automate the process!.
+I have a [previous post](/2018/11/21/shiny_rstudio_server/) about installing Shiny and RStudio server natively on Raspbian Stretch but since it was written for this old version of the operating system, it is outdated now and it only works as a general guideline instead of a working installation guide, so I decided to come up with an updated version for the new Raspberry Pi OS Lite (32-bit) but in the process, I realized that going through a bunch of commands that take a very long time to execute is a mood killer, so, What can I do about it? well... Automate the process!.
 
 To automate the installation and configuration process I decided to use [Ansible](https://en.wikipedia.org/wiki/Ansible_(software)), those in DevOps must be familiar with the power of Ansible but even if you've never heard of it, don't worry, you don't need to know Ansible in order to take advantage of its automation capabilities, I'm not an Ansible expert myself and I've been capable of accomplishing this project with just basic knowledge of the tool, so if I can do it, so can you. I'm going to guide you through the process assuming you have no prior experience with this tool and just some basic Linux terminal skills.
 
 Ansible is an open-source software provisioning, configuration management, and application-deployment tool enabling infrastructure as code. It runs on many Unix-like systems, and can configure both Unix-like systems as well as Microsoft Windows. In layman's terms, it lets you automate tasks in your infrastructure (One, or many Raspberry Pi SBCs at once in our case) by defining a set of steps to execute in [YAML](https://en.wikipedia.org/wiki/YAML) files called "playbooks". I took one for the team and wrote some Ansible playbooks to automate most of the installation process but leaving some room for you to configure the installation to your liking without having to modify the playbooks (which will require you to know how to edit them) via a config file. Although, if you want to have a basic understanding of how this tool works, there is a nice Ansible 101 series on [Jeff Geerling's YouTube channel](https://www.youtube.com/playlist?list=PL2_OBreMn7FqZkvMYt6ATmgC0KAGGJNAN).
 
->:pencil2: Note that this has only been tested on a Raspberry Pi 3B+ with Raspberry Pi OS (32-bit) and with the software versions specified in the config file, most likely this will work on a Raspberry Pi 4 as well without any changes and it is still possible that this could work on other Debian based operating systems (like Ubuntu) and with other versions of the installed software but it might require some modifications to the playbooks.
-
+> :pencil2: Note that this has only been tested on a Raspberry Pi 3B+ with Raspberry Pi OS (32-bit) and with the software versions specified in the config file, most likely this will work on a Raspberry Pi 4 as well without any changes and it is still possible that this could work on other Debian based operating systems (like Ubuntu) and with other versions of the installed software but it might require some modifications to the playbooks.
 
 ## Prepare the Raspberry Pi
 
@@ -41,20 +40,20 @@ Even if most of the process can be automated with Ansible, we still need at leas
 
 Download "Raspberry Pi Imager" from the [official site](https://www.raspberrypi.org/software/), install it in your system, execute it, select Raspberry Pi OS Lite (32-bit) as the "Operating System", choose your "SD Card" and press "Write"
 
-![](/post/2020-12-22-raspberry-pi-server.en_files/Raspberry Pi Imager.jpg){width=400px height=300px}
- 
+![](/post/2020-12-22-raspberry-pi-server.en_files/Raspberry%20Pi%20Imager.jpg){width="400px" height="300px"}
+
 Once the process is done, you have a clean installation of Raspberry Pi OS Lite in your micro SD card. Insert the card into your Raspberry Pi, plug a keyboard and a screen, and turn it on so you can set some basic configurations with `raspi-config`.
 
-![](/post/2020-12-22-raspberry-pi-server.en_files/raspi-config.jpg){width=600px height=300px}
+![](/post/2020-12-22-raspberry-pi-server.en_files/raspi-config.jpg){width="600px" height="300px"}
 
 Log into the system (the default user and password are `pi` and `raspberry` respectively), run `sudo raspi-config`, and perform the following tasks:
 
-* Optionally, change the password for the "pi" user (System Options --> Password)
-* Enable the SSH server (Interface Options --> SSH)
-* Reduce GPU memory to 16MB (Performance Options --> GPU memory)
-* Set your locale settings (Localization Options)
-* Expand the filesystem to use the full capacity of your SD card (Advanced Options --> Expand Filesystem)
-* Disable Predictable Network Interface Names (Advanced Options --> Network Interface Names)
+-   Optionally, change the password for the "pi" user (System Options --\> Password)
+-   Enable the SSH server (Interface Options --\> SSH)
+-   Reduce GPU memory to 16MB (Performance Options --\> GPU memory)
+-   Set your locale settings (Localization Options)
+-   Expand the filesystem to use the full capacity of your SD card (Advanced Options --\> Expand Filesystem)
+-   Disable Predictable Network Interface Names (Advanced Options --\> Network Interface Names)
 
 When you are done, exit the `raspi-config` tool and reboot your Pi with `sudo reboot now`.
 
@@ -122,7 +121,7 @@ Also, since we are going to be installing several packages from source on a low 
     ServerAliveCountMax 2
 ```
 
->:warning: Is very important not to skip the previous step, otherwise, the ssh connection is going to silently fail while running long tasks in Ansible and you are going to be waiting pointlessly with your Raspberry Pi doing nothing in reality.
+> :warning: Is very important not to skip the previous step, otherwise, the ssh connection is going to silently fail while running long tasks in Ansible and you are going to be waiting pointlessly with your Raspberry Pi doing nothing in reality.
 
 ## Download and Configure the Playbooks
 
@@ -153,8 +152,7 @@ ansible_python_interpreter: /usr/bin/python3 # It also works with python2 but is
 ansible_ssh_private_key_file: ~/.ssh/raspberrypi_key # The location of the ssh key in your local PC.
 ```
 
-Now, if you want to change the default installation settings, you can do it by editing the variables on the `raspberry_pi_server/vars/config_vars.yml` file, although, the default options are fine for most use case scenarios, including reasonable security settings to use on real-world applications.
-The only things you most certainly want to change here are the email address for security notifications and the password for the PostgreSQL main user.
+Now, if you want to change the default installation settings, you can do it by editing the variables on the `raspberry_pi_server/vars/config_vars.yml` file, although, the default options are fine for most use case scenarios, including reasonable security settings to use on real-world applications. The only things you most certainly want to change here are the email address for security notifications and the password for the PostgreSQL main user.
 
 ```{bash config_vars, eval=FALSE}
 ---
@@ -246,16 +244,19 @@ ansible-playbook install_basic_services.yml --tags "r"
 
 The available tags are:
 
-- `secure`: Set security settings on the server
-- `swap`: Add swap memory to the server
-- `nginx`: Install and configure Nginx + PHP
-- `postgresql`: Install and configure PostgreSQL
-- `r`: Install R from source
-- `disable_wifi`: Disable Wifi and Bluetooth module
-- `shiny-server`: Install shiny-server from source
-- `configure_shiny`: Configure shiny-server
-- `rstudio`: Install RStudio server from source
-- `configure_rstudio`: Configure RStudio server
+- install_basic_services.yml
+    - `secure`: Set security settings on the server
+    - `swap`: Add swap memory to the server
+    - `nginx`: Install and configure Nginx + PHP
+    - `postgresql`: Install and configure PostgreSQL
+    - `r`: Install R from source
+    - `disable_wifi`: Disable Wifi and Bluetooth module
+- install_shiny_server.yml
+    - `shiny-server`: Install shiny-server from source
+    - `configure_shiny`: Configure shiny-server
+- install_rstudio_server.yml
+    - `rstudio`: Install RStudio server from source
+    - `configure_rstudio`: Configure RStudio server
 
 You can also go the other way and skip specific parts of the playbooks by using the `--skip-tags` option, for example, if you don't need PostgreSQL, you can avoid installing it by running the playbook this way:
 
@@ -266,7 +267,7 @@ ansible-playbook install_basic_services.yml --skip-tags "postgresql"
 
 After successfully running all the playbooks, you will have a fully functional installation ready to be used, so you could simply open an RStudio session at `http://your_server_ip/rstudio` and/or publish your Shiny apps in the `/srv/shiny-server` folder and access them at `http://your_server_ip/shiny/your_app_name`.
 
->:warning: If the Nginx configuration hasn't been set by the `install_basic_services.yml` playbook because you have omitted it, you have to configure the reverse proxy manually or access the services with the specific port (e.g. `http://your_server_ip/3838/your_app_name`)
+> :warning: If the Nginx configuration hasn't been set by the `install_basic_services.yml` playbook because you have omitted it, you have to configure the reverse proxy manually or access the services with the specific port, e.g. `http://your_server_ip/3838/your_app_name`, this would also require you to open the port on the firewall.
 
 ## Final Notes
 
