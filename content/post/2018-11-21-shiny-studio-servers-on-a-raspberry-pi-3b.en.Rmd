@@ -40,7 +40,7 @@ Also, the steps that I'm going to share with you, are applicable for this specif
 
 **"Raspberry Pi 3B+ running Raspbian Stretch Lite (not tested yet on the new Raspbian Buster)"**
  
->:pencil2: Have in mind that this guide might not be directly applicable for other SBCs, Linux distributions or even other versions of Raspberry Pi SBCs.
+>:warning: This guide doesn't work out of the box with newer versions of Raspberry Pi OS and RStudio software, for an up-to-date approach take a look at this [newer article](/2021/01/13/raspberry_pi_server/).
 
 ## Preparing The Raspberry Pi
 
