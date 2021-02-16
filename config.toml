@@ -87,6 +87,10 @@ author = "authors"
 [markup]
   [markup.highlight]
     codeFences = false
+  
+  [markup.goldmark]
+    [markup.goldmark.renderer]
+      unsafe = true
 
 [services]
   [services.instagram]
