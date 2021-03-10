@@ -2,7 +2,7 @@
 title: Automatically installing Shiny and RStudio server on Amazon Web Services with Ansible
 description: "In this post, I'll give you step-by-step instructions to automatically install and configure a fully-fledged R-based data science server including support services as Nginx and PostgreSQL on an AWS EC2 instance using a provided Ansible playbook. No prior Ansible knowledge needed."
 author: andres-castro
-date: '2021-02-01'
+date: '2021-03-15'
 slug: aws_r_server
 categories:
   - R
@@ -32,6 +32,7 @@ output:
 pre > code.sourceCode { white-space: pre; position: relative; }
 pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
 div.sourceCode { margin: 1em 0; }
 pre.sourceCode { margin: 0; }
@@ -104,11 +105,11 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 
 <p>After writing a very <a href="/2021/01/13/raspberry_pi_server/">similar post</a> about installing Shiny and RStudio server on Raspberry Pi OS using automation with Ansible I realized that the same approach can be easily ported to work with cloud computing services as well, so, basically, this is going to be the Amazon Web Services (AWS) version of that post.</p>
 <blockquote>
-<p>:pencil2: Have in mind that this is a beginner-oriented project, it is not meant as a production tool, so if you are familiar with Ansible you might want to simply download some roles from Ansible Galaxy and integrate them into your workflow instead of following this playbook.</p>
+<p>:pencil2: Have in mind that this is a beginner-oriented project, it is not meant as a production tool, so if you are already familiar with Ansible you might want to simply download some roles from Ansible Galaxy and integrate them into your workflow instead of following this article.</p>
 </blockquote>
-<p>In case you haven’t read the aforementioned post, I’m going to tell you what this is about. The installation and configuration process of an R-based data science server can be automated using a tool called <a href="https://en.wikipedia.org/wiki/Ansible_(software)">Ansible</a>, those in DevOps must be familiar with the power of Ansible but even if you’ve never heard of it, don’t worry, you don’t need to know Ansible in order to take advantage of its automation capabilities, I’m not an Ansible expert myself and I’ve been capable of accomplishing this project with just basic knowledge of the tool, so if I can do it, so can you. I’m going to guide you through the process assuming you have no prior experience with this tool and just some basic Linux terminal skills.</p>
-<p>Ansible is an open-source software provisioning, configuration management, and application-deployment tool enabling infrastructure as code. It runs on many Unix-like systems, and can configure both Unix-like systems as well as Microsoft Windows. In layman’s terms, it lets you automate tasks in your infrastructure (One, or many EC2 instances at once in our case) by defining a set of steps to execute in <a href="https://en.wikipedia.org/wiki/YAML">YAML</a> files called “playbooks”. I have wrote some Ansible playbooks to automate most of the installation process but leaving some room for you to configure the installation to your liking without having to modify the playbooks (which will require you to know how to edit them) via a config file. Although, if you want to have a basic understanding of how this tool works, there is a nice Ansible 101 series on <a href="https://www.youtube.com/playlist?list=PL2_OBreMn7FqZkvMYt6ATmgC0KAGGJNAN">Jeff Geerling’s YouTube channel</a>.</p>
-<p>In case you are not familiar with AWS EC2, it is a cloud service that among many other things, it provides access to virtual servers hosted on the cloud, so you don’t have to take care of a physical infrastructure, and also, there are some AWS specific terms that we need to define in simple terms so you can follow along with this article:</p>
+<p>In case you haven’t read the aforementioned post, I’m going to tell you what this is about. The installation and configuration process of an R-based data science server on AWS can be automated using a tool called <a href="https://en.wikipedia.org/wiki/Ansible_(software)">Ansible</a>, those in DevOps must be familiar with the power of Ansible but even if you’ve never heard of it, don’t worry, you don’t need to know Ansible in order to take advantage of its automation capabilities, I’m not an Ansible expert myself and I’ve been capable of accomplishing this project with just basic knowledge of the tool, so if I can do it, so can you. I’m going to guide you through the process assuming you have no prior experience with this tool and just some basic Linux terminal skills.</p>
+<p>Ansible is an open-source software provisioning, configuration management, and application-deployment tool enabling infrastructure as code. It runs on many Unix-like systems, and can configure both Unix-like systems as well as Microsoft Windows. In layman’s terms, it lets you automate tasks in your infrastructure (One, or many EC2 instances at once, in our case) by defining a set of steps to execute in <a href="https://en.wikipedia.org/wiki/YAML">YAML</a> files called “playbooks”. I have wrote some Ansible playbooks to automate most of the installation process but leaving some room for you to configure the installation to your liking without having to modify the playbooks (which will require you to know how to edit them) via a config file. Although, if you want to have a basic understanding of how this tool works, there is a nice Ansible 101 series on <a href="https://www.youtube.com/playlist?list=PL2_OBreMn7FqZkvMYt6ATmgC0KAGGJNAN">Jeff Geerling’s YouTube channel</a>.</p>
+<p>In case you are not familiar with AWS EC2, it is a cloud service that among many other things, it provides access to virtual servers hosted on the cloud, so you don’t have to take care of a physical infrastructure yourself. Also, to follow along with this article, there are some AWS specific terms that we need to define in simple terms:</p>
 <ul>
 <li><strong>EC2 Instance</strong>: It refers to an individual instance of a virtual server.</li>
 <li><strong>Amazon Machine Images (AMI)</strong>: It provides the information required to launch an instance, like the Operating System, pre-installed libraries and configurations required for a server to work. Note that you can make your own AMIs.</li>
@@ -117,6 +118,22 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 </ul>
 <div id="create-an-aws-account-and-security-credentials" class="section level2">
 <h2>Create an AWS Account and Security Credentials</h2>
+<p>In order to use AWS services you need to have an account, if you already have one, you can skip this part, if not, to create one go to <a href="https://aws.amazon.com/">https://aws.amazon.com/</a> and click on “Create an AWS Account”, fill in the required information and keep pressing “Continue”, you are going to be asked to provide a credit card, but you are not going to be charged for using the products comprised on the “Free Tier”.</p>
+<p>Once your account has been created, you are going to be directed to the “AWS Management Console”, once there, click on the search button, type “EC2” and select “EC2 Virtual Servers in the Cloud”</p>
+<p><img src="/post/2021-02-01-aws-server.en_files/aws_ec2.jpg" width="600" height="200" /></p>
+<p>Then in the left menu, look for “Network &amp; Security -&gt; Key Pairs” and click on it.</p>
+<p><img src="/post/2021-02-01-aws-server.en_files/aws_key_pair.jpg" width="200" height="600" /></p>
+<p>On the right corner look for “Create Key Pair” and click on it.</p>
+<p><img src="/post/2021-02-01-aws-server.en_files/aws_create_key.jpg" width="600" height="200" /></p>
+<p>You are going to see this dialog box, fill it this way, click on “Create Key Pair” and save the resulting file.</p>
+<p><img src="/post/2021-02-01-aws-server.en_files/aws_new%20key.jpg" width="600" height="400" /></p>
+<p>Next, you need to create an access key so you can have access to your account programmatically, go to your account menu and select “My Security Credentials”.</p>
+<p><img src="/post/2021-02-01-aws-server.en_files/aws_security_settings.jpg" width="600" height="300" /></p>
+<p>Then select “Create New Access Key” and save the file with your credentials</p>
+<p><img src="/post/2021-02-01-aws-server.en_files/aws_access_key.jpg" width="600" height="400" /></p>
+<blockquote>
+<p>:warning: Keep the downloaded files safe and at hand, you are going to need them later. Be careful not to share these files since they could enable other people to generate charges to your credit card.</p>
+</blockquote>
 </div>
 <div id="install-ansible" class="section level2">
 <h2>Install Ansible</h2>
@@ -141,28 +158,28 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Install git if you don&#39;t have it already</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install git</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Clone the latest commit from the repository</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone https://github.com/andresrcs/aws_r_server.git -–depth 1</span></code></pre></div>
-<p>To start configuring the playbooks, you usually first need to define an “inventory” (a list of servers to connect to), but in this case, the <code>provision_ec2_instance</code> playbook is going to create one automatically for you when you run it and the other playbooks are going to get an updated inventory from AWS automatically using the <code>aws_ec2</code> plugging when needed, this is one of the advantages of working with well supported cloud computing services like AWS, but in order for the <code>aws_ec2</code> plugging to do its magic, you need to provide it with your AWS credentials, so edit the <code>aws_r_server/inventories/aws_ec2.yml</code> file, and fill your credentials on the respective variables.</p>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone https://github.com/andresrcs/aws_r_server.git <span class="at">-–depth</span> 1</span></code></pre></div>
+<p>To start configuring the playbooks, you usually first need to define an “inventory” (a list of servers to connect to), but in this case, the <code>provision_ec2_instance</code> playbook is going to create one automatically for you when you run it and the other playbooks are going to get an updated inventory from AWS automatically using the <code>aws_ec2</code> plugging when needed, this is one of the advantages of working with well supported cloud computing services like AWS, but in order for the <code>aws_ec2</code> plugging to do its magic, you need to provide it with your AWS credentials and define your <a href="https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions">AWS EC2 region</a>, so edit the <code>aws_r_server/inventories/aws_ec2.yml</code> file, and fill your credentials and region on the respective variables.</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">---</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="ex">plugin</span>: aws_ec2</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="ex">plugin:</span> aws_ec2</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="ex">aws_access_key</span>: <span class="st">&#39;your_key_goes_here&#39;</span></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="ex">aws_secret_key</span>: <span class="st">&#39;your_secret_goes_here&#39;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="ex">aws_access_key:</span> <span class="st">&#39;your_key_goes_here&#39;</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="ex">aws_secret_key:</span> <span class="st">&#39;your_secret_goes_here&#39;</span></span>
 <span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="ex">regions</span>:</span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> <span class="st">&#39;sa-east-1&#39;</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="ex">regions:</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> <span class="st">&#39;closest_aws_region&#39;</span> <span class="co">#  e.g. sa-east-1</span></span>
 <span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="ex">hostnames</span>:</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="ex">hostnames:</span></span>
 <span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> <span class="st">&#39;ip-address&#39;</span></span>
 <span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="ex">keyed_groups</span>:</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="ex">keyed_groups:</span></span>
 <span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> key: tags.inventory_group</span></code></pre></div>
-<p>Then you need to configure the path to your ssh key for the <code>[aws]</code> group by editing the <code>aws_r_server/group_vars/aws.yml</code> file, there are other variables here that you can change if needed but, in most cases the only thing to change here is the path to your ssh key.</p>
+<p>Then you need to configure the path to the ssh key for your AWS account by editing the <code>aws_r_server/group_vars/aws.yml</code> file, there are other variables here that you can change if needed but, in most cases the only thing to change is the path to your ssh key.</p>
 <div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">---</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible_user</span>: ubuntu # This is the default user for Ubuntu</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible_become_method</span>: sudo</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible_python_interpreter</span>: /usr/bin/python3 # It also works with python2 but is not recommended.</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible_ssh_private_key_file</span>: ~/.ssh/aws_server.pem # The location of the ssh key in your local PC.</span></code></pre></div>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible_user:</span> ubuntu <span class="co"># This is the default user for Ubuntu</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible_become_method:</span> sudo</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible_python_interpreter:</span> /usr/bin/python3 <span class="co"># It also works with python2 but is not recommended.</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible_ssh_private_key_file:</span> ~/.ssh/aws_server.pem <span class="co"># The location of the ssh key in your local PC.</span></span></code></pre></div>
 <p>Now, if you want to change the default installation settings, you can do it by editing the variables on the <code>aws_r_server/vars/config_vars.yml</code> file, although, the default options are fine for most use case scenarios, including reasonable security settings to use on real-world applications. The only things you most certainly want to change here are the email address for security notifications and the password for the PostgreSQL main user.</p>
 <blockquote>
 <p>:pencil2: This post has been written as an example of applying this approach with cloud computing services so for simplicity’s sake, I have made it work only with the Ubuntu Server 20.04 LTS AMI, so to be clear, it is not OS-agnostic. If you want to use it with an RHEL based AMI you would need to modify the playbook considerably.</p>
@@ -170,96 +187,100 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">---</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co"># AWS Config Vars ##############################################################</span></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co"># General AWS configurations</span></span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="ex">aws_access_key</span>: <span class="st">&#39;your_key_goes_here&#39;</span></span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="ex">aws_secret_key</span>: <span class="st">&#39;your_secret_goes_here&#39;</span></span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="ex">aws_profile</span>: default</span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="ex">aws_region</span>: sa-east-1</span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="ex">aws_ec2_ami</span>: ami-0c3c87b7d583d618f # Ubuntu 20.04 LTS</span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="co"># List of instances</span></span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="ex">instances</span>:</span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> name: rstudio</span>
-<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    <span class="ex">group</span>: aws</span>
-<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    <span class="ex">security_group</span>: [<span class="st">&quot;default&quot;</span>, <span class="st">&quot;public_server&quot;</span>]</span>
-<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    <span class="ex">ssh_key</span>: aws_server</span>
-<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a><span class="co"># AWS firewall settings</span></span>
-<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a><span class="ex">security_groups</span>:</span>
-<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> name: public_server</span>
-<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>    <span class="ex">rules</span>:</span>
-<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>      <span class="ex">-</span> proto: tcp</span>
-<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>        <span class="ex">from_port</span>: 80</span>
-<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>        <span class="ex">to_port</span>: 80</span>
-<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>        <span class="ex">cidr_ip</span>: 0.0.0.0/0</span>
-<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>        <span class="ex">rule_desc</span>: <span class="st">&quot;http&quot;</span></span>
-<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>      <span class="ex">-</span> proto: tcp</span>
-<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>        <span class="ex">from_port</span>: 443</span>
-<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>        <span class="ex">to_port</span>: 443</span>
-<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>        <span class="ex">cidr_ip</span>: 0.0.0.0/0</span>
-<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>        <span class="ex">rule_desc</span>: <span class="st">&quot;https&quot;</span></span>
-<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>      <span class="ex">-</span> proto: tcp</span>
-<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>        <span class="ex">from_port</span>: 22</span>
-<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a>        <span class="ex">to_port</span>: 22</span>
-<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a>        <span class="ex">cidr_ip</span>: 0.0.0.0/0</span>
-<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a>        <span class="ex">rule_desc</span>: <span class="st">&quot;SSH-TCP&quot;</span></span>
-<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a>      <span class="ex">-</span> proto: udp</span>
-<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a>        <span class="ex">from_port</span>: 22</span>
-<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a>        <span class="ex">to_port</span>: 22</span>
-<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a>        <span class="ex">cidr_ip</span>: 0.0.0.0/0</span>
-<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a>        <span class="ex">rule_desc</span>: <span class="st">&quot;SSH-UDP&quot;</span></span>
-<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a>      <span class="ex">-</span> proto: tcp</span>
-<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a>        <span class="ex">from_port</span>: 5432</span>
-<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a>        <span class="ex">to_port</span>: 5432</span>
-<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a>        <span class="ex">cidr_ip</span>: 0.0.0.0/0</span>
-<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a>        <span class="ex">rule_desc</span>: <span class="st">&quot;PostgreSQL&quot;</span></span>
-<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a>    <span class="ex">rules_egress</span>: []</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co"># AWS credentials</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="ex">aws_access_key:</span> <span class="st">&#39;your_key_goes_here&#39;</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="ex">aws_secret_key:</span> <span class="st">&#39;your_secret_goes_here&#39;</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="co"># General AWS configurations</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="ex">aws_region:</span> <span class="st">&#39;closest_aws_region&#39;</span> <span class="co">#  e.g. sa-east-1</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="ex">aws_ec2_ami:</span> ami-0c3c87b7d583d618f <span class="co"># Ubuntu 20.04 LTS</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="co"># List of instances</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="ex">instances:</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> name: rstudio</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    <span class="ex">group:</span> aws</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    <span class="ex">security_group:</span> [<span class="st">&quot;default&quot;</span>, <span class="st">&quot;public_server&quot;</span>]</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    <span class="ex">ssh_key:</span> aws_server</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a><span class="co"># AWS firewall settings</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a><span class="ex">security_groups:</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> name: public_server</span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>    <span class="ex">rules:</span></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>      <span class="ex">-</span> proto: tcp <span class="co"># http</span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>        <span class="ex">from_port:</span> 80</span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>        <span class="ex">to_port:</span> 80</span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>        <span class="ex">cidr_ip:</span> 0.0.0.0/0</span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>      <span class="ex">-</span> proto: tcp  <span class="co"># https</span></span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>        <span class="ex">from_port:</span> 443</span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>        <span class="ex">to_port:</span> 443</span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>        <span class="ex">cidr_ip:</span> 0.0.0.0/0</span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>      <span class="ex">-</span> proto: tcp  <span class="co"># SSH TCP</span></span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>        <span class="ex">from_port:</span> 22</span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>        <span class="ex">to_port:</span> 22</span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a>        <span class="ex">cidr_ip:</span> 0.0.0.0/0</span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a>      <span class="ex">-</span> proto: udp  <span class="co"># SSH UDP</span></span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a>        <span class="ex">from_port:</span> 22</span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a>        <span class="ex">to_port:</span> 22</span>
+<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a>        <span class="ex">cidr_ip:</span> 0.0.0.0/0</span>
+<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a>      <span class="ex">-</span> proto: tcp  <span class="co"># PostgreSQL</span></span>
+<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a>        <span class="ex">from_port:</span> 5432</span>
+<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a>        <span class="ex">to_port:</span> 5432</span>
+<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a>        <span class="ex">cidr_ip:</span> 0.0.0.0/0</span>
+<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a>      <span class="ex">-</span> proto: tcp  <span class="co"># NoIp Client</span></span>
+<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a>        <span class="ex">from_port:</span> 5432</span>
+<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a>        <span class="ex">to_port:</span> 5432</span>
+<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a>        <span class="ex">cidr_ip:</span> 0.0.0.0/0</span>
+<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a>    <span class="ex">rules_egress:</span> []</span>
 <span id="cb6-48"><a href="#cb6-48" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-49"><a href="#cb6-49" aria-hidden="true" tabindex="-1"></a><span class="co"># System Configurations ########################################################</span></span>
 <span id="cb6-50"><a href="#cb6-50" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-51"><a href="#cb6-51" aria-hidden="true" tabindex="-1"></a><span class="co"># Swap parameters</span></span>
-<span id="cb6-52"><a href="#cb6-52" aria-hidden="true" tabindex="-1"></a><span class="ex">swap_file_path</span>: /var/swap</span>
-<span id="cb6-53"><a href="#cb6-53" aria-hidden="true" tabindex="-1"></a><span class="co"># Use any of the following suffixes</span></span>
-<span id="cb6-54"><a href="#cb6-54" aria-hidden="true" tabindex="-1"></a><span class="co"># c=1</span></span>
-<span id="cb6-55"><a href="#cb6-55" aria-hidden="true" tabindex="-1"></a><span class="co"># w=2</span></span>
-<span id="cb6-56"><a href="#cb6-56" aria-hidden="true" tabindex="-1"></a><span class="co"># b=512</span></span>
-<span id="cb6-57"><a href="#cb6-57" aria-hidden="true" tabindex="-1"></a><span class="co"># kB=1000</span></span>
-<span id="cb6-58"><a href="#cb6-58" aria-hidden="true" tabindex="-1"></a><span class="co"># K=1024</span></span>
-<span id="cb6-59"><a href="#cb6-59" aria-hidden="true" tabindex="-1"></a><span class="co"># MB=1000*1000</span></span>
-<span id="cb6-60"><a href="#cb6-60" aria-hidden="true" tabindex="-1"></a><span class="co"># M=1024*1024</span></span>
-<span id="cb6-61"><a href="#cb6-61" aria-hidden="true" tabindex="-1"></a><span class="co"># xM=M</span></span>
-<span id="cb6-62"><a href="#cb6-62" aria-hidden="true" tabindex="-1"></a><span class="co"># GB=1000*1000*1000</span></span>
-<span id="cb6-63"><a href="#cb6-63" aria-hidden="true" tabindex="-1"></a><span class="co"># G=1024*1024*1024</span></span>
-<span id="cb6-64"><a href="#cb6-64" aria-hidden="true" tabindex="-1"></a><span class="ex">swap_file_size</span>: 3GB</span>
-<span id="cb6-65"><a href="#cb6-65" aria-hidden="true" tabindex="-1"></a><span class="ex">swappiness</span>: <span class="st">&#39;10&#39;</span></span>
-<span id="cb6-66"><a href="#cb6-66" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-67"><a href="#cb6-67" aria-hidden="true" tabindex="-1"></a><span class="co"># Language and locale settings</span></span>
-<span id="cb6-68"><a href="#cb6-68" aria-hidden="true" tabindex="-1"></a><span class="ex">language_pack</span>: []                 #  language-pack-es-base</span>
-<span id="cb6-69"><a href="#cb6-69" aria-hidden="true" tabindex="-1"></a><span class="ex">default_locale</span>: <span class="st">&#39;en_US.UTF-8&#39;</span>     #  es_PE.UTF-8</span>
+<span id="cb6-51"><a href="#cb6-51" aria-hidden="true" tabindex="-1"></a><span class="co"># Personal user</span></span>
+<span id="cb6-52"><a href="#cb6-52" aria-hidden="true" tabindex="-1"></a><span class="ex">personal_user:</span> <span class="st">&#39;your_linux_user&#39;</span></span>
+<span id="cb6-53"><a href="#cb6-53" aria-hidden="true" tabindex="-1"></a><span class="ex">personal_user_password:</span> <span class="st">&#39;very_secure_password&#39;</span></span>
+<span id="cb6-54"><a href="#cb6-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-55"><a href="#cb6-55" aria-hidden="true" tabindex="-1"></a><span class="co"># Swap parameters</span></span>
+<span id="cb6-56"><a href="#cb6-56" aria-hidden="true" tabindex="-1"></a><span class="ex">swap_file_path:</span> /var/swap</span>
+<span id="cb6-57"><a href="#cb6-57" aria-hidden="true" tabindex="-1"></a><span class="co"># Use any of the following suffixes</span></span>
+<span id="cb6-58"><a href="#cb6-58" aria-hidden="true" tabindex="-1"></a><span class="co"># c=1</span></span>
+<span id="cb6-59"><a href="#cb6-59" aria-hidden="true" tabindex="-1"></a><span class="co"># w=2</span></span>
+<span id="cb6-60"><a href="#cb6-60" aria-hidden="true" tabindex="-1"></a><span class="co"># b=512</span></span>
+<span id="cb6-61"><a href="#cb6-61" aria-hidden="true" tabindex="-1"></a><span class="co"># kB=1000</span></span>
+<span id="cb6-62"><a href="#cb6-62" aria-hidden="true" tabindex="-1"></a><span class="co"># K=1024</span></span>
+<span id="cb6-63"><a href="#cb6-63" aria-hidden="true" tabindex="-1"></a><span class="co"># MB=1000*1000</span></span>
+<span id="cb6-64"><a href="#cb6-64" aria-hidden="true" tabindex="-1"></a><span class="co"># M=1024*1024</span></span>
+<span id="cb6-65"><a href="#cb6-65" aria-hidden="true" tabindex="-1"></a><span class="co"># xM=M</span></span>
+<span id="cb6-66"><a href="#cb6-66" aria-hidden="true" tabindex="-1"></a><span class="co"># GB=1000*1000*1000</span></span>
+<span id="cb6-67"><a href="#cb6-67" aria-hidden="true" tabindex="-1"></a><span class="co"># G=1024*1024*1024</span></span>
+<span id="cb6-68"><a href="#cb6-68" aria-hidden="true" tabindex="-1"></a><span class="ex">swap_file_size:</span> 3GB</span>
+<span id="cb6-69"><a href="#cb6-69" aria-hidden="true" tabindex="-1"></a><span class="ex">swappiness:</span> <span class="st">&#39;10&#39;</span></span>
 <span id="cb6-70"><a href="#cb6-70" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-71"><a href="#cb6-71" aria-hidden="true" tabindex="-1"></a><span class="co"># Security Configurations ######################################################</span></span>
-<span id="cb6-72"><a href="#cb6-72" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-73"><a href="#cb6-73" aria-hidden="true" tabindex="-1"></a><span class="co"># Notification email for fail2ban</span></span>
-<span id="cb6-74"><a href="#cb6-74" aria-hidden="true" tabindex="-1"></a><span class="ex">send_email</span>: true</span>
-<span id="cb6-75"><a href="#cb6-75" aria-hidden="true" tabindex="-1"></a><span class="ex">fail2ban_email</span>: your_email@something.com</span>
+<span id="cb6-71"><a href="#cb6-71" aria-hidden="true" tabindex="-1"></a><span class="co"># Language and locale</span></span>
+<span id="cb6-72"><a href="#cb6-72" aria-hidden="true" tabindex="-1"></a><span class="ex">language_pack:</span> []                 <span class="co">#  e.g. language-pack-es-base</span></span>
+<span id="cb6-73"><a href="#cb6-73" aria-hidden="true" tabindex="-1"></a><span class="ex">default_locale:</span> <span class="st">&#39;en_US.UTF-8&#39;</span>     <span class="co">#  e.g. es_PE.UTF-8</span></span>
+<span id="cb6-74"><a href="#cb6-74" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-75"><a href="#cb6-75" aria-hidden="true" tabindex="-1"></a><span class="co"># Security Configurations ######################################################</span></span>
 <span id="cb6-76"><a href="#cb6-76" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-77"><a href="#cb6-77" aria-hidden="true" tabindex="-1"></a><span class="co"># PostgreSQL password</span></span>
-<span id="cb6-78"><a href="#cb6-78" aria-hidden="true" tabindex="-1"></a><span class="ex">postgres_password</span>: <span class="st">&#39;very_secure_password&#39;</span></span>
-<span id="cb6-79"><a href="#cb6-79" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-80"><a href="#cb6-80" aria-hidden="true" tabindex="-1"></a><span class="co"># Access rules for Postgresql</span></span>
-<span id="cb6-81"><a href="#cb6-81" aria-hidden="true" tabindex="-1"></a><span class="ex">postgresql_rules</span>:</span>
-<span id="cb6-82"><a href="#cb6-82" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> { contype: local, users: all, address: samehost, method: trust }</span>
-<span id="cb6-83"><a href="#cb6-83" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> { contype: local, users: postgres, address: samehost, method: trust }</span>
-<span id="cb6-84"><a href="#cb6-84" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> { contype: host, users: all, address: 0.0.0.0/0, method: password }</span>
-<span id="cb6-85"><a href="#cb6-85" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-86"><a href="#cb6-86" aria-hidden="true" tabindex="-1"></a><span class="co"># Main Software Versions #######################################################</span></span>
-<span id="cb6-87"><a href="#cb6-87" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-88"><a href="#cb6-88" aria-hidden="true" tabindex="-1"></a><span class="co"># Shiny-server version to install</span></span>
-<span id="cb6-89"><a href="#cb6-89" aria-hidden="true" tabindex="-1"></a><span class="ex">shiny_server_version</span>: <span class="st">&#39;1.5.16.958&#39;</span></span>
-<span id="cb6-90"><a href="#cb6-90" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-91"><a href="#cb6-91" aria-hidden="true" tabindex="-1"></a><span class="co"># RStudio version to install</span></span>
-<span id="cb6-92"><a href="#cb6-92" aria-hidden="true" tabindex="-1"></a><span class="ex">rstudio_version</span>: <span class="st">&#39;1.4.1103&#39;</span></span>
-<span id="cb6-93"><a href="#cb6-93" aria-hidden="true" tabindex="-1"></a><span class="ex">preview_version</span>: false</span></code></pre></div>
+<span id="cb6-77"><a href="#cb6-77" aria-hidden="true" tabindex="-1"></a><span class="co"># Notification email for fail2ban</span></span>
+<span id="cb6-78"><a href="#cb6-78" aria-hidden="true" tabindex="-1"></a><span class="ex">send_email:</span> true</span>
+<span id="cb6-79"><a href="#cb6-79" aria-hidden="true" tabindex="-1"></a><span class="ex">fail2ban_email:</span> your_email@something.com</span>
+<span id="cb6-80"><a href="#cb6-80" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-81"><a href="#cb6-81" aria-hidden="true" tabindex="-1"></a><span class="co"># Postgresql Password</span></span>
+<span id="cb6-82"><a href="#cb6-82" aria-hidden="true" tabindex="-1"></a><span class="ex">postgres_password:</span> <span class="st">&#39;very_secure_password&#39;</span></span>
+<span id="cb6-83"><a href="#cb6-83" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-84"><a href="#cb6-84" aria-hidden="true" tabindex="-1"></a><span class="co"># Access rules for Postgresql</span></span>
+<span id="cb6-85"><a href="#cb6-85" aria-hidden="true" tabindex="-1"></a><span class="ex">postgresql_rules:</span></span>
+<span id="cb6-86"><a href="#cb6-86" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> { contype: local, users: all, address: samehost, method: trust }</span>
+<span id="cb6-87"><a href="#cb6-87" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> { contype: local, users: postgres, address: samehost, method: trust }</span>
+<span id="cb6-88"><a href="#cb6-88" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> { contype: host, users: all, address: 0.0.0.0/0, method: password }</span>
+<span id="cb6-89"><a href="#cb6-89" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-90"><a href="#cb6-90" aria-hidden="true" tabindex="-1"></a><span class="co"># Main Software Versions #######################################################</span></span>
+<span id="cb6-91"><a href="#cb6-91" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-92"><a href="#cb6-92" aria-hidden="true" tabindex="-1"></a><span class="co"># Shiny-server version to install</span></span>
+<span id="cb6-93"><a href="#cb6-93" aria-hidden="true" tabindex="-1"></a><span class="ex">shiny_server_version:</span> <span class="st">&#39;1.5.16.958&#39;</span></span>
+<span id="cb6-94"><a href="#cb6-94" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-95"><a href="#cb6-95" aria-hidden="true" tabindex="-1"></a><span class="co"># RStudio version to install</span></span>
+<span id="cb6-96"><a href="#cb6-96" aria-hidden="true" tabindex="-1"></a><span class="ex">rstudio_version:</span> <span class="st">&#39;1.4.1106&#39;</span></span>
+<span id="cb6-97"><a href="#cb6-97" aria-hidden="true" tabindex="-1"></a><span class="ex">preview_version:</span> false</span></code></pre></div>
 </div>
 <div id="run-the-playbooks" class="section level2">
 <h2>Run the Playbooks</h2>
@@ -272,28 +293,38 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible-playbook</span> install_basic_services.yml</span>
 <span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible-playbook</span> install_shiny_server.yml</span>
 <span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible-playbook</span> install_rstudio_server.yml</span></code></pre></div>
-<p>If you decide that you only need Shiny server or RStudio server but not the other, or you already have the support services you need to be installed, you can run only the playbooks you actually need.</p>
-<p>If you want to update something in the future, RStudio, or Shiny server (I can’t guaranty this is always going to work out of the box), you can simply change the version in the config file and run the specific part of the playbook by taking advantage of the defined “tags”.</p>
+<p>If you decide that you only need Shiny server or RStudio server but not the other, or you already have installed the support services you are going to use, then you can run only the playbooks you actually need.</p>
+<p>If you want to update something in the future, like RStudio, or Shiny server (I can’t guaranty this is always going to work out of the box), you can simply change the version in the config file and run the specific part of the playbook by taking advantage of the defined “tags”.</p>
 <p>For example, this will only install the RStudio version defined in the config file and nothing more:</p>
 <div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> aws_r_server</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible-playbook</span> install_basic_services.yml --tags <span class="st">&quot;rstudio&quot;</span></span></code></pre></div>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible-playbook</span> install_rstudio_server.yml <span class="at">--tags</span> <span class="st">&quot;rstudio&quot;</span></span></code></pre></div>
 <p>The available tags are:</p>
+<ul>
+<li>install_basic_services.yml
 <ul>
 <li><code>secure</code>: Set security settings on the server</li>
 <li><code>swap</code>: Add swap memory to the server</li>
 <li><code>nginx</code>: Install and configure Nginx + PHP</li>
 <li><code>postgresql</code>: Install and configure PostgreSQL</li>
-<li><code>shiny-server</code>: Install shiny-server from source</li>
+<li><code>r</code>: Install R from the CRAN repository</li>
+</ul></li>
+<li>install_shiny_server.yml
+<ul>
+<li><code>shiny-server</code>: Install shiny-server</li>
 <li><code>configure_shiny</code>: Configure shiny-server</li>
-<li><code>rstudio</code>: Install RStudio server from source</li>
+</ul></li>
+<li>install_rstudio_server.yml
+<ul>
+<li><code>rstudio</code>: Install RStudio server</li>
 <li><code>configure_rstudio</code>: Configure RStudio server</li>
+</ul></li>
 </ul>
 <p>You can also go the other way and skip specific parts of the playbooks by using the <code>--skip-tags</code> option, for example, if you don’t need PostgreSQL, you can avoid installing it by running the playbook this way:</p>
 <div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> aws_r_server</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible-playbook</span> install_basic_services.yml --skip-tags <span class="st">&quot;postgresql&quot;</span></span></code></pre></div>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible-playbook</span> install_basic_services.yml <span class="at">--skip-tags</span> <span class="st">&quot;postgresql&quot;</span></span></code></pre></div>
 <p>After successfully running all the playbooks, you will have a fully functional installation ready to be used, so you could simply open an RStudio session at <code>http://your_server_ip/rstudio</code> and/or publish your Shiny apps in the <code>/srv/shiny-server</code> folder and access them at <code>http://your_server_ip/shiny/your_app_name</code>.</p>
 </div>
 <div id="final-notes" class="section level2">
 <h2>Final Notes</h2>
-<p>To finish I just want to make you aware that there are other options for getting RStudio and Shiny server on AWS that you might consider to be simpler, like using a premade AMI or containers, but they are not as flexible and customizable as defining your own infrastructure in code with Ansible. Obviously, the example in this article is my conception of a basic installationfor an R-based data science server but you can use it as a starting point to custom tailor your own infrastructure and make your workflow more efficient as you become more proficient with Ansible.</p>
+<p>To finish I just want to make you aware that there are other options for getting RStudio and Shiny server on AWS that you might consider to be simpler, like using a premade AMI or containers, but they are not as flexible and customizable as defining your own infrastructure in code with Ansible. Obviously, the example in this article is my conception of a basic installation for an R-based data science server but you can use it as a starting point to custom tailor your own infrastructure and make your workflow more efficient as you become more proficient with Ansible.</p>
 </div>
