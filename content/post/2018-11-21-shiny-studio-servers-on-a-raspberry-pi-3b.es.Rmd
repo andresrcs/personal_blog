@@ -208,7 +208,7 @@ PYTHON=`which python`
 sudo cmake -DCMAKE_INSTALL_PREFIX=/usr/local -DPYTHON="$PYTHON" ../
 sudo make
 mkdir ../build
-sed -i '8s/.*/NODE_SHA256=d26f81800cafcec54d35d9a79bfe9f2e3bf008c21c9653abe2493161bbffad92/' ../external/node/install-node.sh # node-v12.19.0-linux-armv7l.tar.xz
+sed -i '8s/.*/NODE_SHA256=abef7d431d6d0e067fe5797d4fe44039a5577f01ed9e40d7a3496cbb22502f55/' ../external/node/install-node.sh # node-v12.20.0-linux-armv7l.tar.xz
 sed -i 's/linux-x64.tar.xz/linux-armv7l.tar.xz/' ../external/node/install-node.sh
 sed -i 's/https:\/\/github.com\/jcheng5\/node-centos6\/releases\/download\//https:\/\/nodejs.org\/dist\//' ../external/node/install-node.sh
 (cd .. && sudo ./external/node/install-node.sh)
