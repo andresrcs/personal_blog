@@ -122,7 +122,7 @@ Además, dado que vamos a estar instalando varios paquetes desde la fuente en un
     ServerAliveCountMax 2
 ```
 
->:warning: Es muy importante no saltarse el paso anterior, de lo contrario, la conexión SSH fallará silenciosamente mientras se ejecutan tareas largas en Ansible y vas a estart esperando inútilmente con tu Raspberry Pi sin hacer nada en realidad.
+>:warning: Es muy importante no saltarse el paso anterior, de lo contrario, la conexión SSH fallará silenciosamente mientras se ejecutan tareas largas en Ansible y vas a estar esperando inútilmente con tu Raspberry Pi sin hacer nada en realidad.
 
 ## Descarga y configura los Playbooks
 
@@ -248,7 +248,7 @@ Las etiquetas disponibles son:
 
 - install_basic_services.yml
     - `secure`: Establecer la configuración de seguridad en el servidor
-    - `swap`: Agregue memoria swap al servidor
+    - `swap`: Agregar memoria swap al servidor
     - `nginx`: Instalar y configurar Nginx + PHP
     - `postgresql`: Instalar y configurar PostgreSQL
     - `r`: Instalar R desde la fuente

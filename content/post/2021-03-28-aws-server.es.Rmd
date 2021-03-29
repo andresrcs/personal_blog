@@ -1,0 +1,300 @@
+---
+title: Instalación automática de Shiny y RStudio server en Amazon Web Services con Ansible
+description: "En esta publicación, te daré instrucciones paso a paso de cómo instalar y configurar automáticamente un servidor de ciencia de datos basado en R completamente funcional, incluidos servicios de soporte como Nginx y PostgreSQL, en una instancia EC2 de AWS utilizando un playbook de Ansible que te proporcionaré. No se necesitan conocimientos previos de Ansible."
+author: andres-castro
+date: '2021-03-28'
+slug: aws_r_server
+categories:
+  - R
+series: 
+  - r-admin
+tags:
+  - admin
+  - aws
+  - ec2
+  - server
+  - shiny-server
+  - rstudio-server
+  - ansible
+  - nginx
+  - postgresql
+draft: false
+images: ["aws_server.jpg"]
+authors: ["andres-castro"]
+output:
+  blogdown::html_page:
+    toc: true
+    highlight: zenburn
+---
+
+Despues de escribir una [publicación muy similar](/es/2021/01/13/raspberry_pi_server/) sobre la instalación de Shiny y RStudio server en Raspberry Pi OS usando la automatización con Ansible, me di cuenta de que el mismo enfoque se puede portar fácilmente para trabajar con servicios de computación en la nube, así que, básicamente, esta será la versión Amazon Web Services (AWS a partir de ahora) de esa publicación.
+
+> :pencil2: Ten en cuenta que este es un proyecto orientado a principiantes, no está destinado a ser una herramienta de producción, por lo que si ya estás familiarizado con Ansible, es posible que quieras simplemente descargar algunos roles de Ansible Galaxy e integrarlos en tu flujo de trabajo en lugar de seguir este artículo.
+
+En caso de que no hayas leído la publicación antes mencionada, te voy a contar de qué se trata. El proceso de instalación y configuración de un servidor de ciencia de datos basado en R en AWS se puede automatizar usando una herramienta llamada [Ansible](https://es.wikipedia.org/wiki/Ansible_(software)), aquellos en DevOps deben estar familiarizados con el poder de Ansible, pero incluso si nunca has oído hablar de ello, no te preocupe, no necesitas saber Ansible para aprovechar sus capacidades de automatización, yo mismo no soy un experto en Ansible y he sido capaz de realizar este proyecto con solo conocimientos básicos de la herramienta, así que si yo puedo hacerlo, tu también. Te guiaré a través del proceso asumiendo que no tienes experiencia previa con esta herramienta y solo algunas habilidades básicas de terminal de Linux.
+
+Ansible es una herramienta de implementación de aplicaciones, administración de configuración y aprovisionamiento de software de código abierto que habilita la infraestructura como código. Se ejecuta en muchos sistemas de tipo Unix y puede configurar tanto sistemas tipo Unix como Microsoft Windows. En términos simples, te permite automatizar tareas en tu infraestructura (una, o muchas instancias EC2 a la vez, en nuestro caso) definiendo un conjunto de pasos para ejecutar en archivos [YAML](https://es.wikipedia.org/wiki/YAML), llamados "playbooks".
+
+Escribí algunos playbooks de Ansible para automatizar la mayor parte del proceso de instalación, pero dejé algo de espacio para que configures la instalación a tu gusto sin tener que modificar los playbooks (lo que requeriría que sepas cómo editarlos) a través de un archivo de configuración. Aunque, si deseas tener una comprensión básica de cómo funciona esta herramienta, hay una buena serie de Ansible para principiantes en el [canal de YouTube de Jeff Geerling](https://www.youtube.com/playlist?list=PL2_OBreMn7FqZkvMYt6ATmgC0KAGGJNAN).
+
+En caso de que no estés familiarizado con AWS, es un proveedor de servicios en la nube que, entre muchas otras cosas, brinda acceso a servidores virtuales alojados en la nube, por lo que no tienes que encargarte tu mismo de una infraestructura física, también, para seguir con este artículo, hay algunos términos específicos de AWS que debemos definir en términos simples:
+
+- **Instancia EC2**: Se refiere a una instancia individual de un servidor virtual.
+- **Amazon Machine Images (AMI)**: Proporciona la información necesaria para lanzar una instancia, como el sistema operativo, las bibliotecas preinstaladas y las configuraciones necesarias para que funcione un servidor. Tenga en cuenta que puede crear sus propias AMI.
+- **Regiones**: Amazon EC2 está alojado en varias ubicaciones en todo el mundo. Estas ubicaciones se componen de Regiones y cada región es un área geográfica separada.
+- **Grupo de Seguridad**: Un grupo de seguridad actúa como un firewall virtual para que su instancia controle el tráfico entrante y saliente.
+
+## Crea una Cuenta de AWS y Credenciales de Seguridad
+
+Para utilizar los servicios de AWS, debes tener una cuenta, si ya tienes una, puedes omitir esta parte; de lo contrario, para crear una, ve a [https://aws.amazon.com/es/](https://aws.amazon.com/es/) y haz clic en "Crear una cuenta de AWS”, completa la información requerida y sigue presionando "Continuar", se te pedirá que proporciones la información de tu tarjeta de crédito, pero no se te cobrará por usar los productos incluidos en el "Nivel gratuito" al menos por un año.
+
+Una vez creada tu cuenta, ve a la "Consola de administración de AWS" e inicia sesión, una vez allí, haz clic en el botón de búsqueda, escribe "EC2" y selecciona "EC2 Servidores virtuales en la nube".
+
+![](/post/2021-03-28-aws-server.es_files/aws_ec2.jpg){width=700px height=200px}
+
+En la esquina superior derecha, elije una región adecuada, cuanto más cerca geográficamente de ti, mejor. Recuerda tu elección, ya que debes establecer esta misma ubicación en los playbooks más adelante.
+
+![](/post/2021-03-28-aws-server.es_files/region.jpg){width=300px height=600px}
+
+Luego, en el menú de la izquierda, busca "Red y seguridad -> Pares de claves" y haz clic ahí.
+
+![](/post/2021-03-28-aws-server.es_files/aws_key_pair.jpg){width=200px height=600px}
+
+En la esquina superior derecha, busca "Crear par de claves" y haz clic ahí.
+
+![](/post/2021-03-28-aws-server.es_files/aws_create_key.jpg){width=700px height=200px}
+
+Verás este cuadro de diálogo, llénalo de esta manera, haz clic en "Crear par de claves" y guarda el archivo resultante en esta ruta, `~/.ssh/aws_server.pem`, en tu máquina.
+
+![](/post/2021-03-28-aws-server.es_files/key_pair.jpg){width=600px height=500px}
+
+Establece los permisos adecuados para tu archivo de claves, los permisos del directorio .ssh deben ser 700 (rwx______) y la clave privada (aws_server.pem) debe ser 600 (rw_______).
+
+```{bash set_permissions, eval=FALSE}
+sudo chmod 700 ~/.ssh/
+sudo chmod 600 ~/.ssh/aws_server.pem
+```
+
+A continuación, debes crear una clave de acceso, para que puedas tener acceso a tu cuenta mediante programación, ve al menú de tu cuenta y selecciona "Mis credenciales de seguridad".
+
+![](/post/2021-03-28-aws-server.es_files/aws_security_settings.jpg){width=700px height=300px}
+
+Luego selecciona "Crear una clave de acceso" y guarda el archivo con tus credenciales
+
+![](/post/2021-03-28-aws-server.es_files/aws_access_key.jpg){width=600px height=400px}
+
+> :warning: Manten el archivo descargado seguro y a mano, lo necesitarás más adelante. Ten cuidado de no compartir este archivo, ya que podría permitir que otras personas generen cargos en tu tarjeta de crédito.
+
+## Instala Ansible
+
+Es posible instalar Ansible localmente en la propia instancia EC2 y ejecutar playbooks directamente en ella con `connection: local` pero no sería práctico porque, entre otras cosas, requeriría que lancemos manualmente la instancia EC2, es mejor ejecutar los playbooks desde un sistema que no sea tu instancia EC2.
+
+Para instalar Ansible, si tienes un sistema basado en Unix (es decir, Linux, macOS) a tu disposición, tienes suerte, instalar la última versión de Ansible es muy simple.
+
+```{bash install_ansible, eval=FALSE}
+# Instala python3
+sudo apt install python3 # En macOS usa `brew install python3`
+# Instala pip3
+sudo apt install python3-pip 
+# Instala la última versión de Ansible con pip3
+sudo pip3 install ansible
+```
+
+Si estás en Windows, lamentablemente, no hay forma de ejecutar Ansible de forma nativa, tu mejor opción es habilitar WSL (Subsistema de Windows para Linux), instalar una distribución de Linux del Microsoft Store (recomiendo Ubuntu) y ejecutar los pasos anteriores en tu máquina virtual Linux.
+
+Puedes encontrar una guía detallada para instalar WSL [aquí](https://docs.microsoft.com/en-us/windows/wsl/install-win10) y puede encontrar más información sobre la instalación de Ansible en el [sitio de documentación oficial](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html).
+
+Además, dado que vamos a estar probando esto en una instancia EC2 con poca potencia, algunas de estas tareas van a tomar bastante tiempo y la conexión `SSH` podría cerrarse automáticamente por inactividad, para evitar esta situación, activa el envío de paquetes "keep-alive" al servidor editando el archivo `ssh_config` con `sudo nano /etc/ssh/ssh_config` y agregando estas dos líneas debajo de `Host *`:
+
+```{bash keep_alive, eval=FALSE}
+    ServerAliveInterval 300
+    ServerAliveCountMax 2
+```
+
+> :warning: Es muy importante no saltarse el paso anterior, de lo contrario, la conexión SSH fallará silenciosamente mientras se ejecutan tareas largas en Ansible y vas a estar esperando inútilmente con tu instancia EC2 sin hacer nada en realidad.
+
+## Descarga y Configura los Playbooks
+
+Los playbooks están en un repositorio público en GitHub, puedes clonar el repositorio con estos comandos:
+
+```{bash clone_repo, eval=FALSE}
+# Instala git si aún no lo tienes
+sudo apt install git # En macOS usa `brew install git`
+# Clona el último commit del repositorio
+git clone https://github.com/andresrcs/aws_r_server.git --depth 1
+```
+
+Para comenzar a configurar los playbooks, por lo general, primero debes definir un "inventario" (una lista de servidores a los que conectarse), pero en este caso, el playbook `provision_ec2_instance.yml` creará uno automáticamente para ti cuando lo ejecutes y los otros playbooks obtendrán un inventario actualizado de AWS automáticamente usando el plugging `aws_ec2` cuando sea necesario, esta es una de las ventajas de trabajar con servicios de computación en la nube bien soportados como AWS, pero para que el plugging `aws_ec2`  pueda hacer su magia, debes proporcionarle tus credenciales de AWS y definir tu [región de AWS EC2](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions), así que edita el archivo `aws_r_server/inventories/aws_ec2.yml`, y completa tus credenciales y región en las variables respectivas. Recuerda que ya creaste estas credenciales en un paso anterior y guardaste un archivo .csv que las contiene, además, la región de AWS que configures aquí debe ser la misma que seleccionaste cuando comenzaste a crear tus credenciales.
+
+```{bash inventory, eval=FALSE}
+---
+plugin: aws_ec2
+
+aws_access_key: 'tu_código_de_acceso_va_aqui'
+aws_secret_key: 'tu_código_secreto_va_aqui'
+
+regions:
+  - 'regin_aws_más_cercana' # Por ejemplo sa-east-1
+
+hostnames:
+  - 'ip-address' # No cambies esto
+
+keyed_groups:
+  - key: tags.inventory_group
+```
+
+Ahora, si deseas cambiar la configuración de instalación predeterminada, puedes hacerlo editando las variables en el archivo `aws_r_server/vars/config_vars.yml`, aunque las opciones predeterminadas están bien para la mayoría de los casos de uso, incluida una configuración de seguridad razonable para usar en aplicaciones del mundo real. Lo único que debes cambiar aquí son las credenciales y la región de AWS, la dirección de correo electrónico para las notificaciones de seguridad y la contraseña del usuario principal de PostgreSQL.
+
+> :pencil2: Esta publicación se ha escrito como un ejemplo de la aplicación de este enfoque con servicios de computación en la nube, por lo que, en aras de la simplicidad, lo hice funcionar solo con la AMI de Ubuntu Server 20.04 LTS, por lo que, para ser claro, no es independiente del sistema operativo. Si deseas utilizarlo con una AMI basada en RHEL, deberás modificar considerablemente los playbooks. 
+
+```{bash config_vars, eval=FALSE}
+---
+# Variables de Congiguración de AWS ############################################
+
+# Credenciales de AWS
+aws_access_key: 'tu_código_de_acceso_va_aqui'
+aws_secret_key: 'tu_código_secreto_va_aqui'
+
+# Configuración General de AWS
+aws_region: 'regin_aws_más_cercana' # Por ejemplo sa-east-1
+aws_ec2_ami: ami-0c3c87b7d583d618f # Ubuntu 20.04 LTS
+
+# Lista de instancias
+instances:
+  - name: rstudio
+    group: aws
+    security_group: ["default", "public_server"]
+    ssh_key: aws_server
+
+# Configuración del firewall de AWS
+security_groups:
+  - name: public_server
+    rules:
+      - proto: tcp # http
+        from_port: 80
+        to_port: 80
+        cidr_ip: 0.0.0.0/0
+      - proto: tcp  # https
+        from_port: 443
+        to_port: 443
+        cidr_ip: 0.0.0.0/0
+      - proto: tcp  # SSH TCP
+        from_port: 22
+        to_port: 22
+        cidr_ip: 0.0.0.0/0
+      - proto: udp  # SSH UDP
+        from_port: 22
+        to_port: 22
+        cidr_ip: 0.0.0.0/0
+      - proto: tcp  # PostgreSQL
+        from_port: 5432
+        to_port: 5432
+        cidr_ip: 0.0.0.0/0
+    rules_egress: []
+
+# Configuraciones del Sistema ##################################################
+
+# Usuario Personal
+personal_user: 'tu_usuario_de_linux'
+personal_user_password: 'password_muy_seguro'
+
+# Swap parameters
+swap_file_path: /var/swap
+# Use any of the following suffixes
+# c=1
+# w=2
+# b=512
+# kB=1000
+# K=1024
+# MB=1000*1000
+# M=1024*1024
+# xM=M
+# GB=1000*1000*1000
+# G=1024*1024*1024
+swap_file_size: 3GB
+swappiness: '10'
+
+# Lenguaje y configuración local
+language_pack: []                 #  Por ejemplo language-pack-es-base
+default_locale: 'en_US.UTF-8'     #  Por ejemplo es_PE.UTF-8
+
+# Configuraciones de Seguridad #################################################
+
+# Email para notificaciones de fail2ban
+send_email: true
+fail2ban_email: 'tu_email@algo.com'
+
+# Password para Postgresql
+postgres_password: 'password_muy_seguro'
+
+# Reglas de acceso para Postgresql
+postgresql_rules:
+  - { contype: local, users: all, address: samehost, method: trust }
+  - { contype: local, users: postgres, address: samehost, method: trust }
+  - { contype: host, users: all, address: 0.0.0.0/0, method: password }
+
+# Versiones del Software Principal #############################################
+
+# Versión de Shiny-server a instalar
+shiny_server_version: '1.5.16.958'
+
+# Versión de RStudio a instalar
+rstudio_version: '1.4.1106'
+preview_version: false
+
+```
+
+## Ejecuta los Playbooks
+
+Simplemente puede acceder a la carpeta `aws_r_server` y ejecutar el playbook `main.yml` para instalar todo a la vez de esta manera:
+
+```{bash main_playbook, eval=FALSE}
+cd aws_r_server
+ansible-playbook main.yml
+```
+
+Pero para hacer que el proceso de instalación sea más flexible, he dividido el proceso en cuatro playbooks individuales:
+
+```{bash playbooks, eval=FALSE}
+ansible-playbook provision_ec2_instance.yml
+ansible-playbook install_basic_services.yml
+ansible-playbook install_shiny_server.yml
+ansible-playbook install_rstudio_server.yml
+```
+
+Si decides que solo necesitas Shiny server o RStudio server pero no el otro, o si ya has instalado los servicios de soporte que vas a utilizar, puedes ejecutar solo los playbooks que realmente necesitas.
+
+Si deseas actualizar algo en el futuro, como RStudio o Shiny (no puedo garantizar que siempre funcionará sin necesidad de cambios), simplemente puedes cambiar la versión en el archivo de configuración y ejecutar la parte específica del playbook aprovechando las "etiquetas" definidas.
+
+Por ejemplo, esto solo instalará la versión de RStudio definida en el archivo de configuración y nada más:
+
+```{bash tags, eval=FALSE}
+ansible-playbook install_rstudio_server.yml --tags "rstudio"
+```
+
+Las etiquetas disponibles son:
+
+- install_basic_services.yml
+    - `secure`: Establecer la configuración de seguridad en el servidor
+    - `swap`: Agregar memoria swap al servidor
+    - `nginx`: Instalar y configurar Nginx + PHP
+    - `postgresql`: Instalar y configurar PostgreSQL
+    - `r`: Instalar R desde el repositorio CRAN
+- install_shiny_server.yml
+    - `shiny-server`: Instalar shiny-server
+    - `configure_shiny`: Configurar shiny-server
+- install_rstudio_server.yml
+    - `rstudio`: Instalar RStudio server
+    - `configure_rstudio`: Configurar RStudio server
+
+También puedes hacer lo contrario y omitir partes específicas de los playbooks usando la opción `--skip-tags`, por ejemplo, si no necesitas PostgreSQL, puedes evitar instalarlo ejecutando el playbook de esta manera:
+
+```{bash skip_tags, eval=FALSE}
+ansible-playbook install_basic_services.yml --skip-tags "postgresql"
+```
+
+Después de ejecutar con éxito todos los playbooks, tendrás una instalación completamente funcional lista para ser utilizada, por lo que podras simplemente abrir una sesión de RStudio en `http://ip_de_tu_servidor/rstudio` y/o publicar tus aplicaciones Shiny en la carpeta `/srv/shiny-server` y acceder a ellas en `http://ip_de_tu_servidor/shiny/nombre_de_tu_app`.
+
+## Notas Finales
+
+Para terminar, solo quiero informarte que hay otras opciones para obtener RStudio y Shiny server en AWS que podrías considerar más simples, como usar una AMI o contenedores prefabricados, pero no son tan flexibles y personalizables como definir tu propia infraestructura en código con Ansible. Obviamente, el ejemplo de este artículo es mi concepción de una instalación básica para un servidor de ciencia de datos basado en R, pero puedes usarlo como punto de partida para personalizar tu propia infraestructura y hacer que tu flujo de trabajo sea más eficiente a medida que te vuelvas más competente con Ansible.
