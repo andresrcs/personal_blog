@@ -178,7 +178,7 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Instala git si aún no lo tienes</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install git</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Clonar el último commit del repositorio</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone https://github.com/andresrcs/raspberry_pi_server.git <span class="at">-–depth</span> 1</span></code></pre></div>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone https://github.com/andresrcs/raspberry_pi_server.git <span class="at">--depth</span> 1</span></code></pre></div>
 <p>Para configurar los playbooks, primero debes definir tu “inventario”, esta es una lista de los hosts a los que te vas a conectar, edita el archivo <code>raspberry_pi_server/inventory.ini</code> y agrega la IP de tu(s) Raspberry Pi(s):</p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">[raspberries]</span> <span class="co"># Esto representa un grupo de Raspberries</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ex">raspberry_01</span> ansible_host=192.168.0.10 <span class="co"># Este es el nombre de host y la IP de una Raspberry Pi individual</span></span>

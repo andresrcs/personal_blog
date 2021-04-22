@@ -132,7 +132,7 @@ Los playbooks están en un repositorio público en GitHub, puedes clonar el repo
 # Instala git si aún no lo tienes
 sudo apt install git
 # Clonar el último commit del repositorio
-git clone https://github.com/andresrcs/raspberry_pi_server.git -–depth 1
+git clone https://github.com/andresrcs/raspberry_pi_server.git --depth 1
 ```
 
 Para configurar los playbooks, primero debes definir tu "inventario", esta es una lista de los hosts a los que te vas a conectar, edita el archivo `raspberry_pi_server/inventory.ini` y agrega la IP de tu(s) Raspberry Pi(s):

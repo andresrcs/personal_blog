@@ -31,6 +31,7 @@ output:
 pre > code.sourceCode { white-space: pre; position: relative; }
 pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
 div.sourceCode { margin: 1em 0; }
 pre.sourceCode { margin: 0; }
@@ -143,7 +144,7 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="co"># If you use Putty as your SSH client (Windows), generate a ppk key, otherwise, ignore these steps</span></span>
 <span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install putty-tools</span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="ex">puttygen</span> id_rsa -o id_rsa.ppk</span></code></pre></div>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="ex">puttygen</span> id_rsa <span class="at">-o</span> id_rsa.ppk</span></code></pre></div>
 <p>Copy the id_rsa and id_rsa.pub (and id_rsa.ppk if applicable) files to the machine you are going to use to execute the playbooks, I like to use <code>sftp</code> but you can do it the way you prefer (e.g. with a USB memory). After you have copied the key files, delete them from your Pi with <code>rm ~/.ssh/id_rsa*</code></p>
 <p>The next step is to set a static IP so you can always know where to reach your Pi, edit the <code>dhcpcd.conf</code> file accordingly to your own needs with <code>sudo nano /etc/dhcpcd.conf</code>.</p>
 <p>This is a sample IP configuration for the ethernet interface:</p>
@@ -177,23 +178,23 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Install git if you don&#39;t have it already</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install git</span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Clone the latest commit from the repository</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone https://github.com/andresrcs/raspberry_pi_server.git -–depth 1</span></code></pre></div>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone https://github.com/andresrcs/raspberry_pi_server.git <span class="at">--depth</span> 1</span></code></pre></div>
 <p>To configure the playbooks, you first need to define your “inventory”, this is a list of the hosts you are going to connect to, edit the <code>raspberry_pi_server/inventory.ini</code> file and add the IP of your Raspberry Pi(s):</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>[<span class="ex">raspberries</span>] # This represents a group of Raspberries</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ex">raspberry_01</span> ansible_host=192.168.0.10 # This is the hostname and IP for an individual Raspberry Pi</span>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">[raspberries]</span> <span class="co"># This represents a group of Raspberries</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="ex">raspberry_01</span> ansible_host=192.168.0.10 <span class="co"># This is the hostname and IP for an individual Raspberry Pi</span></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co"># You can add as many Raspberries as you need</span></span></code></pre></div>
 <p>Then set common variables for your <code>[raspberries]</code> group by editing the <code>raspberry_pi_server/group_vars/raspberries.yml</code> file, the most important thing to check here is the path to your ssh key.</p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">---</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible_user</span>: pi # This is the default user for Raspberry Pi OS</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible_become_method</span>: sudo</span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible_python_interpreter</span>: /usr/bin/python3 # It also works with python2 but is not recommended.</span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible_ssh_private_key_file</span>: ~/.ssh/raspberrypi_key # The location of the ssh key in your local PC.</span></code></pre></div>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible_user:</span> pi <span class="co"># This is the default user for Raspberry Pi OS</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible_become_method:</span> sudo</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible_python_interpreter:</span> /usr/bin/python3 <span class="co"># It also works with python2 but is not recommended.</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible_ssh_private_key_file:</span> ~/.ssh/raspberrypi_key <span class="co"># The location of the ssh key in your local PC.</span></span></code></pre></div>
 <p>Now, if you want to change the default installation settings, you can do it by editing the variables on the <code>raspberry_pi_server/vars/config_vars.yml</code> file, although, the default options are fine for most use case scenarios, including reasonable security settings to use on real-world applications. The only things you most certainly want to change here are the email address for security notifications and the password for the PostgreSQL main user.</p>
 <div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">---</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co"># System Configurations ########################################################</span></span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Swap parameters</span></span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="ex">swap_file_path</span>: <span class="st">&#39;/var/swap.1&#39;</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="ex">swap_file_path:</span> <span class="st">&#39;/var/swap.1&#39;</span></span>
 <span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Use any of the following suffixes</span></span>
 <span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a><span class="co"># c=1</span></span>
 <span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="co"># w=2</span></span>
@@ -205,31 +206,31 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="co"># xM=M</span></span>
 <span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a><span class="co"># GB=1000*1000*1000</span></span>
 <span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a><span class="co"># G=1024*1024*1024</span></span>
-<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a><span class="ex">swap_file_size</span>: <span class="st">&#39;3GB&#39;</span></span>
-<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a><span class="ex">swappiness</span>: <span class="st">&#39;10&#39;</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a><span class="ex">swap_file_size:</span> <span class="st">&#39;3GB&#39;</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a><span class="ex">swappiness:</span> <span class="st">&#39;10&#39;</span></span>
 <span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a><span class="co"># Disable Wifi interface?</span></span>
-<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a><span class="ex">disable_wifi</span>: true</span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a><span class="ex">disable_wifi:</span> true</span>
 <span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a><span class="co"># Security Configurations ######################################################</span></span>
 <span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a><span class="co"># Ports to open</span></span>
-<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a><span class="ex">exposed_ports</span>:</span>
-<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> { rule: <span class="st">&#39;allow&#39;</span>, port: 22, proto: <span class="st">&#39;tcp&#39;</span> }   # <span class="fu">ssh</span></span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a><span class="ex">exposed_ports:</span></span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> { rule: <span class="st">&#39;allow&#39;</span>, port: 22, proto: <span class="st">&#39;tcp&#39;</span> }   <span class="co"># ssh</span></span>
 <span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> { rule: <span class="st">&#39;allow&#39;</span>, port: 22, proto: <span class="st">&#39;udp&#39;</span> }</span>
-<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> { rule: <span class="st">&#39;allow&#39;</span>, port: 80, proto: <span class="st">&#39;tcp&#39;</span> }   # <span class="ex">http</span></span>
-<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> { rule: <span class="st">&#39;allow&#39;</span>, port: 5432, proto: <span class="st">&#39;tcp&#39;</span> }   # <span class="ex">PostgreSQL</span></span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> { rule: <span class="st">&#39;allow&#39;</span>, port: 80, proto: <span class="st">&#39;tcp&#39;</span> }   <span class="co"># http</span></span>
+<span id="cb8-30"><a href="#cb8-30" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> { rule: <span class="st">&#39;allow&#39;</span>, port: 5432, proto: <span class="st">&#39;tcp&#39;</span> }   <span class="co"># PostgreSQL</span></span>
 <span id="cb8-31"><a href="#cb8-31" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> { rule: <span class="st">&#39;allow&#39;</span>, port: 5432, proto: <span class="st">&#39;udp&#39;</span> }</span>
 <span id="cb8-32"><a href="#cb8-32" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-33"><a href="#cb8-33" aria-hidden="true" tabindex="-1"></a><span class="co"># Notification email for fail2ban</span></span>
-<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a><span class="ex">send_email</span>: true</span>
-<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a><span class="ex">fail2ban_email</span>: your_email@something.com</span>
+<span id="cb8-34"><a href="#cb8-34" aria-hidden="true" tabindex="-1"></a><span class="ex">send_email:</span> true</span>
+<span id="cb8-35"><a href="#cb8-35" aria-hidden="true" tabindex="-1"></a><span class="ex">fail2ban_email:</span> your_email@something.com</span>
 <span id="cb8-36"><a href="#cb8-36" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-37"><a href="#cb8-37" aria-hidden="true" tabindex="-1"></a><span class="co"># Password for the main PostgreSQL user</span></span>
-<span id="cb8-38"><a href="#cb8-38" aria-hidden="true" tabindex="-1"></a><span class="ex">postgres_password</span>: <span class="st">&#39;very_secure_password&#39;</span></span>
+<span id="cb8-38"><a href="#cb8-38" aria-hidden="true" tabindex="-1"></a><span class="ex">postgres_password:</span> <span class="st">&#39;very_secure_password&#39;</span></span>
 <span id="cb8-39"><a href="#cb8-39" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-40"><a href="#cb8-40" aria-hidden="true" tabindex="-1"></a><span class="co"># Access rules for PostgreSQL</span></span>
-<span id="cb8-41"><a href="#cb8-41" aria-hidden="true" tabindex="-1"></a><span class="ex">postgresql_rules</span>:</span>
+<span id="cb8-41"><a href="#cb8-41" aria-hidden="true" tabindex="-1"></a><span class="ex">postgresql_rules:</span></span>
 <span id="cb8-42"><a href="#cb8-42" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> { contype: local, users: all, address: samehost, method: trust }</span>
 <span id="cb8-43"><a href="#cb8-43" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> { contype: local, users: postgres, address: samehost, method: trust }</span>
 <span id="cb8-44"><a href="#cb8-44" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> { contype: host, users: all, address: <span class="st">&quot;{{ ansible_default_ipv4.network }}/24&quot;</span>, method: trust }</span>
@@ -238,13 +239,13 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <span id="cb8-47"><a href="#cb8-47" aria-hidden="true" tabindex="-1"></a><span class="co"># Main Software Versions #######################################################</span></span>
 <span id="cb8-48"><a href="#cb8-48" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-49"><a href="#cb8-49" aria-hidden="true" tabindex="-1"></a><span class="co"># R version to install</span></span>
-<span id="cb8-50"><a href="#cb8-50" aria-hidden="true" tabindex="-1"></a><span class="ex">r_version</span>: <span class="st">&#39;4.0.3&#39;</span></span>
+<span id="cb8-50"><a href="#cb8-50" aria-hidden="true" tabindex="-1"></a><span class="ex">r_version:</span> <span class="st">&#39;4.0.3&#39;</span></span>
 <span id="cb8-51"><a href="#cb8-51" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-52"><a href="#cb8-52" aria-hidden="true" tabindex="-1"></a><span class="co"># shiny-server version to install</span></span>
-<span id="cb8-53"><a href="#cb8-53" aria-hidden="true" tabindex="-1"></a><span class="ex">shiny_server_version</span>: <span class="st">&#39;v1.5.16.958&#39;</span></span>
+<span id="cb8-53"><a href="#cb8-53" aria-hidden="true" tabindex="-1"></a><span class="ex">shiny_server_version:</span> <span class="st">&#39;v1.5.16.958&#39;</span></span>
 <span id="cb8-54"><a href="#cb8-54" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-55"><a href="#cb8-55" aria-hidden="true" tabindex="-1"></a><span class="co"># rstudio-server version to install</span></span>
-<span id="cb8-56"><a href="#cb8-56" aria-hidden="true" tabindex="-1"></a><span class="ex">rstudio_version</span>: <span class="st">&#39;v1.4.1103&#39;</span></span></code></pre></div>
+<span id="cb8-56"><a href="#cb8-56" aria-hidden="true" tabindex="-1"></a><span class="ex">rstudio_version:</span> <span class="st">&#39;v1.4.1103&#39;</span></span></code></pre></div>
 </div>
 <div id="run-the-playbooks" class="section level2">
 <h2>Run the Playbooks</h2>
@@ -260,7 +261,7 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <p>If you want to update something in the future, like R, RStudio, or Shiny server (I can’t guaranty that is going to work out of the box), you can simply change the version in the config file and run the specific part of the playbook by taking advantage of the defined “tags”.</p>
 <p>For example, this will only install the R version defined in the config file and nothing more:</p>
 <div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> raspberry_pi_server</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible-playbook</span> install_basic_services.yml --tags <span class="st">&quot;r&quot;</span></span></code></pre></div>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible-playbook</span> install_basic_services.yml <span class="at">--tags</span> <span class="st">&quot;r&quot;</span></span></code></pre></div>
 <p>The available tags are:</p>
 <ul>
 <li>install_basic_services.yml
@@ -285,7 +286,7 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 </ul>
 <p>You can also go the other way and skip specific parts of the playbooks by using the <code>--skip-tags</code> option, for example, if you don’t need PostgreSQL, you can avoid installing it by running the playbook this way:</p>
 <div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> raspberry_pi_server</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible-playbook</span> install_basic_services.yml --skip-tags <span class="st">&quot;postgresql&quot;</span></span></code></pre></div>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible-playbook</span> install_basic_services.yml <span class="at">--skip-tags</span> <span class="st">&quot;postgresql&quot;</span></span></code></pre></div>
 <p>After successfully running all the playbooks, you will have a fully functional installation ready to be used, so you could simply open an RStudio session at <code>http://your_server_ip/rstudio</code> and/or publish your Shiny apps in the <code>/srv/shiny-server</code> folder and access them at <code>http://your_server_ip/shiny/your_app_name</code>.</p>
 <blockquote>
 <p>:warning: If the Nginx configuration hasn’t been set by the <code>install_basic_services.yml</code> playbook because you have omitted it, you have to configure the reverse proxy manually or access the services with the specific port, e.g. <code>http://your_server_ip/3838/your_app_name</code>, this would also require you to open the port on the firewall.</p>
