@@ -24,27 +24,30 @@ output:
     highlight: zenburn
 ---
 
+<script src="/rmarkdown-libs/header-attrs/header-attrs.js"></script>
 <style type="text/css">
-a.sourceLine { display: inline-block; line-height: 1.25; }
-a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
-a.sourceLine:empty { height: 1.2em; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
-code.sourceCode { white-space: pre; position: relative; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
 div.sourceCode { margin: 1em 0; }
 pre.sourceCode { margin: 0; }
 @media screen {
 div.sourceCode { overflow: auto; }
 }
 @media print {
-code.sourceCode { white-space: pre-wrap; }
-a.sourceLine { text-indent: -1em; padding-left: 1em; }
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
 }
-pre.numberSource a.sourceLine
-  { position: relative; left: -4em; }
-pre.numberSource a.sourceLine::before
-  { content: attr(data-line-number);
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
     position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; pointer-events: all; display: inline-block;
+    border: none; display: inline-block;
     -webkit-touch-callout: none; -webkit-user-select: none;
     -khtml-user-select: none; -moz-user-select: none;
     -ms-user-select: none; user-select: none;
@@ -54,7 +57,7 @@ pre.numberSource { margin-left: 3em;  padding-left: 4px; }
 div.sourceCode
   { color: #cccccc; background-color: #303030; }
 @media screen {
-a.sourceLine::before { text-decoration: underline; }
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 code span.al { color: #ffcfaf; } /* Alert */
 code span.an { color: #7f9f7f; font-weight: bold; } /* Annotation */
@@ -96,7 +99,7 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 </div>
 
 <p>I thought this only happened in my country (Perú), but it turns out it happens to people around the globe, you contract an Internet Service Plan that offers <strong>up to</strong> <code>X</code> Mbps, where <code>X</code> is an impressive value (relative to each country’s context), but the catch is in that word, <strong>Up to</strong>.</p>
-{{% tweet "1217915622023147542" %}}
+<p>{{% tweet "1217915622023147542" %}}</p>
 <p>In reality, you end up getting far slower download speeds than advertised, and ISPs (Internet Service Providers) get away with this because they only test download speed with you once when they install the service (suspiciously it works great at that moment) and most people don’t bother to keep track of their download speeds over time because it would be impractical to manually perform speed tests every short period of time, luckily there is a better way, <a href="https://www.speedtest.net/">Ookla’s Speedtest</a> service provides a <em><strong>Command Line Interface (CLI)</strong></em> that allows you to perform tests from your system terminal enabling you to set up automated scripts to collect connection performance data.</p>
 <p>In the next lines, I’m going to show you how to do this from R and get the results in the form of nice plots you can tweet to your ISP to annoy them a little bit. :satisfied:</p>
 <div id="getting-your-setup-ready" class="section level2">
@@ -106,15 +109,11 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <blockquote>
 <p>:pencil2: There are <a href="https://www.speedtest.net/apps/cli">installation instructions for other OSs</a> on the Speedtest web site</p>
 </blockquote>
-<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="fu">sudo</span> apt-get install gnupg1 apt-transport-https dirmngr</a>
-<a class="sourceLine" id="cb1-2" data-line-number="2"><span class="bu">export</span> <span class="va">INSTALL_KEY=</span>379CE192D401AB61</a>
-<a class="sourceLine" id="cb1-3" data-line-number="3"><span class="co"># Ubuntu versions supported: xenial, bionic</span></a>
-<a class="sourceLine" id="cb1-4" data-line-number="4"><span class="co"># Debian versions supported: jessie, stretch, buster</span></a>
-<a class="sourceLine" id="cb1-5" data-line-number="5"><span class="bu">export</span> <span class="va">DEB_DISTRO=$(</span><span class="ex">lsb_release</span> -sc<span class="va">)</span></a>
-<a class="sourceLine" id="cb1-6" data-line-number="6"><span class="fu">sudo</span> apt-key adv --keyserver keyserver.ubuntu.com --recv-keys <span class="va">$INSTALL_KEY</span></a>
-<a class="sourceLine" id="cb1-7" data-line-number="7"><span class="bu">echo</span> <span class="st">&quot;deb https://ookla.bintray.com/debian </span><span class="va">${DEB_DISTRO}</span><span class="st"> main&quot;</span> <span class="kw">|</span> <span class="fu">sudo</span> tee  /etc/apt/sources.list.d/speedtest.list</a>
-<a class="sourceLine" id="cb1-8" data-line-number="8"><span class="fu">sudo</span> apt-get update</a>
-<a class="sourceLine" id="cb1-9" data-line-number="9"><span class="fu">sudo</span> apt-get install speedtest</a></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> su</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">wget</span> https://install.speedtest.net/app/cli/ookla-speedtest-1.0.0-armhf-linux.tgz</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">tar</span> <span class="at">-xvzf</span> ookla-speedtest-1.0.0-armhf-linux.tgz</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">mv</span> speedtest /usr/bin/speedtest</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="bu">exit</span></span></code></pre></div>
 <blockquote>
 <p>:pencil2: Check if you have an older python version of the CLI installed in your system and make sure to uninstall it with this command <code>sudo pip uninstall speedtes-cli</code>, since it could cause conflicts with the newer official version. This happened to me and I didn’t notice :flushed:, thanks to <a href="https://twitter.com/jasongrahn">@jasongrahn</a> for the heads up.</p>
 </blockquote>
@@ -122,149 +121,149 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <div id="gathering-data" class="section level2">
 <h2>Gathering Data</h2>
 <p>Now we can write an R script that retrieves the test output, parses the content and stores the data. In this example I’m going to store it into a PostgreSQL database but you could choose other options like another SQL server, Google Sheets, a CSV file, etc. I have called this script file <code>speedtest_job.R</code>.</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="co">#! /usr/bin/env Rscript</span></a>
-<a class="sourceLine" id="cb2-2" data-line-number="2"></a>
-<a class="sourceLine" id="cb2-3" data-line-number="3"><span class="co"># Data adquisition</span></a>
-<a class="sourceLine" id="cb2-4" data-line-number="4">output &lt;-<span class="st"> </span><span class="kw">read.csv</span>(</a>
-<a class="sourceLine" id="cb2-5" data-line-number="5">  <span class="dt">text =</span> <span class="kw">system</span>(</a>
-<a class="sourceLine" id="cb2-6" data-line-number="6">    <span class="dt">command =</span> <span class="st">&quot;speedtest -f csv --output-header --accept-license&quot;</span>,</a>
-<a class="sourceLine" id="cb2-7" data-line-number="7">    <span class="dt">intern =</span> <span class="ot">TRUE</span></a>
-<a class="sourceLine" id="cb2-8" data-line-number="8">  )</a>
-<a class="sourceLine" id="cb2-9" data-line-number="9">)</a>
-<a class="sourceLine" id="cb2-10" data-line-number="10"></a>
-<a class="sourceLine" id="cb2-11" data-line-number="11">results &lt;-<span class="st"> </span><span class="kw">data.frame</span>(</a>
-<a class="sourceLine" id="cb2-12" data-line-number="12">  <span class="dt">stringsAsFactors =</span> <span class="ot">FALSE</span>,</a>
-<a class="sourceLine" id="cb2-13" data-line-number="13">  <span class="dt">time =</span> <span class="kw">as.POSIXct</span>(<span class="kw">Sys.time</span>()),</a>
-<a class="sourceLine" id="cb2-14" data-line-number="14">  <span class="dt">ip =</span> <span class="kw">system</span>(<span class="st">&quot;curl ifconfig.me&quot;</span>, <span class="dt">intern =</span> <span class="ot">TRUE</span>), <span class="co"># This field is no longer provided on the new CLI version</span></a>
-<a class="sourceLine" id="cb2-15" data-line-number="15">  <span class="dt">ping =</span> output<span class="op">$</span>latency,</a>
-<a class="sourceLine" id="cb2-16" data-line-number="16">  <span class="dt">download =</span> output<span class="op">$</span>download <span class="op">*</span><span class="st"> </span><span class="fl">7.629395E-6</span>, <span class="co"># Convert to Mbps</span></a>
-<a class="sourceLine" id="cb2-17" data-line-number="17">  <span class="dt">upload =</span> output<span class="op">$</span>upload <span class="op">*</span><span class="st"> </span><span class="fl">7.629395E-6</span>, <span class="co"># Convert to Mbps</span></a>
-<a class="sourceLine" id="cb2-18" data-line-number="18">  <span class="dt">isp =</span> <span class="st">&quot;movistar&quot;</span> <span class="co"># This field is not provided on CSV format</span></a>
-<a class="sourceLine" id="cb2-19" data-line-number="19">)</a>
-<a class="sourceLine" id="cb2-20" data-line-number="20"></a>
-<a class="sourceLine" id="cb2-21" data-line-number="21"><span class="co"># Data storing</span></a>
-<a class="sourceLine" id="cb2-22" data-line-number="22">connection_string &lt;-<span class="st"> </span>glue<span class="op">::</span><span class="kw">glue</span>(</a>
-<a class="sourceLine" id="cb2-23" data-line-number="23">  <span class="st">&quot;Driver={{PostgreSQL ANSI}};</span><span class="ch">\\</span></a>
-<a class="sourceLine" id="cb2-24" data-line-number="24"><span class="st">  Uid={Sys.getenv(&#39;MY_UID&#39;)};</span><span class="ch">\\</span></a>
-<a class="sourceLine" id="cb2-25" data-line-number="25"><span class="st">  Pwd={Sys.getenv(&#39;MY_PWD&#39;)};</span><span class="ch">\\</span></a>
-<a class="sourceLine" id="cb2-26" data-line-number="26"><span class="st">  Server=localhost;</span><span class="ch">\\</span></a>
-<a class="sourceLine" id="cb2-27" data-line-number="27"><span class="st">  Port=5432;</span><span class="ch">\\</span></a>
-<a class="sourceLine" id="cb2-28" data-line-number="28"><span class="st">  Database=internet;&quot;</span> <span class="co"># Name of the database on the sql server</span></a>
-<a class="sourceLine" id="cb2-29" data-line-number="29">) </a>
-<a class="sourceLine" id="cb2-30" data-line-number="30"></a>
-<a class="sourceLine" id="cb2-31" data-line-number="31">con &lt;-<span class="st"> </span>odbc<span class="op">::</span><span class="kw">dbConnect</span>(</a>
-<a class="sourceLine" id="cb2-32" data-line-number="32">  <span class="dt">drv =</span> odbc<span class="op">::</span><span class="kw">odbc</span>(),</a>
-<a class="sourceLine" id="cb2-33" data-line-number="33">  <span class="dt">.connection_string =</span> connection_string,</a>
-<a class="sourceLine" id="cb2-34" data-line-number="34">  <span class="dt">encoding =</span> <span class="st">&quot;utf8&quot;</span></a>
-<a class="sourceLine" id="cb2-35" data-line-number="35">)</a>
-<a class="sourceLine" id="cb2-36" data-line-number="36"></a>
-<a class="sourceLine" id="cb2-37" data-line-number="37">DBI<span class="op">::</span><span class="kw">dbAppendTable</span>(</a>
-<a class="sourceLine" id="cb2-38" data-line-number="38">  <span class="dt">conn =</span> con,</a>
-<a class="sourceLine" id="cb2-39" data-line-number="39">  <span class="dt">name =</span> <span class="st">&quot;speed_test&quot;</span>, <span class="co"># Table name on the sql server</span></a>
-<a class="sourceLine" id="cb2-40" data-line-number="40">  <span class="dt">value =</span> results</a>
-<a class="sourceLine" id="cb2-41" data-line-number="41">)</a>
-<a class="sourceLine" id="cb2-42" data-line-number="42"></a>
-<a class="sourceLine" id="cb2-43" data-line-number="43">odbc<span class="op">::</span><span class="kw">dbDisconnect</span>(<span class="dt">conn =</span> con)</a>
-<a class="sourceLine" id="cb2-44" data-line-number="44"></a>
-<a class="sourceLine" id="cb2-45" data-line-number="45"><span class="co"># Cleaning log files</span></a>
-<a class="sourceLine" id="cb2-46" data-line-number="46"><span class="kw">unlink</span>(<span class="dt">x =</span> <span class="st">&quot;*.log&quot;</span>, <span class="dt">force =</span> <span class="ot">TRUE</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">#! /usr/bin/env Rscript</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Data adquisition</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>output <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">text =</span> <span class="fu">system</span>(</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">command =</span> <span class="st">&quot;speedtest -f csv --output-header --accept-license&quot;</span>,</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">intern =</span> <span class="cn">TRUE</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>results <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">time =</span> <span class="fu">as.POSIXct</span>(<span class="fu">Sys.time</span>()),</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">ip =</span> <span class="fu">system</span>(<span class="st">&quot;curl ifconfig.me&quot;</span>, <span class="at">intern =</span> <span class="cn">TRUE</span>), <span class="co"># This field is no longer provided on the new CLI version</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">ping =</span> output<span class="sc">$</span>latency,</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">download =</span> output<span class="sc">$</span>download <span class="sc">*</span> <span class="fl">7.629395E-6</span>, <span class="co"># Convert to Mbps</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">upload =</span> output<span class="sc">$</span>upload <span class="sc">*</span> <span class="fl">7.629395E-6</span>, <span class="co"># Convert to Mbps</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>  <span class="at">isp =</span> <span class="st">&quot;movistar&quot;</span> <span class="co"># This field is not provided on CSV format</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Data storing</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>connection_string <span class="ot">&lt;-</span> glue<span class="sc">::</span><span class="fu">glue</span>(</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Driver={{PostgreSQL ANSI}};</span><span class="sc">\\</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="st">  Uid={Sys.getenv(&#39;MY_UID&#39;)};</span><span class="sc">\\</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="st">  Pwd={Sys.getenv(&#39;MY_PWD&#39;)};</span><span class="sc">\\</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a><span class="st">  Server=localhost;</span><span class="sc">\\</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="st">  Port=5432;</span><span class="sc">\\</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a><span class="st">  Database=internet;&quot;</span> <span class="co"># Name of the database on the sql server</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>) </span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>con <span class="ot">&lt;-</span> odbc<span class="sc">::</span><span class="fu">dbConnect</span>(</span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>  <span class="at">drv =</span> odbc<span class="sc">::</span><span class="fu">odbc</span>(),</span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>  <span class="at">.connection_string =</span> connection_string,</span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>  <span class="at">encoding =</span> <span class="st">&quot;utf8&quot;</span></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbAppendTable</span>(</span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>  <span class="at">conn =</span> con,</span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>  <span class="at">name =</span> <span class="st">&quot;speed_test&quot;</span>, <span class="co"># Table name on the sql server</span></span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>  <span class="at">value =</span> results</span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a>odbc<span class="sc">::</span><span class="fu">dbDisconnect</span>(<span class="at">conn =</span> con)</span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a><span class="co"># Cleaning log files</span></span>
+<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a><span class="fu">unlink</span>(<span class="at">x =</span> <span class="st">&quot;*.log&quot;</span>, <span class="at">force =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
 <p>Now we can schedule a <code>cron</code> job to run this script on regular intervals, I’m going to set it to run once every hour running this commands on a system terminal:</p>
 <blockquote>
 <p>:pencil2: This can also be done from R using the <code>cronR</code> package.</p>
 </blockquote>
-<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><a class="sourceLine" id="cb3-1" data-line-number="1"><span class="fu">env</span> EDITOR=nano crontab -e</a>
-<a class="sourceLine" id="cb3-2" data-line-number="2">  <span class="co"># Add this line</span></a>
-<a class="sourceLine" id="cb3-3" data-line-number="3">  <span class="ex">0</span> * * * * /usr/local/lib/R/bin/Rscript <span class="st">&#39;/home/pi/speedtest_job.R&#39;</span> <span class="op">&gt;&gt;</span> <span class="st">&#39;/dev/null&#39;</span> <span class="op">2&gt;&amp;1</span> <span class="co"># Change the file path as needed</span></a>
-<a class="sourceLine" id="cb3-4" data-line-number="4"><span class="fu">sudo</span> service cron reload</a></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">env</span> EDITOR=nano crontab <span class="at">-e</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Add this line</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="ex">0</span> <span class="pp">*</span> <span class="pp">*</span> <span class="pp">*</span> <span class="pp">*</span> /usr/local/lib/R/bin/Rscript <span class="st">&#39;/home/pi/speedtest_job.R&#39;</span> <span class="op">&gt;&gt;</span> <span class="st">&#39;/dev/null&#39;</span> <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span> <span class="co"># Change the file path as needed</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> service cron reload</span></code></pre></div>
 <p>After letting some time to pass for registers to accumulate, we can fetch data from the server with a SQL query:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb4-1" data-line-number="1"><span class="kw">library</span>(odbc)</a>
-<a class="sourceLine" id="cb4-2" data-line-number="2"><span class="kw">library</span>(glue)</a>
-<a class="sourceLine" id="cb4-3" data-line-number="3"></a>
-<a class="sourceLine" id="cb4-4" data-line-number="4">connection_string &lt;-<span class="st"> </span>glue<span class="op">::</span><span class="kw">glue</span>(</a>
-<a class="sourceLine" id="cb4-5" data-line-number="5">  <span class="st">&quot;Driver={{PostgreSQL ANSI}};</span><span class="ch">\\</span></a>
-<a class="sourceLine" id="cb4-6" data-line-number="6"><span class="st">  Uid={Sys.getenv(&#39;MY_UID&#39;)};</span><span class="ch">\\</span></a>
-<a class="sourceLine" id="cb4-7" data-line-number="7"><span class="st">  Pwd={Sys.getenv(&#39;MY_PWD&#39;)};</span><span class="ch">\\</span></a>
-<a class="sourceLine" id="cb4-8" data-line-number="8"><span class="st">  Server={Sys.getenv(&#39;MY_REMOTE&#39;)};</span><span class="ch">\\</span></a>
-<a class="sourceLine" id="cb4-9" data-line-number="9"><span class="st">  Port=5432;</span><span class="ch">\\</span></a>
-<a class="sourceLine" id="cb4-10" data-line-number="10"><span class="st">  Database=internet;&quot;</span></a>
-<a class="sourceLine" id="cb4-11" data-line-number="11">)</a>
-<a class="sourceLine" id="cb4-12" data-line-number="12"></a>
-<a class="sourceLine" id="cb4-13" data-line-number="13">con &lt;-<span class="st"> </span><span class="kw">dbConnect</span>(</a>
-<a class="sourceLine" id="cb4-14" data-line-number="14">  <span class="dt">drv =</span> odbc<span class="op">::</span><span class="kw">odbc</span>(),</a>
-<a class="sourceLine" id="cb4-15" data-line-number="15">  <span class="dt">.connection_string =</span> connection_string,</a>
-<a class="sourceLine" id="cb4-16" data-line-number="16">  <span class="dt">encoding =</span> <span class="st">&quot;utf8&quot;</span></a>
-<a class="sourceLine" id="cb4-17" data-line-number="17">)</a>
-<a class="sourceLine" id="cb4-18" data-line-number="18"></a>
-<a class="sourceLine" id="cb4-19" data-line-number="19">query &lt;-<span class="st"> &quot;</span></a>
-<a class="sourceLine" id="cb4-20" data-line-number="20"><span class="st">SELECT * </span></a>
-<a class="sourceLine" id="cb4-21" data-line-number="21"><span class="st">FROM public.speed_test </span></a>
-<a class="sourceLine" id="cb4-22" data-line-number="22"><span class="st">ORDER BY time</span></a>
-<a class="sourceLine" id="cb4-23" data-line-number="23"><span class="st">&quot;</span></a>
-<a class="sourceLine" id="cb4-24" data-line-number="24"></a>
-<a class="sourceLine" id="cb4-25" data-line-number="25">raw_data &lt;-<span class="st"> </span><span class="kw">dbGetQuery</span>(</a>
-<a class="sourceLine" id="cb4-26" data-line-number="26">  <span class="dt">conn =</span> con,</a>
-<a class="sourceLine" id="cb4-27" data-line-number="27">  <span class="dt">statement =</span> query</a>
-<a class="sourceLine" id="cb4-28" data-line-number="28">)</a>
-<a class="sourceLine" id="cb4-29" data-line-number="29"></a>
-<a class="sourceLine" id="cb4-30" data-line-number="30"><span class="kw">dbDisconnect</span>(con)</a></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(odbc)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(glue)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>connection_string <span class="ot">&lt;-</span> glue<span class="sc">::</span><span class="fu">glue</span>(</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Driver={{PostgreSQL ANSI}};</span><span class="sc">\\</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="st">  Uid={Sys.getenv(&#39;MY_UID&#39;)};</span><span class="sc">\\</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="st">  Pwd={Sys.getenv(&#39;MY_PWD&#39;)};</span><span class="sc">\\</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="st">  Server={Sys.getenv(&#39;MY_REMOTE&#39;)};</span><span class="sc">\\</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="st">  Port=5432;</span><span class="sc">\\</span></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="st">  Database=internet;&quot;</span></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>con <span class="ot">&lt;-</span> <span class="fu">dbConnect</span>(</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">drv =</span> odbc<span class="sc">::</span><span class="fu">odbc</span>(),</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">.connection_string =</span> connection_string,</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">encoding =</span> <span class="st">&quot;utf8&quot;</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>query <span class="ot">&lt;-</span> <span class="st">&quot;</span></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a><span class="st">SELECT * </span></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a><span class="st">FROM public.speed_test </span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a><span class="st">ORDER BY time</span></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;</span></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>raw_data <span class="ot">&lt;-</span> <span class="fu">dbGetQuery</span>(</span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>  <span class="at">conn =</span> con,</span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>  <span class="at">statement =</span> query</span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a><span class="fu">dbDisconnect</span>(con)</span></code></pre></div>
 </div>
 <div id="visualizing-the-data" class="section level2">
 <h2>Visualizing the Data</h2>
 <p>Now that we have some data to work with we can start making some plots. Since this is not an article about <code>ggplopt2</code> I’m not going to get much into details about this part, I’m just going to show you some interesting plots you can get about your internet connection speed.</p>
 <p>In Figure <a href="#fig:histogram">1</a> we can see how observed download speeds distribute, letting aside the fact that the advertised speed is already slow (for developed countries standards), this reveals a pattern that is very common, most of the time you get download speeds that are much slower than advertised by the ISP and even so slow that defaults the terms of your contract, like in my case (I actually used this image to file a complaint).</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb5-1" data-line-number="1"><span class="kw">library</span>(tidyverse)</a>
-<a class="sourceLine" id="cb5-2" data-line-number="2"><span class="kw">library</span>(xkcd)</a>
-<a class="sourceLine" id="cb5-3" data-line-number="3"><span class="kw">library</span>(lubridate)</a>
-<a class="sourceLine" id="cb5-4" data-line-number="4"><span class="kw">library</span>(tibbletime)</a>
-<a class="sourceLine" id="cb5-5" data-line-number="5"><span class="kw">library</span>(scales)</a>
-<a class="sourceLine" id="cb5-6" data-line-number="6"></a>
-<a class="sourceLine" id="cb5-7" data-line-number="7"><span class="co"># These are my personal theme settings you can ignore them if you prefer</span></a>
-<a class="sourceLine" id="cb5-8" data-line-number="8"><span class="kw">theme_set</span>(</a>
-<a class="sourceLine" id="cb5-9" data-line-number="9">  <span class="kw">theme_gray</span>() <span class="op">+</span></a>
-<a class="sourceLine" id="cb5-10" data-line-number="10"><span class="st">    </span><span class="kw">theme_xkcd</span>() <span class="op">+</span></a>
-<a class="sourceLine" id="cb5-11" data-line-number="11"><span class="st">    </span><span class="kw">theme</span>(<span class="dt">legend.position =</span> <span class="st">&quot;right&quot;</span>,</a>
-<a class="sourceLine" id="cb5-12" data-line-number="12">          <span class="dt">plot.title.position =</span> <span class="st">&quot;plot&quot;</span>,</a>
-<a class="sourceLine" id="cb5-13" data-line-number="13">          <span class="dt">axis.title.x =</span> <span class="kw">element_text</span>(<span class="dt">margin =</span> <span class="kw">margin</span>(<span class="dt">t =</span> <span class="dv">10</span>)),</a>
-<a class="sourceLine" id="cb5-14" data-line-number="14">          <span class="dt">axis.title.y =</span> <span class="kw">element_text</span>(<span class="dt">margin =</span> <span class="kw">margin</span>(<span class="dt">r =</span> <span class="dv">10</span>)),</a>
-<a class="sourceLine" id="cb5-15" data-line-number="15">          <span class="dt">axis.text.x =</span> <span class="kw">element_text</span>(<span class="dt">angle =</span> <span class="dv">20</span>, <span class="dt">hjust =</span> <span class="dv">1</span>, <span class="dt">vjust =</span> <span class="dv">1</span>),</a>
-<a class="sourceLine" id="cb5-16" data-line-number="16">          <span class="dt">plot.margin =</span> <span class="kw">margin</span>(<span class="dv">10</span>, <span class="dv">10</span>, <span class="dv">10</span>, <span class="dv">10</span>),</a>
-<a class="sourceLine" id="cb5-17" data-line-number="17">          <span class="dt">text =</span> <span class="kw">element_text</span>(<span class="dt">family =</span> <span class="st">&quot;Cloud Calligraphy&quot;</span>))</a>
-<a class="sourceLine" id="cb5-18" data-line-number="18">)</a>
-<a class="sourceLine" id="cb5-19" data-line-number="19"></a>
-<a class="sourceLine" id="cb5-20" data-line-number="20">color &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;Mode&quot;</span> =<span class="st"> &quot;#008B00&quot;</span>, <span class="st">&quot;Parameters&quot;</span> =<span class="st"> &quot;orange&quot;</span>)</a>
-<a class="sourceLine" id="cb5-21" data-line-number="21"></a>
-<a class="sourceLine" id="cb5-22" data-line-number="22">raw_data <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb5-23" data-line-number="23"><span class="st">  </span><span class="kw">ggplot</span>(<span class="kw">aes</span>(<span class="dt">x =</span> download)) <span class="op">+</span></a>
-<a class="sourceLine" id="cb5-24" data-line-number="24"><span class="st">  </span><span class="kw">geom_histogram</span>(<span class="dt">binwidth =</span> <span class="fl">0.1</span>, <span class="dt">fill =</span> <span class="st">&quot;#00B2EE&quot;</span>) <span class="op">+</span></a>
-<a class="sourceLine" id="cb5-25" data-line-number="25"><span class="st">  </span><span class="kw">geom_vline</span>(<span class="kw">aes</span>(<span class="dt">xintercept =</span> <span class="dv">20</span>, <span class="dt">color =</span> <span class="st">&quot;Parameters&quot;</span>),  <span class="dt">linetype =</span> <span class="st">&quot;dashed&quot;</span>) <span class="op">+</span></a>
-<a class="sourceLine" id="cb5-26" data-line-number="26"><span class="st">  </span><span class="kw">geom_vline</span>(<span class="kw">aes</span>(<span class="dt">xintercept =</span> <span class="dv">8</span>, <span class="dt">color =</span> <span class="st">&quot;Parameters&quot;</span>),  <span class="dt">linetype =</span> <span class="st">&quot;dashed&quot;</span>) <span class="op">+</span></a>
-<a class="sourceLine" id="cb5-27" data-line-number="27"><span class="st">  </span><span class="kw">stat_bin</span>(<span class="dt">geom =</span> <span class="st">&quot;vline&quot;</span>,</a>
-<a class="sourceLine" id="cb5-28" data-line-number="28">           <span class="kw">aes</span>(<span class="dt">xintercept =</span> <span class="kw">stat</span>(<span class="kw">ifelse</span>(count <span class="op">==</span><span class="st"> </span><span class="kw">max</span>(count), x, <span class="ot">NA</span>)),</a>
-<a class="sourceLine" id="cb5-29" data-line-number="29">               <span class="dt">color =</span> <span class="st">&quot;Mode&quot;</span>),</a>
-<a class="sourceLine" id="cb5-30" data-line-number="30">           <span class="dt">binwidth =</span> <span class="fl">0.1</span>) <span class="op">+</span></a>
-<a class="sourceLine" id="cb5-31" data-line-number="31"><span class="st">  </span><span class="kw">annotate</span>(<span class="st">&quot;text&quot;</span>,</a>
-<a class="sourceLine" id="cb5-32" data-line-number="32">           <span class="dt">x =</span> <span class="kw">c</span>(<span class="fl">8.4</span>, <span class="fl">20.4</span>),</a>
-<a class="sourceLine" id="cb5-33" data-line-number="33">           <span class="dt">y =</span> <span class="kw">c</span>(<span class="dv">8</span>, <span class="dv">8</span>),</a>
-<a class="sourceLine" id="cb5-34" data-line-number="34">           <span class="dt">label =</span> <span class="kw">c</span>(<span class="st">&quot;Guaranteed Minimum Speed&quot;</span>, <span class="st">&quot;Advertised Speed&quot;</span>),</a>
-<a class="sourceLine" id="cb5-35" data-line-number="35">           <span class="dt">family =</span> <span class="st">&quot;Cloud Calligraphy&quot;</span>,</a>
-<a class="sourceLine" id="cb5-36" data-line-number="36">           <span class="dt">size =</span> <span class="dv">5</span>,</a>
-<a class="sourceLine" id="cb5-37" data-line-number="37">           <span class="dt">angle =</span> <span class="dv">90</span>) <span class="op">+</span></a>
-<a class="sourceLine" id="cb5-38" data-line-number="38"><span class="st">  </span><span class="kw">stat_bin</span>(<span class="dt">geom =</span> <span class="st">&quot;label&quot;</span>,</a>
-<a class="sourceLine" id="cb5-39" data-line-number="39">           <span class="kw">aes</span>(<span class="dt">label =</span> <span class="kw">stat</span>(<span class="kw">ifelse</span>(count <span class="op">==</span><span class="st"> </span><span class="kw">max</span>(count), <span class="kw">round</span>(x, <span class="dv">1</span>), <span class="ot">NA</span>))),</a>
-<a class="sourceLine" id="cb5-40" data-line-number="40">           <span class="dt">binwidth =</span> <span class="fl">0.1</span>,</a>
-<a class="sourceLine" id="cb5-41" data-line-number="41">           <span class="dt">family =</span> <span class="st">&quot;xkcd&quot;</span>,</a>
-<a class="sourceLine" id="cb5-42" data-line-number="42">           <span class="dt">color =</span> <span class="st">&quot;#008B00&quot;</span>,</a>
-<a class="sourceLine" id="cb5-43" data-line-number="43">           <span class="dt">vjust =</span> <span class="fl">-0.2</span>) <span class="op">+</span></a>
-<a class="sourceLine" id="cb5-44" data-line-number="44"><span class="st">  </span><span class="kw">labs</span>(<span class="dt">title =</span> <span class="st">&#39;HISTOGRAM OF OBSERVED DOWNLOAD SPEEDS&#39;</span>,</a>
-<a class="sourceLine" id="cb5-45" data-line-number="45">       <span class="dt">subtitle =</span><span class="st">&#39;ISP: MOVISTAR 20 Mbps&#39;</span>, </a>
-<a class="sourceLine" id="cb5-46" data-line-number="46">       <span class="dt">x =</span> <span class="st">&#39;Speed (Mbps)&#39;</span>,</a>
-<a class="sourceLine" id="cb5-47" data-line-number="47">       <span class="dt">y =</span> <span class="st">&#39;Frequency&#39;</span>,</a>
-<a class="sourceLine" id="cb5-48" data-line-number="48">       <span class="dt">colour =</span> <span class="st">&#39;&#39;</span>) <span class="op">+</span></a>
-<a class="sourceLine" id="cb5-49" data-line-number="49"><span class="st">  </span><span class="kw">scale_x_continuous</span>(<span class="dt">breaks =</span> <span class="kw">seq</span>(<span class="dv">0</span>, <span class="dv">22</span>, <span class="dt">by =</span> <span class="dv">2</span>),</a>
-<a class="sourceLine" id="cb5-50" data-line-number="50">                     <span class="dt">limits =</span> <span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">23</span>)) <span class="op">+</span></a>
-<a class="sourceLine" id="cb5-51" data-line-number="51"><span class="st">  </span><span class="kw">scale_colour_manual</span>(<span class="dt">values =</span> color) <span class="op">+</span></a>
-<a class="sourceLine" id="cb5-52" data-line-number="52"><span class="st">  </span><span class="kw">coord_cartesian</span>(<span class="dt">clip =</span> <span class="st">&#39;off&#39;</span>) <span class="op">+</span></a>
-<a class="sourceLine" id="cb5-53" data-line-number="53"><span class="st">  </span><span class="ot">NULL</span></a></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(xkcd)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(lubridate)</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tibbletime)</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(scales)</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a><span class="co"># These are my personal theme settings you can ignore them if you prefer</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a><span class="fu">theme_set</span>(</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_gray</span>() <span class="sc">+</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme_xkcd</span>() <span class="sc">+</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">theme</span>(<span class="at">legend.position =</span> <span class="st">&quot;right&quot;</span>,</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>          <span class="at">plot.title.position =</span> <span class="st">&quot;plot&quot;</span>,</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>          <span class="at">axis.title.x =</span> <span class="fu">element_text</span>(<span class="at">margin =</span> <span class="fu">margin</span>(<span class="at">t =</span> <span class="dv">10</span>)),</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>          <span class="at">axis.title.y =</span> <span class="fu">element_text</span>(<span class="at">margin =</span> <span class="fu">margin</span>(<span class="at">r =</span> <span class="dv">10</span>)),</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>          <span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">20</span>, <span class="at">hjust =</span> <span class="dv">1</span>, <span class="at">vjust =</span> <span class="dv">1</span>),</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>          <span class="at">plot.margin =</span> <span class="fu">margin</span>(<span class="dv">10</span>, <span class="dv">10</span>, <span class="dv">10</span>, <span class="dv">10</span>),</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>          <span class="at">text =</span> <span class="fu">element_text</span>(<span class="at">family =</span> <span class="st">&quot;Cloud Calligraphy&quot;</span>))</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>color <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;Mode&quot;</span> <span class="ot">=</span> <span class="st">&quot;#008B00&quot;</span>, <span class="st">&quot;Parameters&quot;</span> <span class="ot">=</span> <span class="st">&quot;orange&quot;</span>)</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>raw_data <span class="sc">%&gt;%</span> </span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> download)) <span class="sc">+</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>(<span class="at">binwidth =</span> <span class="fl">0.1</span>, <span class="at">fill =</span> <span class="st">&quot;#00B2EE&quot;</span>) <span class="sc">+</span></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="fu">aes</span>(<span class="at">xintercept =</span> <span class="dv">20</span>, <span class="at">color =</span> <span class="st">&quot;Parameters&quot;</span>),  <span class="at">linetype =</span> <span class="st">&quot;dashed&quot;</span>) <span class="sc">+</span></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_vline</span>(<span class="fu">aes</span>(<span class="at">xintercept =</span> <span class="dv">8</span>, <span class="at">color =</span> <span class="st">&quot;Parameters&quot;</span>),  <span class="at">linetype =</span> <span class="st">&quot;dashed&quot;</span>) <span class="sc">+</span></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stat_bin</span>(<span class="at">geom =</span> <span class="st">&quot;vline&quot;</span>,</span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>           <span class="fu">aes</span>(<span class="at">xintercept =</span> <span class="fu">stat</span>(<span class="fu">ifelse</span>(count <span class="sc">==</span> <span class="fu">max</span>(count), x, <span class="cn">NA</span>)),</span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>               <span class="at">color =</span> <span class="st">&quot;Mode&quot;</span>),</span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a>           <span class="at">binwidth =</span> <span class="fl">0.1</span>) <span class="sc">+</span></span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">annotate</span>(<span class="st">&quot;text&quot;</span>,</span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>           <span class="at">x =</span> <span class="fu">c</span>(<span class="fl">8.4</span>, <span class="fl">20.4</span>),</span>
+<span id="cb5-33"><a href="#cb5-33" aria-hidden="true" tabindex="-1"></a>           <span class="at">y =</span> <span class="fu">c</span>(<span class="dv">8</span>, <span class="dv">8</span>),</span>
+<span id="cb5-34"><a href="#cb5-34" aria-hidden="true" tabindex="-1"></a>           <span class="at">label =</span> <span class="fu">c</span>(<span class="st">&quot;Guaranteed Minimum Speed&quot;</span>, <span class="st">&quot;Advertised Speed&quot;</span>),</span>
+<span id="cb5-35"><a href="#cb5-35" aria-hidden="true" tabindex="-1"></a>           <span class="at">family =</span> <span class="st">&quot;Cloud Calligraphy&quot;</span>,</span>
+<span id="cb5-36"><a href="#cb5-36" aria-hidden="true" tabindex="-1"></a>           <span class="at">size =</span> <span class="dv">5</span>,</span>
+<span id="cb5-37"><a href="#cb5-37" aria-hidden="true" tabindex="-1"></a>           <span class="at">angle =</span> <span class="dv">90</span>) <span class="sc">+</span></span>
+<span id="cb5-38"><a href="#cb5-38" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stat_bin</span>(<span class="at">geom =</span> <span class="st">&quot;label&quot;</span>,</span>
+<span id="cb5-39"><a href="#cb5-39" aria-hidden="true" tabindex="-1"></a>           <span class="fu">aes</span>(<span class="at">label =</span> <span class="fu">stat</span>(<span class="fu">ifelse</span>(count <span class="sc">==</span> <span class="fu">max</span>(count), <span class="fu">round</span>(x, <span class="dv">1</span>), <span class="cn">NA</span>))),</span>
+<span id="cb5-40"><a href="#cb5-40" aria-hidden="true" tabindex="-1"></a>           <span class="at">binwidth =</span> <span class="fl">0.1</span>,</span>
+<span id="cb5-41"><a href="#cb5-41" aria-hidden="true" tabindex="-1"></a>           <span class="at">family =</span> <span class="st">&quot;xkcd&quot;</span>,</span>
+<span id="cb5-42"><a href="#cb5-42" aria-hidden="true" tabindex="-1"></a>           <span class="at">color =</span> <span class="st">&quot;#008B00&quot;</span>,</span>
+<span id="cb5-43"><a href="#cb5-43" aria-hidden="true" tabindex="-1"></a>           <span class="at">vjust =</span> <span class="sc">-</span><span class="fl">0.2</span>) <span class="sc">+</span></span>
+<span id="cb5-44"><a href="#cb5-44" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">&#39;HISTOGRAM OF OBSERVED DOWNLOAD SPEEDS&#39;</span>,</span>
+<span id="cb5-45"><a href="#cb5-45" aria-hidden="true" tabindex="-1"></a>       <span class="at">subtitle =</span><span class="st">&#39;ISP: MOVISTAR 20 Mbps&#39;</span>, </span>
+<span id="cb5-46"><a href="#cb5-46" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">&#39;Speed (Mbps)&#39;</span>,</span>
+<span id="cb5-47"><a href="#cb5-47" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">&#39;Frequency&#39;</span>,</span>
+<span id="cb5-48"><a href="#cb5-48" aria-hidden="true" tabindex="-1"></a>       <span class="at">colour =</span> <span class="st">&#39;&#39;</span>) <span class="sc">+</span></span>
+<span id="cb5-49"><a href="#cb5-49" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_continuous</span>(<span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">22</span>, <span class="at">by =</span> <span class="dv">2</span>),</span>
+<span id="cb5-50"><a href="#cb5-50" aria-hidden="true" tabindex="-1"></a>                     <span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">23</span>)) <span class="sc">+</span></span>
+<span id="cb5-51"><a href="#cb5-51" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_manual</span>(<span class="at">values =</span> color) <span class="sc">+</span></span>
+<span id="cb5-52"><a href="#cb5-52" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_cartesian</span>(<span class="at">clip =</span> <span class="st">&#39;off&#39;</span>) <span class="sc">+</span></span>
+<span id="cb5-53"><a href="#cb5-53" aria-hidden="true" tabindex="-1"></a>  <span class="cn">NULL</span></span></code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:histogram"></span>
 <img src="/post/2020-01-20-internet-speed-test.en_files/figure-html/histogram-1.png" alt="Histogram of Observed Download Speeds" width="768" />
 <p class="caption">
@@ -272,85 +271,85 @@ Figure 1: Histogram of Observed Download Speeds
 </p>
 </div>
 <p>With figures <a href="#fig:line">2</a> and <a href="#fig:box">3</a>, we can show how often the download speeds fall below the minimum guaranteed speed.</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb6-1" data-line-number="1"></a>
-<a class="sourceLine" id="cb6-2" data-line-number="2">colors &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&quot;Mean Speed&quot;</span> =<span class="st"> &quot;blue&quot;</span>,</a>
-<a class="sourceLine" id="cb6-3" data-line-number="3">            <span class="st">&quot;Parameters&quot;</span> =<span class="st"> &quot;orange&quot;</span>,</a>
-<a class="sourceLine" id="cb6-4" data-line-number="4">            <span class="st">&quot;Fault&quot;</span> =<span class="st"> &quot;red&quot;</span>,</a>
-<a class="sourceLine" id="cb6-5" data-line-number="5">            <span class="st">&quot;Download Speed&quot;</span> =<span class="st"> &quot;#00B2EE&quot;</span>)</a>
-<a class="sourceLine" id="cb6-6" data-line-number="6"></a>
-<a class="sourceLine" id="cb6-7" data-line-number="7">plot_data &lt;-<span class="st"> </span>raw_data <span class="op">%&gt;%</span></a>
-<a class="sourceLine" id="cb6-8" data-line-number="8"><span class="st">  </span><span class="kw">as_tbl_time</span>(<span class="dt">index =</span> time) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb6-9" data-line-number="9"><span class="st">  </span><span class="kw">collapse_by</span>(<span class="st">&#39;1 hour&#39;</span>, <span class="dt">side =</span> <span class="st">&#39;start&#39;</span>, <span class="dt">clean =</span> <span class="ot">TRUE</span>)</a>
-<a class="sourceLine" id="cb6-10" data-line-number="10"></a>
-<a class="sourceLine" id="cb6-11" data-line-number="11">mean_speed &lt;-<span class="st"> </span>plot_data <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb6-12" data-line-number="12"><span class="st">  </span><span class="kw">pull</span>(download) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb6-13" data-line-number="13"><span class="st">  </span><span class="kw">mean</span>() <span class="op">%&gt;%</span></a>
-<a class="sourceLine" id="cb6-14" data-line-number="14"><span class="st">  </span><span class="kw">round</span>(<span class="dv">1</span>)</a>
-<a class="sourceLine" id="cb6-15" data-line-number="15"></a>
-<a class="sourceLine" id="cb6-16" data-line-number="16">plot_data <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb6-17" data-line-number="17"><span class="st">  </span><span class="kw">ggplot</span>(<span class="kw">aes</span>(<span class="dt">x =</span> time, <span class="dt">y =</span> download)) <span class="op">+</span></a>
-<a class="sourceLine" id="cb6-18" data-line-number="18"><span class="st">  </span><span class="kw">geom_line</span>(<span class="kw">aes</span>(<span class="dt">color =</span> <span class="st">&quot;Download Speed&quot;</span>)) <span class="op">+</span></a>
-<a class="sourceLine" id="cb6-19" data-line-number="19"><span class="st">  </span><span class="kw">geom_point</span>(<span class="dt">data =</span> plot_data <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">filter</span>(download <span class="op">&lt;</span><span class="st"> </span><span class="dv">8</span>),</a>
-<a class="sourceLine" id="cb6-20" data-line-number="20">             <span class="kw">aes</span>(<span class="dt">color =</span> <span class="st">&quot;Fault&quot;</span>)) <span class="op">+</span></a>
-<a class="sourceLine" id="cb6-21" data-line-number="21"><span class="st">  </span><span class="kw">geom_point</span>(<span class="dt">data =</span> plot_data <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">filter</span>(download <span class="op">&lt;</span><span class="st"> </span><span class="dv">8</span>),</a>
-<a class="sourceLine" id="cb6-22" data-line-number="22">             <span class="dt">shape =</span> <span class="dv">1</span>,</a>
-<a class="sourceLine" id="cb6-23" data-line-number="23">             <span class="dt">color =</span> <span class="st">&quot;red&quot;</span>,</a>
-<a class="sourceLine" id="cb6-24" data-line-number="24">             <span class="dt">size =</span> <span class="dv">5</span>) <span class="op">+</span></a>
-<a class="sourceLine" id="cb6-25" data-line-number="25"><span class="st">  </span><span class="kw">geom_hline</span>(<span class="kw">aes</span>(<span class="dt">yintercept =</span> <span class="dv">20</span>, <span class="dt">color =</span> <span class="st">&quot;Parameters&quot;</span>),  <span class="dt">linetype =</span> <span class="st">&quot;dashed&quot;</span>) <span class="op">+</span></a>
-<a class="sourceLine" id="cb6-26" data-line-number="26"><span class="st">  </span><span class="kw">geom_hline</span>(<span class="kw">aes</span>(<span class="dt">yintercept =</span> <span class="dv">8</span>, <span class="dt">color =</span> <span class="st">&quot;Parameters&quot;</span>),  <span class="dt">linetype =</span> <span class="st">&quot;dashed&quot;</span>) <span class="op">+</span></a>
-<a class="sourceLine" id="cb6-27" data-line-number="27"><span class="st">  </span><span class="kw">geom_hline</span>(<span class="kw">aes</span>(<span class="dt">yintercept =</span> mean_speed, <span class="dt">color =</span> <span class="st">&quot;Mean Speed&quot;</span>)) <span class="op">+</span></a>
-<a class="sourceLine" id="cb6-28" data-line-number="28"><span class="st">  </span><span class="kw">annotate</span>(<span class="st">&quot;text&quot;</span>,</a>
-<a class="sourceLine" id="cb6-29" data-line-number="29">           <span class="dt">x =</span> <span class="kw">as.POSIXct</span>(<span class="kw">c</span>(<span class="st">&quot;2019-06-24 11:00:00 UTC&quot;</span>, <span class="st">&quot;2019-06-24 11:00:00 UTC&quot;</span>)),</a>
-<a class="sourceLine" id="cb6-30" data-line-number="30">           <span class="dt">y =</span> <span class="kw">c</span>(<span class="dv">7</span>, <span class="dv">19</span>),</a>
-<a class="sourceLine" id="cb6-31" data-line-number="31">           <span class="dt">label =</span> <span class="kw">c</span>(<span class="st">&quot;Guaranteed Minimum Speed&quot;</span>, <span class="st">&quot;Advertised Speed&quot;</span>),</a>
-<a class="sourceLine" id="cb6-32" data-line-number="32">           <span class="dt">family =</span> <span class="st">&quot;Cloud Calligraphy&quot;</span>,</a>
-<a class="sourceLine" id="cb6-33" data-line-number="33">           <span class="dt">size=</span><span class="dv">5</span>) <span class="op">+</span></a>
-<a class="sourceLine" id="cb6-34" data-line-number="34"><span class="st">  </span><span class="kw">geom_label</span>(<span class="dt">x =</span> <span class="kw">as.POSIXct</span>(<span class="st">&quot;2019-08-01 11:00:00 UTC&quot;</span>),</a>
-<a class="sourceLine" id="cb6-35" data-line-number="35">             <span class="dt">y =</span> mean_speed,</a>
-<a class="sourceLine" id="cb6-36" data-line-number="36">             <span class="dt">label =</span> mean_speed,</a>
-<a class="sourceLine" id="cb6-37" data-line-number="37">             <span class="dt">family =</span> <span class="st">&quot;xkcd&quot;</span>,</a>
-<a class="sourceLine" id="cb6-38" data-line-number="38">             <span class="dt">show.legend =</span> <span class="ot">FALSE</span>,</a>
-<a class="sourceLine" id="cb6-39" data-line-number="39">             <span class="dt">inherit.aes =</span> <span class="ot">FALSE</span>,</a>
-<a class="sourceLine" id="cb6-40" data-line-number="40">             <span class="dt">color =</span> <span class="st">&quot;blue&quot;</span>)  <span class="op">+</span></a>
-<a class="sourceLine" id="cb6-41" data-line-number="41"><span class="st">  </span><span class="kw">labs</span>(<span class="dt">title =</span> <span class="st">&#39;OBSERVED DOWNLOAD SPEEDS&#39;</span>,</a>
-<a class="sourceLine" id="cb6-42" data-line-number="42">       <span class="dt">subtitle =</span><span class="st">&#39;ISP: MOVISTAR 20 Mbps&#39;</span>, </a>
-<a class="sourceLine" id="cb6-43" data-line-number="43">       <span class="dt">x =</span> <span class="st">&#39;Date&#39;</span>,</a>
-<a class="sourceLine" id="cb6-44" data-line-number="44">       <span class="dt">y =</span> <span class="st">&#39;Speed (Mbps)&#39;</span>,</a>
-<a class="sourceLine" id="cb6-45" data-line-number="45">       <span class="dt">color =</span> <span class="st">&#39;Legend:&#39;</span>) <span class="op">+</span></a>
-<a class="sourceLine" id="cb6-46" data-line-number="46"><span class="st">  </span><span class="kw">scale_x_datetime</span>(<span class="dt">date_breaks =</span> <span class="st">&quot;5 days&quot;</span>,</a>
-<a class="sourceLine" id="cb6-47" data-line-number="47">                   <span class="dt">labels =</span> <span class="kw">label_date_short</span>(), </a>
-<a class="sourceLine" id="cb6-48" data-line-number="48">                   <span class="dt">expand =</span> <span class="kw">expansion</span>(<span class="kw">c</span>(<span class="dv">0</span>, <span class="fl">0.04</span>))) <span class="op">+</span></a>
-<a class="sourceLine" id="cb6-49" data-line-number="49"><span class="st">  </span><span class="kw">scale_y_continuous</span>(<span class="dt">breaks =</span> <span class="kw">seq</span>(<span class="dv">0</span>, <span class="dv">22</span>, <span class="dt">by =</span> <span class="dv">2</span>), <span class="dt">limits =</span> <span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">23</span>)) <span class="op">+</span></a>
-<a class="sourceLine" id="cb6-50" data-line-number="50"><span class="st">  </span><span class="kw">scale_colour_manual</span>(<span class="dt">values =</span> colors) <span class="op">+</span></a>
-<a class="sourceLine" id="cb6-51" data-line-number="51"><span class="st">  </span><span class="kw">coord_cartesian</span>(<span class="dt">clip =</span> <span class="st">&#39;off&#39;</span>) <span class="op">+</span></a>
-<a class="sourceLine" id="cb6-52" data-line-number="52"><span class="st">  </span><span class="ot">NULL</span></a></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>colors <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;Mean Speed&quot;</span> <span class="ot">=</span> <span class="st">&quot;blue&quot;</span>,</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;Parameters&quot;</span> <span class="ot">=</span> <span class="st">&quot;orange&quot;</span>,</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;Fault&quot;</span> <span class="ot">=</span> <span class="st">&quot;red&quot;</span>,</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>            <span class="st">&quot;Download Speed&quot;</span> <span class="ot">=</span> <span class="st">&quot;#00B2EE&quot;</span>)</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>plot_data <span class="ot">&lt;-</span> raw_data <span class="sc">%&gt;%</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tbl_time</span>(<span class="at">index =</span> time) <span class="sc">%&gt;%</span> </span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">collapse_by</span>(<span class="st">&#39;1 hour&#39;</span>, <span class="at">side =</span> <span class="st">&#39;start&#39;</span>, <span class="at">clean =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>mean_speed <span class="ot">&lt;-</span> plot_data <span class="sc">%&gt;%</span> </span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(download) <span class="sc">%&gt;%</span> </span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mean</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">round</span>(<span class="dv">1</span>)</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>plot_data <span class="sc">%&gt;%</span> </span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> time, <span class="at">y =</span> download)) <span class="sc">+</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>(<span class="fu">aes</span>(<span class="at">color =</span> <span class="st">&quot;Download Speed&quot;</span>)) <span class="sc">+</span></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">data =</span> plot_data <span class="sc">%&gt;%</span> <span class="fu">filter</span>(download <span class="sc">&lt;</span> <span class="dv">8</span>),</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>             <span class="fu">aes</span>(<span class="at">color =</span> <span class="st">&quot;Fault&quot;</span>)) <span class="sc">+</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">data =</span> plot_data <span class="sc">%&gt;%</span> <span class="fu">filter</span>(download <span class="sc">&lt;</span> <span class="dv">8</span>),</span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>             <span class="at">shape =</span> <span class="dv">1</span>,</span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>             <span class="at">color =</span> <span class="st">&quot;red&quot;</span>,</span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>             <span class="at">size =</span> <span class="dv">5</span>) <span class="sc">+</span></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="fu">aes</span>(<span class="at">yintercept =</span> <span class="dv">20</span>, <span class="at">color =</span> <span class="st">&quot;Parameters&quot;</span>),  <span class="at">linetype =</span> <span class="st">&quot;dashed&quot;</span>) <span class="sc">+</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="fu">aes</span>(<span class="at">yintercept =</span> <span class="dv">8</span>, <span class="at">color =</span> <span class="st">&quot;Parameters&quot;</span>),  <span class="at">linetype =</span> <span class="st">&quot;dashed&quot;</span>) <span class="sc">+</span></span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="fu">aes</span>(<span class="at">yintercept =</span> mean_speed, <span class="at">color =</span> <span class="st">&quot;Mean Speed&quot;</span>)) <span class="sc">+</span></span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">annotate</span>(<span class="st">&quot;text&quot;</span>,</span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>           <span class="at">x =</span> <span class="fu">as.POSIXct</span>(<span class="fu">c</span>(<span class="st">&quot;2019-06-24 11:00:00 UTC&quot;</span>, <span class="st">&quot;2019-06-24 11:00:00 UTC&quot;</span>)),</span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>           <span class="at">y =</span> <span class="fu">c</span>(<span class="dv">7</span>, <span class="dv">19</span>),</span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>           <span class="at">label =</span> <span class="fu">c</span>(<span class="st">&quot;Guaranteed Minimum Speed&quot;</span>, <span class="st">&quot;Advertised Speed&quot;</span>),</span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>           <span class="at">family =</span> <span class="st">&quot;Cloud Calligraphy&quot;</span>,</span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>           <span class="at">size=</span><span class="dv">5</span>) <span class="sc">+</span></span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_label</span>(<span class="at">x =</span> <span class="fu">as.POSIXct</span>(<span class="st">&quot;2019-08-01 11:00:00 UTC&quot;</span>),</span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a>             <span class="at">y =</span> mean_speed,</span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a>             <span class="at">label =</span> mean_speed,</span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a>             <span class="at">family =</span> <span class="st">&quot;xkcd&quot;</span>,</span>
+<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a>             <span class="at">show.legend =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a>             <span class="at">inherit.aes =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a>             <span class="at">color =</span> <span class="st">&quot;blue&quot;</span>)  <span class="sc">+</span></span>
+<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">&#39;OBSERVED DOWNLOAD SPEEDS&#39;</span>,</span>
+<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a>       <span class="at">subtitle =</span><span class="st">&#39;ISP: MOVISTAR 20 Mbps&#39;</span>, </span>
+<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">&#39;Date&#39;</span>,</span>
+<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">&#39;Speed (Mbps)&#39;</span>,</span>
+<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a>       <span class="at">color =</span> <span class="st">&#39;Legend:&#39;</span>) <span class="sc">+</span></span>
+<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_x_datetime</span>(<span class="at">date_breaks =</span> <span class="st">&quot;5 days&quot;</span>,</span>
+<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a>                   <span class="at">labels =</span> <span class="fu">label_date_short</span>(), </span>
+<span id="cb6-48"><a href="#cb6-48" aria-hidden="true" tabindex="-1"></a>                   <span class="at">expand =</span> <span class="fu">expansion</span>(<span class="fu">c</span>(<span class="dv">0</span>, <span class="fl">0.04</span>))) <span class="sc">+</span></span>
+<span id="cb6-49"><a href="#cb6-49" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">22</span>, <span class="at">by =</span> <span class="dv">2</span>), <span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">23</span>)) <span class="sc">+</span></span>
+<span id="cb6-50"><a href="#cb6-50" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_manual</span>(<span class="at">values =</span> colors) <span class="sc">+</span></span>
+<span id="cb6-51"><a href="#cb6-51" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_cartesian</span>(<span class="at">clip =</span> <span class="st">&#39;off&#39;</span>) <span class="sc">+</span></span>
+<span id="cb6-52"><a href="#cb6-52" aria-hidden="true" tabindex="-1"></a>  <span class="cn">NULL</span></span></code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:line"></span>
 <img src="/post/2020-01-20-internet-speed-test.en_files/figure-html/line-1.png" alt="Observed Download Speeds" width="768" />
 <p class="caption">
 Figure 2: Observed Download Speeds
 </p>
 </div>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb7-1" data-line-number="1">faults &lt;-<span class="st"> </span>plot_data <span class="op">%&gt;%</span></a>
-<a class="sourceLine" id="cb7-2" data-line-number="2"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">event_type =</span> <span class="kw">ifelse</span>(download <span class="op">&lt;=</span><span class="st"> </span><span class="dv">8</span>, <span class="st">&#39;fault&#39;</span>, <span class="st">&#39;normal&#39;</span>)) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb7-3" data-line-number="3"><span class="st">  </span><span class="kw">filter</span>(event_type <span class="op">==</span><span class="st"> &#39;fault&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb7-4" data-line-number="4"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">tbf =</span> <span class="kw">as.numeric</span>(<span class="kw">as.period</span>(<span class="kw">interval</span>(<span class="kw">lag</span>(time), time),</a>
-<a class="sourceLine" id="cb7-5" data-line-number="5">                                    <span class="dt">unit =</span> <span class="st">&#39;seconds&#39;</span>)) <span class="op">/</span><span class="st"> </span>(<span class="dv">3600</span>)) <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb7-6" data-line-number="6"><span class="st">  </span><span class="kw">tail</span>(<span class="op">-</span><span class="dv">1</span>)</a>
-<a class="sourceLine" id="cb7-7" data-line-number="7"></a>
-<a class="sourceLine" id="cb7-8" data-line-number="8">faults <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb7-9" data-line-number="9"><span class="st">  </span><span class="kw">ggplot</span>(<span class="kw">aes</span>(<span class="dt">x =</span> <span class="st">&#39;&#39;</span>, <span class="dt">y =</span> tbf)) <span class="op">+</span></a>
-<a class="sourceLine" id="cb7-10" data-line-number="10"><span class="st">  </span><span class="kw">geom_boxplot</span>(<span class="dt">fill =</span> <span class="st">&#39;#FF303094&#39;</span>) <span class="op">+</span></a>
-<a class="sourceLine" id="cb7-11" data-line-number="11"><span class="st">  </span><span class="kw">coord_flip</span>() <span class="op">+</span></a>
-<a class="sourceLine" id="cb7-12" data-line-number="12"><span class="st">  </span><span class="kw">geom_label</span>(<span class="dt">y =</span> <span class="kw">median</span>(faults<span class="op">$</span>tbf),</a>
-<a class="sourceLine" id="cb7-13" data-line-number="13">             <span class="dt">label =</span> <span class="kw">paste</span>(<span class="kw">round</span>(<span class="kw">median</span>(faults<span class="op">$</span>tbf),<span class="dv">1</span>), <span class="st">&#39;h&#39;</span>),</a>
-<a class="sourceLine" id="cb7-14" data-line-number="14">             <span class="dt">family =</span> <span class="st">&quot;xkcd&quot;</span>,</a>
-<a class="sourceLine" id="cb7-15" data-line-number="15">             <span class="dt">show.legend =</span> <span class="ot">FALSE</span>,</a>
-<a class="sourceLine" id="cb7-16" data-line-number="16">             <span class="dt">color =</span> <span class="st">&quot;blue&quot;</span>) <span class="op">+</span></a>
-<a class="sourceLine" id="cb7-17" data-line-number="17"><span class="st">  </span><span class="kw">labs</span>(<span class="dt">title =</span> <span class="st">&#39;BOXPLOT OF TIME BETWEEN FAILURES&#39;</span>,</a>
-<a class="sourceLine" id="cb7-18" data-line-number="18">       <span class="dt">subtitle =</span><span class="st">&#39;ISP: MOVISTAR 20 Mbps&#39;</span>,</a>
-<a class="sourceLine" id="cb7-19" data-line-number="19">       <span class="dt">x =</span> <span class="st">&#39;&#39;</span>,</a>
-<a class="sourceLine" id="cb7-20" data-line-number="20">       <span class="dt">y =</span> <span class="st">&#39;Hours&#39;</span>) <span class="op">+</span></a>
-<a class="sourceLine" id="cb7-21" data-line-number="21"><span class="st">  </span><span class="ot">NULL</span></a></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>faults <span class="ot">&lt;-</span> plot_data <span class="sc">%&gt;%</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">event_type =</span> <span class="fu">ifelse</span>(download <span class="sc">&lt;=</span> <span class="dv">8</span>, <span class="st">&#39;fault&#39;</span>, <span class="st">&#39;normal&#39;</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(event_type <span class="sc">==</span> <span class="st">&#39;fault&#39;</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">tbf =</span> <span class="fu">as.numeric</span>(<span class="fu">as.period</span>(<span class="fu">interval</span>(<span class="fu">lag</span>(time), time),</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>                                    <span class="at">unit =</span> <span class="st">&#39;seconds&#39;</span>)) <span class="sc">/</span> (<span class="dv">3600</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tail</span>(<span class="sc">-</span><span class="dv">1</span>)</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>faults <span class="sc">%&gt;%</span> </span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> <span class="st">&#39;&#39;</span>, <span class="at">y =</span> tbf)) <span class="sc">+</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>(<span class="at">fill =</span> <span class="st">&#39;#FF303094&#39;</span>) <span class="sc">+</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_flip</span>() <span class="sc">+</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_label</span>(<span class="at">y =</span> <span class="fu">median</span>(faults<span class="sc">$</span>tbf),</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>             <span class="at">label =</span> <span class="fu">paste</span>(<span class="fu">round</span>(<span class="fu">median</span>(faults<span class="sc">$</span>tbf),<span class="dv">1</span>), <span class="st">&#39;h&#39;</span>),</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>             <span class="at">family =</span> <span class="st">&quot;xkcd&quot;</span>,</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>             <span class="at">show.legend =</span> <span class="cn">FALSE</span>,</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>             <span class="at">color =</span> <span class="st">&quot;blue&quot;</span>) <span class="sc">+</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">&#39;BOXPLOT OF TIME BETWEEN FAILURES&#39;</span>,</span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>       <span class="at">subtitle =</span><span class="st">&#39;ISP: MOVISTAR 20 Mbps&#39;</span>,</span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">&#39;&#39;</span>,</span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">&#39;Hours&#39;</span>) <span class="sc">+</span></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>  <span class="cn">NULL</span></span></code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:box"></span>
 <img src="/post/2020-01-20-internet-speed-test.en_files/figure-html/box-1.png" alt="Boxplot of Time Between Failures" width="672" />
 <p class="caption">
@@ -358,33 +357,33 @@ Figure 3: Boxplot of Time Between Failures
 </p>
 </div>
 <p>And with Figure <a href="#fig:boxes">4</a> we can find out when the peak hours occur, so we can know at what time of the day is more likely for us to experience slow internet speeds.</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb8-1" data-line-number="1">hour_data &lt;-<span class="st"> </span>plot_data <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb8-2" data-line-number="2"><span class="st">  </span><span class="kw">collapse_by</span>(<span class="st">&#39;1 hour&#39;</span>, <span class="dt">side =</span> <span class="st">&#39;start&#39;</span>, <span class="dt">clean =</span> <span class="ot">TRUE</span>) <span class="op">%&gt;%</span></a>
-<a class="sourceLine" id="cb8-3" data-line-number="3"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">time =</span> <span class="kw">format</span>(time, <span class="st">&quot;%H:%M&quot;</span>))</a>
-<a class="sourceLine" id="cb8-4" data-line-number="4"></a>
-<a class="sourceLine" id="cb8-5" data-line-number="5">hour_data <span class="op">%&gt;%</span><span class="st"> </span></a>
-<a class="sourceLine" id="cb8-6" data-line-number="6"><span class="st">  </span><span class="kw">ggplot</span>(<span class="kw">aes</span>(<span class="dt">x =</span> time, <span class="dt">y =</span> download)) <span class="op">+</span></a>
-<a class="sourceLine" id="cb8-7" data-line-number="7"><span class="st">  </span><span class="kw">geom_boxplot</span>(<span class="dt">fill =</span> <span class="st">&quot;#00B2EE&quot;</span>) <span class="op">+</span></a>
-<a class="sourceLine" id="cb8-8" data-line-number="8"><span class="st">  </span><span class="kw">geom_point</span>(<span class="dt">data =</span> hour_data <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">filter</span>(download <span class="op">&lt;</span><span class="st"> </span><span class="dv">8</span>),</a>
-<a class="sourceLine" id="cb8-9" data-line-number="9">             <span class="dt">shape =</span> <span class="dv">1</span>,</a>
-<a class="sourceLine" id="cb8-10" data-line-number="10">             <span class="dt">color =</span> <span class="st">&quot;red&quot;</span>,</a>
-<a class="sourceLine" id="cb8-11" data-line-number="11">             <span class="dt">size =</span> <span class="dv">5</span>) <span class="op">+</span></a>
-<a class="sourceLine" id="cb8-12" data-line-number="12"><span class="st">  </span><span class="kw">geom_hline</span>(<span class="kw">aes</span>(<span class="dt">yintercept =</span> <span class="dv">20</span>), <span class="dt">color =</span> <span class="st">&quot;orange&quot;</span>,  <span class="dt">linetype =</span> <span class="st">&quot;dashed&quot;</span>) <span class="op">+</span></a>
-<a class="sourceLine" id="cb8-13" data-line-number="13"><span class="st">  </span><span class="kw">geom_hline</span>(<span class="kw">aes</span>(<span class="dt">yintercept =</span> <span class="dv">8</span>), <span class="dt">color =</span> <span class="st">&quot;orange&quot;</span>,  <span class="dt">linetype =</span> <span class="st">&quot;dashed&quot;</span>) <span class="op">+</span></a>
-<a class="sourceLine" id="cb8-14" data-line-number="14"><span class="st">  </span><span class="kw">annotate</span>(<span class="st">&quot;text&quot;</span>,</a>
-<a class="sourceLine" id="cb8-15" data-line-number="15">           <span class="dt">x =</span> <span class="kw">c</span>(<span class="st">&quot;04:00&quot;</span>, <span class="st">&quot;04:00&quot;</span>),</a>
-<a class="sourceLine" id="cb8-16" data-line-number="16">           <span class="dt">y =</span> <span class="kw">c</span>(<span class="dv">7</span>, <span class="dv">19</span>),</a>
-<a class="sourceLine" id="cb8-17" data-line-number="17">           <span class="dt">label =</span> <span class="kw">c</span>(<span class="st">&quot;Guaranteed Minimum Speed&quot;</span>, <span class="st">&quot;Advertised Speed&quot;</span>),</a>
-<a class="sourceLine" id="cb8-18" data-line-number="18">           <span class="dt">family =</span> <span class="st">&quot;Cloud Calligraphy&quot;</span>,</a>
-<a class="sourceLine" id="cb8-19" data-line-number="19">           <span class="dt">size =</span> <span class="dv">5</span>) <span class="op">+</span></a>
-<a class="sourceLine" id="cb8-20" data-line-number="20"><span class="st">  </span><span class="kw">labs</span>(<span class="dt">title =</span> <span class="st">&#39;BOXPLOT OF OBSERVED DOWNLOAD SPEEDS BY HOUR OF THE DAY&#39;</span>,</a>
-<a class="sourceLine" id="cb8-21" data-line-number="21">       <span class="dt">subtitle =</span><span class="st">&#39;ISP: MOVISTAR 20 Mbps&#39;</span>,</a>
-<a class="sourceLine" id="cb8-22" data-line-number="22">       <span class="dt">x =</span> <span class="st">&#39;Hour&#39;</span>,</a>
-<a class="sourceLine" id="cb8-23" data-line-number="23">       <span class="dt">y =</span> <span class="st">&#39;Speed (Mbps)&#39;</span>) <span class="op">+</span></a>
-<a class="sourceLine" id="cb8-24" data-line-number="24"><span class="st">  </span><span class="kw">scale_y_continuous</span>(<span class="dt">breaks =</span> <span class="kw">seq</span>(<span class="dv">0</span>, <span class="dv">22</span>, <span class="dt">by =</span> <span class="dv">2</span>),</a>
-<a class="sourceLine" id="cb8-25" data-line-number="25">                     <span class="dt">limits =</span> <span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">22</span>)) <span class="op">+</span></a>
-<a class="sourceLine" id="cb8-26" data-line-number="26"><span class="st">  </span><span class="kw">coord_cartesian</span>(<span class="dt">clip =</span> <span class="st">&#39;off&#39;</span>) <span class="op">+</span></a>
-<a class="sourceLine" id="cb8-27" data-line-number="27"><span class="st">  </span><span class="ot">NULL</span></a></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>hour_data <span class="ot">&lt;-</span> plot_data <span class="sc">%&gt;%</span> </span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">collapse_by</span>(<span class="st">&#39;1 hour&#39;</span>, <span class="at">side =</span> <span class="st">&#39;start&#39;</span>, <span class="at">clean =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">time =</span> <span class="fu">format</span>(time, <span class="st">&quot;%H:%M&quot;</span>))</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>hour_data <span class="sc">%&gt;%</span> </span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> time, <span class="at">y =</span> download)) <span class="sc">+</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_boxplot</span>(<span class="at">fill =</span> <span class="st">&quot;#00B2EE&quot;</span>) <span class="sc">+</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>(<span class="at">data =</span> hour_data <span class="sc">%&gt;%</span> <span class="fu">filter</span>(download <span class="sc">&lt;</span> <span class="dv">8</span>),</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>             <span class="at">shape =</span> <span class="dv">1</span>,</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>             <span class="at">color =</span> <span class="st">&quot;red&quot;</span>,</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>             <span class="at">size =</span> <span class="dv">5</span>) <span class="sc">+</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="fu">aes</span>(<span class="at">yintercept =</span> <span class="dv">20</span>), <span class="at">color =</span> <span class="st">&quot;orange&quot;</span>,  <span class="at">linetype =</span> <span class="st">&quot;dashed&quot;</span>) <span class="sc">+</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_hline</span>(<span class="fu">aes</span>(<span class="at">yintercept =</span> <span class="dv">8</span>), <span class="at">color =</span> <span class="st">&quot;orange&quot;</span>,  <span class="at">linetype =</span> <span class="st">&quot;dashed&quot;</span>) <span class="sc">+</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">annotate</span>(<span class="st">&quot;text&quot;</span>,</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>           <span class="at">x =</span> <span class="fu">c</span>(<span class="st">&quot;04:00&quot;</span>, <span class="st">&quot;04:00&quot;</span>),</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>           <span class="at">y =</span> <span class="fu">c</span>(<span class="dv">7</span>, <span class="dv">19</span>),</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>           <span class="at">label =</span> <span class="fu">c</span>(<span class="st">&quot;Guaranteed Minimum Speed&quot;</span>, <span class="st">&quot;Advertised Speed&quot;</span>),</span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>           <span class="at">family =</span> <span class="st">&quot;Cloud Calligraphy&quot;</span>,</span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>           <span class="at">size =</span> <span class="dv">5</span>) <span class="sc">+</span></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">&#39;BOXPLOT OF OBSERVED DOWNLOAD SPEEDS BY HOUR OF THE DAY&#39;</span>,</span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>       <span class="at">subtitle =</span><span class="st">&#39;ISP: MOVISTAR 20 Mbps&#39;</span>,</span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">&#39;Hour&#39;</span>,</span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">&#39;Speed (Mbps)&#39;</span>) <span class="sc">+</span></span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_y_continuous</span>(<span class="at">breaks =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">22</span>, <span class="at">by =</span> <span class="dv">2</span>),</span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>                     <span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">22</span>)) <span class="sc">+</span></span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_cartesian</span>(<span class="at">clip =</span> <span class="st">&#39;off&#39;</span>) <span class="sc">+</span></span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>  <span class="cn">NULL</span></span></code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:boxes"></span>
 <img src="/post/2020-01-20-internet-speed-test.en_files/figure-html/boxes-1.png" alt="Boxplot of Observer Download Speeds by Hour of the Day" width="768" />
 <p class="caption">
