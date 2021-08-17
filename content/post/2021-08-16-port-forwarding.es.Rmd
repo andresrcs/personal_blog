@@ -1,5 +1,5 @@
 ---
-title: Cómo hacer que su servidor Shiny o Rstudio casero sea accesible desde la Internet pública
+title: Cómo hacer que tu servidor Shiny o Rstudio casero sea accesible desde la Internet pública
 description: "Aprende los pasos necesarios para exponer tu servidor Shiny y/o RStudio casero a la Internet pública para permitir el acceso desde cualquier lugar."
 author: andres-castro
 date: '2021-08-16'
