@@ -1,0 +1,164 @@
+---
+title: Cómo hacer que su servidor Shiny o Rstudio casero sea accesible desde la Internet pública
+description: "Aprende los pasos necesarios para exponer tu servidor Shiny y/o RStudio casero a la Internet pública para permitir el acceso desde cualquier lugar."
+author: andres-castro
+date: '2021-08-16'
+slug: port_forwarding
+categories:
+  - R
+series: 
+  - r-admin
+tags:
+  - admin
+  - server
+  - shiny-server
+  - rstudio-server
+  - networking
+draft: false
+images: ["port_forwarding.jpg"]
+authors: ["andres-castro"]
+output:
+  blogdown::html_page:
+    toc: true
+    highlight: zenburn
+---
+
+> :warning: ¡Requiere ensamblaje! Este proyecto requerie que investigues los detalles de tu equipo de red por tu cuenta.
+
+Has instalado Shiny y/o RStudio sever en la computadora de tu casa y funciona muy bien siempre que estés conectado a tu red local, sin embargo, no puedes acceder a ellos desde otras ubicaciones, ¿qué puedes hacer?
+
+La solución es exponer tu servidor a la Internet pública reenviando el tráfico entrante al puerto correspondiente en tu servidor. Ahora, no voy a mentirte diciéndo que este artículo te va a dar instrucciones detalladas sobre cómo hacerlo con tu router específico porque sería virtualmente imposible, cada marca de router (incluso modelo) tiene una interfaz de administración diferente, solo puedo darte los pasos requeridos junto con un ejemplo usando el router que tengo en casa, aunque, en general, el procedimiento implica los mismos pasos independientemente del modelo de router específico que tengas, así que con un poco de esfuerzo de tu parte, deberías poder averiguar cómo hacer que funcione con tu propio router.
+
+## Prerrequisitos
+
+1. Estoy escribiendo este artículo asumiendo que tienes Shiny y/o RStudio server correctamente instalados en una computadora en casa.
+
+2. Debes tener una IP pública asignada a tu router (no importa si cambia dinámicamente), no todos tienen una, ya que algunos proveedores de servicios de Internet (PSI) usan una configuración NAT3, lo que básicamente significa que compartes una IP pública con un grupo de sus clientes y no hay forma de canalizar una solicitud HTTP hacia tu servidor doméstico, sin embargo, es posible que puedas cambiar tu configuración NAT si llamas a tu PSI y solicitas una IP pública, por lo que puede que quieras intentarlo.
+
+3. Necesitas conocer el usuario y la contraseña para acceder a la interfaz de configuración de tu router, algunos PSI lo dejan con los valores de fabrica y solo necesitas buscar en Google la contraseña predeterminada para tu modelo de router, pero en la mayoría de los casos, la cambian, por lo que tendrías que darles una llamada y preguntar por tus credenciales.
+
+## Abrir los Puertos Necesarios en el Servidor
+
+Los puertos específicos para Shiny y/o RStudio Server deben estar accesibles en tu servidor para poder conectarse a esos servicios. La mayoría de las distribuciones de Linux vienen con todos los puertos accesibles de forma predeterminada, pero es una práctica común (y buena) instalar un firewall para restringir el acceso a tu servidor; si este es tu caso, debes asegurarte de tener abiertos los puertos necesarios.
+
+Para Shiny server, el puerto predeterminado es 3838 y para RStudio server es 8787 (esto se puede personalizar). Si has configurado un proxy inverso con `Nginx` o` Apache`, puedes obviar esos puertos y solo abrir el puerto `80` para HTTP o el puerto `443` para HTTPS. Por ejemplo, el comando para permitir el tráfico entrante en el puerto 80 usando el firewall `ufw` en sistemas basados en Ubuntu sería así:
+
+```{bash open_ports_ubuntu, eval=FALSE}
+sudo ufw allow 80/tcp
+```
+
+Y usando `firewalld` en sistemas basados en RHEL sería:
+
+```{bash open_ports_RHEL, eval=FALSE}
+sudo firewall-cmd --permanent --zone=public --add-port=80/tcp
+sudo firewall-cmd --reload
+```
+
+Puede que tengas otras reglas que podrían evitar que el tráfico ingrese a tu servidor desde ubicaciones remotas, por lo que es posible que desees inspeccionar las reglas de tu firewall y buscar cualquier cosa que restrinja el tráfico entrante.
+
+## Configura el Reenvio de Puertos en tu Router
+
+Abre un navegador web en un dispositivo que esté conectado a tu red local y escribe la IP local de tu router, por lo general, es algo como `192.168.0.1` o `192.168.1.1`. Todos los routers tienen un servidor web que se ejecuta en el puerto 80 de forma predeterminada, por lo que al escribir su IP se abrirá una página web con la interfaz de configuración.
+
+En mi caso particular, sigo usando el módem Sagemcom HFC que me dio mi PSI (porque siempre voy a configurar un router `pfSense` personalizado muy pronto), así que si abro un navegador Chrome y escribo `192.168 .0.1` esto es lo que obtengo.
+
+![](/post/2021-08-16-port-forwarding.en_files/login.jpg){width=800px height=400px}
+En tu caso, la interfaz de usuario se verá diferente y las opciones podrían tener nombres ligeramente distintos, pero son básicamente las mismas.
+
+Ingresa tus credenciales para acceder a la interfaz de configuración, que en mi caso se ve así.
+
+![](/post/2021-08-16-port-forwarding.en_files/console.jpg){width=800px height=400px}
+
+Luego, busca entre todas las pestañas disponibles para encontrar la sección "reenvío de puertos" (Port Forwarding en inglés), no estará en el mismo lugar para ti, pero la mayoría de routers modernos tienen esta opción.
+
+![](/post/2021-08-16-port-forwarding.en_files/forwarding.jpg){width=800px height=400px}
+
+Una vez allí, agrega las reglas de reenvío para Shiny y/o Rstudio server (debes reemplazar "IP_del_servidor" con la IP local de tu servidor) y aplica los cambios.
+
+| Dirección Local | Puerto Inicial | Puerto Final | Dirección Externa | Protocolo | Descripción   |
+| :-------------- | :------------- | :-------     | :---------------- | :-------- | :------------ |
+| IP_del_servidor | 3838           | 3838         | 0.0.0.0           | TCP       | Shiny-Server  |
+| IP_del_servidor | 8787           | 8787         | 0.0.0.0           | TCP       | RStudio-Server|
+
+Si está utilizando un proxy inverso, solo necesitas asegurarte de tener una de estas.
+
+| Dirección Local | Puerto Inicial | Puerto Final | Dirección Externa | Protocolo | Descripción   |
+| :-------------- | :------------- | :----------- | :---------------- | :-------- | :------------ |
+| IP_del_servidor | 80             | 80           | 0.0.0.0           | TCP       | HTTP          |
+| IP_del_servidor | 443            | 443          | 0.0.0.0           | TCP       | HTTPS         |
+
+
+Además, asegúrate de no tener la opción "Bloquear tráfico WAN" habilitada en tu router, eso bloquearía todo el tráfico entrante en absoluto.
+
+Después de hacer todo esto, deberías poder acceder a tus aplicaciones Shiny escribiendo `tu.ip.publica/3838/nombre_de_tu_app` y/o a tu servidor Rstudio escribiendo `tu.ip.publica/8787` en cualquier navegador.
+
+## Pasos Adicionales Opcionales
+
+### Configura un Servicio de DNS Dinámico (DDNS)
+
+La mayoría de los servicios de Internet residencial no incluyen una IP pública "estática", lo que significa que incluso si tienes una IP pública asignada en cada momento dado, no siempre será la misma. Se necesita una IP pública para acceder a tu servidor desde Internet directamente o para apuntar tu dominio personalizado (dirección web) a él, por lo que puedes imaginar lo inconveniente que sería tener que averiguar cuál es el IP en cada momento dado.
+
+Para solucionar este problema, puedes utilizar un servicio de DNS dinámico (a mí me gusta utilizar [No-IP](https://www.noip.com/)). Lo que hace este servicio es actualizar automáticamente tu dominio (incluso pueden darte un subdominio gratis si lo deseas) para apuntar hacia tu IP pública actual cada vez que cambia, lo hace usando un agente DDNS incorporado en tu router si es que está disponible, o si no, usando un servicio instalado en tu servidor que reporta automáticamente la IP actual al servicio DDNS.
+
+Si tu router tiene un agente DDNS integrado compatible, solo tienes que ingresar tus credenciales y estarás listo para comenzar.
+
+![](/post/2021-08-16-port-forwarding.en_files/ddns.jpg){width=700px height=400px}
+
+Si tu router no tiene un angete DDNS, tendrás que instalar uno en tu servidor (proporcionado por el proveedor de DDNS). Cómo instalarlo depende del proveedor de DDNS que estés utilizando y del sistema operativo que esté ejecutando tu servidor, pero seguramente puedes encontrar instrucciones detalladas en la página de documentación de tu proveedor de DDNS.
+
+Con este paso adicional, accederás a tus aplicaciones Shiny con: `tu_dominio/3838/nombre_de_tu_app` y a tu servidor RStudio con: `tu_dominio/8787`, lo que no requiere que conozcas tu IP pública actual por adelantado.
+
+### Configura un Proxy Inverso
+
+Hasta el paso anterior, habíamos resuelto el problema con el cambio de dirección IP, pero todavía tenemos números de puerto extraños en las direcciones web de nuestro servidor, al configurar un proxy inverso podemos usar direcciones más agradables como: `tu_dominio/shiny/nombre_de_tu_app` y `tu_dominio/rstudio`.
+
+Para configurar un proxy inverso, instala Nginx
+
+```{bash eval=FALSE}
+sudo apt install nginx
+```
+
+Edita el archivo de configuración de Nginx: `sudo nano /etc/nginx/sites-enabled/default`, agreguando las siguientes líneas antes de la línea que dice `server {`
+
+```{bash eval=FALSE}
+map $http_upgrade $connection_upgrade {
+      default upgrade;
+      ''      close;
+    }
+```
+
+y las siguientes líneas justo después de la línea que dice `server_name _;`
+
+```{bash eval=FALSE}
+    rewrite ^/shiny$ $scheme://$http_host/shiny/ permanent;
+    # Esta parte es para Shiny server
+    location /shiny/ {
+            rewrite ^/shiny/(.*)$ /$1 break;
+            proxy_pass http://localhost:3838;
+            proxy_redirect / $scheme://$http_host/shiny/;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection $connection_upgrade;
+            proxy_read_timeout 20d;
+            proxy_buffering off;
+    }
+    # Esta parte es para RStudio server
+    rewrite ^/rstudio$ $scheme://$http_host/rstudio/ permanent; 
+    
+    location /rstudio/ {
+        rewrite ^/rstudio/(.*)$ /$1 break;
+        proxy_pass http://localhost:8787;
+        proxy_redirect http://localhost:8787/ $scheme://$http_host/rstudio/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+        proxy_read_timeout 20d;
+    }
+```
+
+Ahora solo tienes que reiniciar Nginx para aplicar los cambios y listo.
+
+```{bash eval=FALSE}
+sudo service nginx restart
+```
+

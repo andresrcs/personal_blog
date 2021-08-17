@@ -1,0 +1,252 @@
+---
+title: How to make your home Shiny or Rstudio Server accessible from the public internet
+description: "Learn the necessary steps to expose your home Shiny and/or RStudio server to the public internet to enable access from anywhere."
+author: andres-castro
+date: '2021-08-16'
+slug: port_forwarding
+categories:
+  - R
+series: 
+  - r-admin
+tags:
+  - admin
+  - server
+  - shiny-server
+  - rstudio-server
+  - networking
+draft: false
+images: ["port_forwarding.jpg"]
+authors: ["andres-castro"]
+output:
+  blogdown::html_page:
+    toc: true
+    highlight: zenburn
+---
+
+<script src="/rmarkdown-libs/header-attrs/header-attrs.js"></script>
+<style type="text/css">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  { color: #cccccc; background-color: #303030; }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ffcfaf; } /* Alert */
+code span.an { color: #7f9f7f; font-weight: bold; } /* Annotation */
+code span.at { } /* Attribute */
+code span.bn { color: #dca3a3; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #f0dfaf; } /* ControlFlow */
+code span.ch { color: #dca3a3; } /* Char */
+code span.cn { color: #dca3a3; font-weight: bold; } /* Constant */
+code span.co { color: #7f9f7f; } /* Comment */
+code span.cv { color: #7f9f7f; font-weight: bold; } /* CommentVar */
+code span.do { color: #7f9f7f; } /* Documentation */
+code span.dt { color: #dfdfbf; } /* DataType */
+code span.dv { color: #dcdccc; } /* DecVal */
+code span.er { color: #c3bf9f; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #c0bed1; } /* Float */
+code span.fu { color: #efef8f; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #7f9f7f; font-weight: bold; } /* Information */
+code span.kw { color: #f0dfaf; } /* Keyword */
+code span.op { color: #f0efd0; } /* Operator */
+code span.ot { color: #efef8f; } /* Other */
+code span.pp { color: #ffcfaf; font-weight: bold; } /* Preprocessor */
+code span.sc { color: #dca3a3; } /* SpecialChar */
+code span.ss { color: #cc9393; } /* SpecialString */
+code span.st { color: #cc9393; } /* String */
+code span.va { } /* Variable */
+code span.vs { color: #cc9393; } /* VerbatimString */
+code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
+</style>
+
+<div id="TOC">
+<ul>
+<li><a href="#prerequisites">Prerequisites</a></li>
+<li><a href="#open-the-required-ports-in-the-server">Open the Required Ports in the Server</a></li>
+<li><a href="#configure-port-forwarding-in-your-router">Configure Port Forwarding in your Router</a></li>
+<li><a href="#optional-extra-steps">Optional Extra Steps</a>
+<ul>
+<li><a href="#setup-a-dynamic-dns-service-ddns">Setup a Dynamic DNS Service (DDNS)</a></li>
+<li><a href="#configure-a-reverse-proxy">Configure a Reverse Proxy</a></li>
+</ul></li>
+</ul>
+</div>
+
+<blockquote>
+<p>:warning: Some assembly required! This project is going to require you to investigate the specifics of your network equipment on your own.</p>
+</blockquote>
+<p>You have installed Shiny and/or RStudio server in your home computer and it works great as long as you are connected to your local network, however, you can’t access it from other locations, What can you do?</p>
+<p>The solution is to expose your server to the public internet by forwarding incoming traffic to the corresponding port in your server. Now, I’m not going to lie to you telling you that this article is going to give you detailed instructions on how to do it with your specific router because it would be virtually impossible, each router brand (an even model) has a different management interface, I can only give you the required steps along with an example using the router I have at home, although, generally speaking, the procedure involves the same steps regardless of the specific router model you have, so with a little effort on your part you should be able to figure out how to make it work with your own router.</p>
+<div id="prerequisites" class="section level2">
+<h2>Prerequisites</h2>
+<ol style="list-style-type: decimal">
+<li><p>I’m writing this article under the assumption that you already have Shiny and/or RStudio server properly installed on a computer at home (if you haven’t, you can check out the other articles in my blog for inspiration).</p></li>
+<li><p>You need to have a public IP assigned to your router (it doesn’t matter if it changes dynamically), not everybody has one since some Internet Service Providers (ISPs) use a NAT3 configuration, which basically means that you share a public IP with a group of their clients and there will be no means to map an HTTP request to your home server, however, it is possible that you can get your NAT configuration changed if you call your ISP and request for a public IP so you might want to give it a try.</p></li>
+<li><p>You need to know the user and password to access your router’s configuration interface, some ISPs let it as default and you only need to google the default password for your router’s model, but in most cases, they change it so you would need to give them a call and ask for your credentials.</p></li>
+</ol>
+</div>
+<div id="open-the-required-ports-in-the-server" class="section level2">
+<h2>Open the Required Ports in the Server</h2>
+<p>Specific ports for Shiny and/or RStudio server need to be accessible in your server to be able to connect to those services. Most Linux distributions come with all ports accessible by default but it is a common (and good) practice to install a firewall to restrict access to your server, if this is your case, you need to make sure that you have the required ports open.</p>
+<p>For Shiny server the default port is 3838 and for RStudio server it is 8787 (this can be customized). If you have configured a reverse proxy with <code>Nginx</code> or <code>Apache</code> you can obviate those ports and only open port <code>80</code> for HTTP or port <code>443</code> for HTTPS. For example, the command to allow incoming traffic on port 80 using the <code>ufw</code> firewall in Ubuntu-based systems would be like this:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ufw allow 80/tcp</span></code></pre></div>
+<p>And using <code>firewalld</code> in RHEL-based systems would be:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> firewall-cmd <span class="at">--permanent</span> <span class="at">--zone</span><span class="op">=</span>public <span class="at">--add-port</span><span class="op">=</span>80/tcp</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> firewall-cmd <span class="at">--reload</span></span></code></pre></div>
+<p>You could have other rules that could prevent traffic from going into your server from remote locations so you might want to inspect your firewall rules and look for anything restricting incoming traffic.</p>
+</div>
+<div id="configure-port-forwarding-in-your-router" class="section level2">
+<h2>Configure Port Forwarding in your Router</h2>
+<p>Open a web browser on a device that is connected to your local network and type your router’s local IP, usually, it is something like <code>192.168.0.1</code> or <code>192.168.1.1</code>. All routers have a web server running on port 80 by default so by typing their IP it would open a web page with the configuration interface.</p>
+<p>In my particular case, I’m steel using a cheap Sagemcom HFC modem my ISP gave me (because I’m always going to set up my custom <code>pfSense</code> router very soon), so if I open a Chrome browser and type <code>192.168.0.1</code> this is what I get.</p>
+<p><img src="/post/2021-08-16-port-forwarding.en_files/login.jpg" width="800" height="400" />
+In your case, the user interface would look different and options might have slightly different names but they are basically the same.</p>
+<p>Enter your credentials to get access to the configuration interface, which in my case looks like this.</p>
+<p><img src="/post/2021-08-16-port-forwarding.en_files/console.jpg" width="800" height="400" /></p>
+<p>Then, search among all the available tabs to find the “port forwarding” section, it is not going to be in the same place for you but most modern routers have this section.</p>
+<p><img src="/post/2021-08-16-port-forwarding.en_files/forwarding.jpg" width="800" height="400" /></p>
+<p>Once in there add forwarding rules for Shiny and/or Rstudio server (You have to replace “your_sever_ip” with your actual server’s local IP) and apply changes.</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Local Address</th>
+<th align="left">Start Port</th>
+<th align="left">End Port</th>
+<th align="left">External Address</th>
+<th align="left">Protocol</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">your_sever_ip</td>
+<td align="left">3838</td>
+<td align="left">3838</td>
+<td align="left">0.0.0.0</td>
+<td align="left">TCP</td>
+<td align="left">Shiny-Server</td>
+</tr>
+<tr class="even">
+<td align="left">your_sever_ip</td>
+<td align="left">8787</td>
+<td align="left">8787</td>
+<td align="left">0.0.0.0</td>
+<td align="left">TCP</td>
+<td align="left">RStudio-Server</td>
+</tr>
+</tbody>
+</table>
+<p>If you are using a reverse proxy, you only need to make sure you have one of these.</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Local Address</th>
+<th align="left">Start Port</th>
+<th align="left">End Port</th>
+<th align="left">External Address</th>
+<th align="left">Protocol</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">your_sever_ip</td>
+<td align="left">80</td>
+<td align="left">80</td>
+<td align="left">0.0.0.0</td>
+<td align="left">TCP</td>
+<td align="left">HTTP</td>
+</tr>
+<tr class="even">
+<td align="left">your_sever_ip</td>
+<td align="left">443</td>
+<td align="left">443</td>
+<td align="left">0.0.0.0</td>
+<td align="left">TCP</td>
+<td align="left">HTTPS</td>
+</tr>
+</tbody>
+</table>
+<p>Also, make sure you don’t have a “Block WAN traffic” option enabled in your router, this will block all incoming traffic whatsoever.</p>
+<p>After doing all these you should be able to access your shiny apps by typing <code>your.public.ip/3838/your_app_name</code> and/or your Rstudio Server by typing <code>your.public.ip/8787</code> in any browser.</p>
+</div>
+<div id="optional-extra-steps" class="section level2">
+<h2>Optional Extra Steps</h2>
+<div id="setup-a-dynamic-dns-service-ddns" class="section level3">
+<h3>Setup a Dynamic DNS Service (DDNS)</h3>
+<p>Most residential internet services do not include a “static” public IP, which means that even if you have a public IP assigned at any given moment, it will not always be the same. A public IP is needed to access your server from the internet directly or to point your custom domain (web address) to it, so you can imagine how inconvenient would be having to figure out what the value is at any given moment.</p>
+<p>To address this issue, you can use a Dynamic DNS Service (I like to use <a href="https://www.noip.com/">No-IP</a>). What this service does, is to automatically update your domain (they can even give you a free subdomain if you want) to point towards your current public IP every time it changes, it does it by using a built-in DDNS agent in your router if available or if not, by using a service installed in your server that automatically reports the current IP to the DDNS service.</p>
+<p>If your router has a compatible built-in DDNS agent, you just have to enter your credentials and you are ready to go.</p>
+<p><img src="/post/2021-08-16-port-forwarding.en_files/ddns.jpg" width="700" height="400" /></p>
+<p>If your router does not have a DDNS agent, you are going to have to install one in your server (provided by the DDNS provider). How to install it depends on what DDNS provider you are using and what operating system your server is running but surely you can find detailed instructions on the DDNS provider’s documentation page.</p>
+<p>With this extra step, you will access your shiny apps with <code>your_domain/3838/your_app_name</code> and your RStudio server with <code>your_domain/8787</code> which doesn’t require you to know your current public IP in advance.</p>
+</div>
+<div id="configure-a-reverse-proxy" class="section level3">
+<h3>Configure a Reverse Proxy</h3>
+<p>Up until the previous step we had solved the problem with the changing IP address but we still have awkward port numbers in the web addresses for our server, by configuring a reverse proxy we can get to use nicer addresses like <code>your_domain/shiny/your_app_name</code> and <code>your_domain/rstudio</code>.</p>
+<p>To configure a reverse proxy, install Nginx</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install nginx</span></code></pre></div>
+<p>Edit Nginx config file: <code>sudo nano /etc/nginx/sites-enabled/default</code>, add the following lines before the line that reads <code>server {</code></p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">map</span> <span class="va">$http_upgrade</span> <span class="va">$connection_upgrade</span> {</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>      <span class="ex">default</span> upgrade<span class="kw">;</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>      <span class="st">&#39;&#39;</span>      close<span class="kw">;</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="er">}</span></span></code></pre></div>
+<p>and the following lines right after the line that reads <code>server_name _;</code></p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>    <span class="ex">rewrite</span> ^/shiny$ <span class="va">$scheme</span>://<span class="va">$http_host</span>/shiny/ permanent<span class="kw">;</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># This part is for Shiny server</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="ex">location</span> /shiny/ {</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>            <span class="ex">rewrite</span> ^/shiny/<span class="er">(</span><span class="bu">.</span><span class="pp">*</span><span class="kw">)</span><span class="ex">$</span> /<span class="va">$1</span> break<span class="kw">;</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>            <span class="ex">proxy_pass</span> http://localhost:3838<span class="kw">;</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>            <span class="ex">proxy_redirect</span> / <span class="va">$scheme</span>://<span class="va">$http_host</span>/shiny/<span class="kw">;</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>            <span class="ex">proxy_http_version</span> 1.1<span class="kw">;</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>            <span class="ex">proxy_set_header</span> Upgrade <span class="va">$http_upgrade</span><span class="kw">;</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>            <span class="ex">proxy_set_header</span> Connection <span class="va">$connection_upgrade</span><span class="kw">;</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>            <span class="ex">proxy_read_timeout</span> 20d<span class="kw">;</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>            <span class="ex">proxy_buffering</span> off<span class="kw">;</span></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    <span class="er">}</span></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    <span class="co"># This part is for RStudio server</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    <span class="ex">rewrite</span> ^/rstudio$ <span class="va">$scheme</span>://<span class="va">$http_host</span>/rstudio/ permanent<span class="kw">;</span> </span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    <span class="ex">location</span> /rstudio/ {</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>        <span class="ex">rewrite</span> ^/rstudio/<span class="er">(</span><span class="bu">.</span><span class="pp">*</span><span class="kw">)</span><span class="ex">$</span> /<span class="va">$1</span> break<span class="kw">;</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>        <span class="ex">proxy_pass</span> http://localhost:8787<span class="kw">;</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>        <span class="ex">proxy_redirect</span> http://localhost:8787/ <span class="va">$scheme</span>://<span class="va">$http_host</span>/rstudio/<span class="kw">;</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>        <span class="ex">proxy_http_version</span> 1.1<span class="kw">;</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>        <span class="ex">proxy_set_header</span> Upgrade <span class="va">$http_upgrade</span><span class="kw">;</span></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>        <span class="ex">proxy_set_header</span> Connection <span class="va">$connection_upgrade</span><span class="kw">;</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>        <span class="ex">proxy_read_timeout</span> 20d<span class="kw">;</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>    <span class="er">}</span></span></code></pre></div>
+<p>Now you just have to restart Nginx to apply the changes and you are done.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> service nginx restart</span></code></pre></div>
+</div>
+</div>
