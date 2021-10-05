@@ -90,7 +90,7 @@ Si está utilizando un proxy inverso, solo necesitas asegurarte de tener una de 
 
 Además, asegúrate de no tener la opción "Bloquear tráfico WAN" habilitada en tu router, eso bloquearía todo el tráfico entrante en absoluto.
 
-Después de hacer todo esto, deberías poder acceder a tus aplicaciones Shiny escribiendo `tu.ip.publica/3838/nombre_de_tu_app` y/o a tu servidor Rstudio escribiendo `tu.ip.publica/8787` en cualquier navegador.
+Después de hacer todo esto, deberías poder acceder a tus aplicaciones Shiny escribiendo `tu.ip.publica:3838/nombre_de_tu_app` y/o a tu servidor Rstudio escribiendo `tu.ip.publica:8787` en cualquier navegador.
 
 ## Pasos Adicionales Opcionales
 
@@ -106,7 +106,7 @@ Si tu router tiene un agente DDNS integrado compatible, solo tienes que ingresar
 
 Si tu router no tiene un angete DDNS, tendrás que instalar uno en tu servidor (proporcionado por el proveedor de DDNS). Cómo instalarlo depende del proveedor de DDNS que estés utilizando y del sistema operativo que esté ejecutando tu servidor, pero seguramente puedes encontrar instrucciones detalladas en la página de documentación de tu proveedor de DDNS.
 
-Con este paso adicional, accederás a tus aplicaciones Shiny con: `tu_dominio/3838/nombre_de_tu_app` y a tu servidor RStudio con: `tu_dominio/8787`, lo que no requiere que conozcas tu IP pública actual por adelantado.
+Con este paso adicional, accederás a tus aplicaciones Shiny con: `tu_dominio:3838/nombre_de_tu_app` y a tu servidor RStudio con: `tu_dominio:8787`, lo que no requiere que conozcas tu IP pública actual por adelantado.
 
 ### Configura un Proxy Inverso
 

@@ -198,7 +198,7 @@ In your case, the user interface would look different and options might have sli
 </tbody>
 </table>
 <p>Also, make sure you don’t have a “Block WAN traffic” option enabled in your router, this will block all incoming traffic whatsoever.</p>
-<p>After doing all these you should be able to access your shiny apps by typing <code>your.public.ip/3838/your_app_name</code> and/or your Rstudio Server by typing <code>your.public.ip/8787</code> in any browser.</p>
+<p>After doing all these you should be able to access your shiny apps by typing <code>your.public.ip:3838/your_app_name</code> and/or your Rstudio Server by typing <code>your.public.ip:8787</code> in any browser.</p>
 </div>
 <div id="optional-extra-steps" class="section level2">
 <h2>Optional Extra Steps</h2>
@@ -209,7 +209,7 @@ In your case, the user interface would look different and options might have sli
 <p>If your router has a compatible built-in DDNS agent, you just have to enter your credentials and you are ready to go.</p>
 <p><img src="/post/2021-08-16-port-forwarding.en_files/ddns.jpg" width="700" height="400" /></p>
 <p>If your router does not have a DDNS agent, you are going to have to install one in your server (provided by the DDNS provider). How to install it depends on what DDNS provider you are using and what operating system your server is running but surely you can find detailed instructions on the DDNS provider’s documentation page.</p>
-<p>With this extra step, you will access your shiny apps with <code>your_domain/3838/your_app_name</code> and your RStudio server with <code>your_domain/8787</code> which doesn’t require you to know your current public IP in advance.</p>
+<p>With this extra step, you will access your shiny apps with <code>your_domain:3838/your_app_name</code> and your RStudio server with <code>your_domain:8787</code> which doesn’t require you to know your current public IP in advance.</p>
 </div>
 <div id="configure-a-reverse-proxy" class="section level3">
 <h3>Configure a Reverse Proxy</h3>
