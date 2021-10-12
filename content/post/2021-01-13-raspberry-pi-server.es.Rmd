@@ -39,7 +39,7 @@ Ansible es una herramienta de implementación de aplicaciones, administración d
 
 Incluso si la mayor parte del proceso se puede automatizar con Ansible, todavía necesitamos al menos una Raspberry Pi funcional que configurar, por lo que debemos comenzar cargando una imagen de Raspberry Pi OS Lite (32-bits) en nuestra tarjeta SD (Recomiendo al menos 32 GB clase 10 HC1).
 
-Descarga "Raspberry Pi Imager" del [sitio oficial](https://www.raspberrypi.org/software/), instálalo en tu sistema, ejecútalo, selecciona Raspberry Pi OS Lite (32-bits) como el "Sistema Operativo", elije tu "Tarjeta SD" y presiona "Escribir"
+Descarga "Raspberry Pi Imager" del [sitio oficial](https://www.raspberrypi.com/software/), instálalo en tu sistema, ejecútalo, selecciona Raspberry Pi OS Lite (32-bits) como el "Sistema Operativo", elije tu "Tarjeta SD" y presiona "Escribir"
 
 ![](/post/2020-12-22-raspberry-pi-server.en_files/Raspberry Pi Imager.jpg){width=400px height=300px}
  
