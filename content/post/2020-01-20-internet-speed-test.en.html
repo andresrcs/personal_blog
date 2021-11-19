@@ -109,11 +109,9 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <blockquote>
 <p>:pencil2: There are <a href="https://www.speedtest.net/apps/cli">installation instructions for other OSs</a> on the Speedtest web site</p>
 </blockquote>
-<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> su</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">wget</span> https://install.speedtest.net/app/cli/ookla-speedtest-1.0.0-armhf-linux.tgz</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">tar</span> <span class="at">-xvzf</span> ookla-speedtest-1.0.0-armhf-linux.tgz</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">mv</span> speedtest /usr/bin/speedtest</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="bu">exit</span></span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt-get install curl</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> https://install.speedtest.net/app/cli/install.deb.sh <span class="kw">|</span> <span class="fu">sudo</span> bash</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt-get install speedtest</span></code></pre></div>
 <blockquote>
 <p>:pencil2: Check if you have an older python version of the CLI installed in your system and make sure to uninstall it with this command <code>sudo pip uninstall speedtes-cli</code>, since it could cause conflicts with the newer official version. This happened to me and I didn’t notice :flushed:, thanks to <a href="https://twitter.com/jasongrahn">@jasongrahn</a> for the heads up.</p>
 </blockquote>
@@ -264,7 +262,7 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <span id="cb5-51"><a href="#cb5-51" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_manual</span>(<span class="at">values =</span> color) <span class="sc">+</span></span>
 <span id="cb5-52"><a href="#cb5-52" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_cartesian</span>(<span class="at">clip =</span> <span class="st">&#39;off&#39;</span>) <span class="sc">+</span></span>
 <span id="cb5-53"><a href="#cb5-53" aria-hidden="true" tabindex="-1"></a>  <span class="cn">NULL</span></span></code></pre></div>
-<div class="figure" style="text-align: center"><span id="fig:histogram"></span>
+<div class="figure" style="text-align: center"><span style="display:block;" id="fig:histogram"></span>
 <img src="/post/2020-01-20-internet-speed-test.en_files/figure-html/histogram-1.png" alt="Histogram of Observed Download Speeds" width="768" />
 <p class="caption">
 Figure 1: Histogram of Observed Download Speeds
@@ -323,7 +321,7 @@ Figure 1: Histogram of Observed Download Speeds
 <span id="cb6-50"><a href="#cb6-50" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_colour_manual</span>(<span class="at">values =</span> colors) <span class="sc">+</span></span>
 <span id="cb6-51"><a href="#cb6-51" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_cartesian</span>(<span class="at">clip =</span> <span class="st">&#39;off&#39;</span>) <span class="sc">+</span></span>
 <span id="cb6-52"><a href="#cb6-52" aria-hidden="true" tabindex="-1"></a>  <span class="cn">NULL</span></span></code></pre></div>
-<div class="figure" style="text-align: center"><span id="fig:line"></span>
+<div class="figure" style="text-align: center"><span style="display:block;" id="fig:line"></span>
 <img src="/post/2020-01-20-internet-speed-test.en_files/figure-html/line-1.png" alt="Observed Download Speeds" width="768" />
 <p class="caption">
 Figure 2: Observed Download Speeds
@@ -350,7 +348,7 @@ Figure 2: Observed Download Speeds
 <span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>       <span class="at">x =</span> <span class="st">&#39;&#39;</span>,</span>
 <span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> <span class="st">&#39;Hours&#39;</span>) <span class="sc">+</span></span>
 <span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>  <span class="cn">NULL</span></span></code></pre></div>
-<div class="figure" style="text-align: center"><span id="fig:box"></span>
+<div class="figure" style="text-align: center"><span style="display:block;" id="fig:box"></span>
 <img src="/post/2020-01-20-internet-speed-test.en_files/figure-html/box-1.png" alt="Boxplot of Time Between Failures" width="672" />
 <p class="caption">
 Figure 3: Boxplot of Time Between Failures
@@ -384,7 +382,7 @@ Figure 3: Boxplot of Time Between Failures
 <span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>                     <span class="at">limits =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">22</span>)) <span class="sc">+</span></span>
 <span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">coord_cartesian</span>(<span class="at">clip =</span> <span class="st">&#39;off&#39;</span>) <span class="sc">+</span></span>
 <span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>  <span class="cn">NULL</span></span></code></pre></div>
-<div class="figure" style="text-align: center"><span id="fig:boxes"></span>
+<div class="figure" style="text-align: center"><span style="display:block;" id="fig:boxes"></span>
 <img src="/post/2020-01-20-internet-speed-test.en_files/figure-html/boxes-1.png" alt="Boxplot of Observer Download Speeds by Hour of the Day" width="768" />
 <p class="caption">
 Figure 4: Boxplot of Observer Download Speeds by Hour of the Day
