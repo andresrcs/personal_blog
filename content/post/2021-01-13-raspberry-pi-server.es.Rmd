@@ -1,5 +1,5 @@
 ---
-title: Instalación automática de Shiny y RStudio server en Raspberry Pi OS con Ansible
+title: Instalación automática de Shiny y RStudio server en Raspberry Pi OS (32 y 64 bits) con Ansible
 description: "En esta publicación, les daré instrucciones paso a paso para instalar y configurar automáticamente un servidor de ciencia de datos basado en R completo en una Raspberry Pi, que incluye servicios de soporte como Nginx y PostgreSQL y utilizando un Playbook de Ansible que les proporcionaré. No se necesitan conocimientos previos de Ansible."
 author: andres-castro
 date: '2021-01-13'
@@ -39,7 +39,7 @@ Ansible es una herramienta de implementación de aplicaciones, administración d
 
 Incluso si la mayor parte del proceso se puede automatizar con Ansible, todavía necesitamos al menos una Raspberry Pi funcional que configurar, por lo que debemos comenzar cargando una imagen de Raspberry Pi OS Lite (32-bits) en nuestra tarjeta SD (Recomiendo al menos 32 GB clase 10 HC1).
 
-Descarga "Raspberry Pi Imager" del [sitio oficial](https://www.raspberrypi.com/software/), instálalo en tu sistema, ejecútalo, selecciona Raspberry Pi OS Lite (32-bits) como el "Sistema Operativo", elije tu "Tarjeta SD" y presiona "Escribir"
+Descarga "Raspberry Pi Imager" del [sitio oficial](https://www.raspberrypi.com/software/), e instálalo en tu sistema, para la versión de 32-bits sólo necesitas ejecutar Raspberry Pi Imager, seleccionar Raspberry Pi OS Lite (32-bits) como el "Sistema Operativo", elegir tu "Tarjeta SD" y presionar "Escribir". Si quieres usar la versión de 64-bits, ya que es una versión beta, necesitas descargar manualmente la última versión lite de 64-bits del [repositorio Raspberry Pi oficial](https://downloads.raspberrypi.org/raspios_lite_arm64/images/) y elegir "Use costume" en Raspberry Pi Imager para seleccionar el archivo zip descargado.
 
 ![](/post/2020-12-22-raspberry-pi-server.en_files/Raspberry Pi Imager.jpg){width=400px height=300px}
  
@@ -233,7 +233,7 @@ ansible-playbook install_shiny_server.yml
 ansible-playbook install_rstudio_server.yml
 ```
 
-Cada uno de ellos todavía tarda mucho en completarse, pero es un tiempo de espera más razonable (esto ya no es cierto, la instalación de la última versión de RStudio server, es decir v1.4.1103, puede llevar más de 24 horas dependiendo de su configuración específica), también, si decides que solo necesitas Shiny server o RStudio server pero no el otro, o ya tienes instalados los servicios de soporte que necesitas, puedes ejecutar solo los playbooks que desees.
+Cada uno de ellos todavía tarda mucho en completarse, pero es un tiempo de espera más razonable (esto ya no es cierto, la instalación de la última versión de RStudio server, es decir v2021.09.1+372, puede llevar hasta 3 días si usas una Raspberry Pi de 1GB de RAM, así que tenlo presente si decides instalarlo), también, si decides que solo necesitas Shiny server o RStudio server pero no el otro, o ya tienes instalados los servicios de soporte que necesitas, puedes ejecutar solo los playbooks que desees.
 
 Si deseas actualizar algo en el futuro, como R, RStudio o Shiny server (no puedo garantizar que siempre funcionará sin necesidad de cambios), simplemente puedes cambiar la versión en el archivo de configuración y ejecutar la parte específica del playbook aprovechando las "etiquetas" definidas.
 
@@ -273,7 +273,7 @@ Después de ejecutar con éxito todos los playbooks, tendrás una instalación c
 
 ## Notas Finales
 
-Incluso con la automatización, la instalación de forma nativa llevará mucho más tiempo que, por ejemplo, con el uso de contenedores, pero como está automatizado, simplemente puedes dejar que se ejecute y volver más tarde, y disfrutarás de la facilidad de gestión de una instalación nativa.
+Incluso con la automatización, la instalación de forma nativa llevará mucho más tiempo que, por ejemplo, con el uso de contenedores, especialmente si usas una Raspberry Pi con poca memoria RAM (< 4GB) pero como está automatizado, simplemente puedes dejar que se ejecute y volver más tarde, y disfrutarás de la facilidad de gestión de una instalación nativa.
 
 Además, ten en cuenta que el proceso de instalación llevará tu Raspberry Pi a sus límites, por lo que puedes esperar algunos errores aleatorios, pero eso no significa que no funcionará, simplemente reinicia tu Pi, vuelve a ejecutar el playbook problemático y ve si funciona la segunda vez. He hecho todo lo posible para que esto sea funcional a largo plazo estableciendo versiones de software específicas, pero aún es posible que una actualización de librerias del sistema inutilice los playbooks. Si encuentras algún problema, ve al repositorio de GitHub para los playbooks y registra un "issue", o mejor aún, si sabes cómo solucionarlo, haz un "pull request".
 

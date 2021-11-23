@@ -1,5 +1,5 @@
 ---
-title: Automatically installing Shiny and RStudio server on Raspberry Pi OS with Ansible
+title: Automatically installing Shiny and RStudio server on Raspberry Pi OS (32 and 64 bits) with Ansible
 description: "In this post, I'll give you step-by-step instructions to automatically install and configure a fully-fledged R-based data science server including support services as Nginx and PostgreSQL on a Raspberry Pi SBC using a provided Ansible playbook. No prior Ansible knowledge needed."
 author: andres-castro
 date: '2021-01-13'
@@ -110,8 +110,8 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 </blockquote>
 <div id="prepare-the-raspberry-pi" class="section level2">
 <h2>Prepare the Raspberry Pi</h2>
-<p>Even if most of the process can be automated with Ansible, we still need at least one working Raspberry Pi to configure, so, we need to start by loading a fresh image of Raspberry Pi OS Lite (32-bit) onto our SD card (I recommend at least 32GB class 10 HC1).</p>
-<p>Download “Raspberry Pi Imager” from the <a href="https://www.raspberrypi.com/software/">official site</a>, install it in your system, execute it, select Raspberry Pi OS Lite (32-bit) as the “Operating System”, choose your “SD Card” and press “Write”</p>
+<p>Even if most of the process can be automated with Ansible, we still need at least one working Raspberry Pi to configure, so, we need to start by loading a fresh image of Raspberry Pi OS Lite onto our SD card (I recommend at least 32GB class 10 HC1).</p>
+<p>Download “Raspberry Pi Imager” from the <a href="https://www.raspberrypi.com/software/">official site</a> and install it in your system, for the 32-bit version you only need to execute Raspberry Pi Imager, select Raspberry Pi OS Lite (32-bit) as the “Operating System”, choose your “SD Card” and press “Write”. If you want to use the 64-bit version, since it is a beta version, you need to manually download the latest release of the 64-bit lite edition from <a href="https://downloads.raspberrypi.org/raspios_lite_arm64/images/">the official Raspberry Pi mirror</a> and choose “Use custome” in Raspberry Pi Imager to select the downloaded zip file.</p>
 <p><img src="/post/2020-12-22-raspberry-pi-server.en_files/Raspberry%20Pi%20Imager.jpg" width="400" height="300" /></p>
 <p>Once the process is done, you have a clean installation of Raspberry Pi OS Lite in your micro SD card. Insert the card into your Raspberry Pi, plug a keyboard and a screen, and turn it on so you can set some basic configurations with <code>raspi-config</code>.</p>
 <p><img src="/post/2020-12-22-raspberry-pi-server.en_files/raspi-config.jpg" width="600" height="300" /></p>
@@ -257,7 +257,7 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible-playbook</span> install_basic_services.yml</span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible-playbook</span> install_shiny_server.yml</span>
 <span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible-playbook</span> install_rstudio_server.yml</span></code></pre></div>
-<p>Each one still takes a long time to complete but it is a more reasonable waiting time (this is no longer true, installing the latest version of RStudio server, i.e. v1.4.1103, may take more than 24 hours depending on your specific setup), also, if you decide that you only need Shiny server or RStudio server but not the other, or you already have the support services you need to be installed, you can run only the playbooks you want.</p>
+<p>Each one still takes a long time to complete but it is a more reasonable waiting time (this is no longer true, installing the latest version of RStudio server, i.e. v2021.09.1+372, may take up to 3 days if you are using a 1GB RAM Raspberry Pi SBC so be aware of that if you choose to install it), also, if you decide that you only need Shiny server or RStudio server but not the other, or you already have the support services you need to be installed, you can run only the playbooks you want.</p>
 <p>If you want to update something in the future, like R, RStudio, or Shiny server (I can’t guaranty that is going to work out of the box), you can simply change the version in the config file and run the specific part of the playbook by taking advantage of the defined “tags”.</p>
 <p>For example, this will only install the R version defined in the config file and nothing more:</p>
 <div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> raspberry_pi_server</span>
@@ -294,7 +294,7 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 </div>
 <div id="final-notes" class="section level2">
 <h2>Final Notes</h2>
-<p>Even with the automation, installing natively is still going to take much longer than, for example, using containers, but since it is automatized, you can simply let it running and come back later, and you will enjoy the simpler manageability of a native installation.</p>
+<p>Even with the automation, installing natively is still going to take much longer than, for example, using containers, especially if you are using a low RAM Raspberry Pi SBC (&lt; 4GB) but since it is automatized, you can simply let it running and come back later, and you will enjoy the simpler manageability of a native installation.</p>
 <p>Also, be aware that the installation process is going to push your Raspberry Pi to its limits so you can expect some random errors, but that doesn’t mean it’s not going to work, just restart your Pi, rerun the problematic playbook and see if it works the second time. I have done my best to make this functional in the long run by setting specific software versions but It is still possible that a system library update might break the playbooks, If you find any issues, please go to the GitHub repository for the playbooks and file an issue, or even better, if you know how to fix it, make a pull request.</p>
 <p>As a final note, I want to point out that this approach can be further extended accordingly to your own needs, for example, you can implement automatic restoration of your server including deployed content. I have an additional playbook to restore the applications, services, and databases I normally run on my Raspberry Pi, so in the event of a catastrophic failure, I can get back to a working state in a short period of time and with little effort, compared with doing a manual restoration of the system.</p>
 </div>
