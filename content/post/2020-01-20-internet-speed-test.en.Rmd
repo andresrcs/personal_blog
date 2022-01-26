@@ -55,8 +55,8 @@ sudo apt-get install speedtest
 ```{bash eval=FALSE, include=FALSE}
 # Manual download if apt source fails (armhf and aarch64 available).
 sudo su
-wget https://install.speedtest.net/app/cli/ookla-speedtest-1.1.1-aarch64-linux.tgz
-tar -xvzf ookla-speedtest-1.1.1-armhf-linux.tgz
+wget https://install.speedtest.net/app/cli/ookla-speedtest-1.1.1-linux-aarch64.tgz
+tar -xvzf ookla-speedtest-1.1.1-linux-aarch64.tgz
 mv speedtest /usr/bin/speedtest
 exit
 ```
