@@ -106,7 +106,7 @@ For installing Ansible, if you have a Unix based system (i.e. Linux, macOS) at y
 ```{bash install_ansible, eval=FALSE}
 # Install pip3
 sudo apt install python3-pip
-# Install Ansible version 5.2.0 (for reproducibility) with pip3
+# Install Ansible version 5.2.0 (for reproducibility) with pip3 
 sudo pip3 install ansible==5.2.0
 ```
 
