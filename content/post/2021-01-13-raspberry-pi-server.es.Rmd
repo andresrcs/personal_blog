@@ -102,13 +102,13 @@ Ahora tu Pi está lista para funcionar, desconecta el teclado y el monitor, cone
 
 En teoría, podrías instalar Ansible en la propia Raspberry Pi y ejecutar los playbooks directamente en ella con `connection: local` pero no sería práctico, es mejor ejecutar los playbooks desde una computadora que no sea tu Raspberry Pi.
 
-Para instalar Ansible, si tienes un sistema basado en Unix (es decir, Linux, macOS) a tu disposición, tienes suerte, instalar la última versión de Ansible es muy simple.
+Para instalar Ansible, si tienes un sistema basado en Unix (es decir, Linux, macOS) a tu disposición, tienes suerte, instalar Ansible es muy simple.
 
 ```{bash install_ansible, eval=FALSE}
 # Instala pip3
 sudo apt install python3-pip
-# Instala la última version de Ansible con pip3
-sudo pip3 install ansible
+# Instala la versión 5.2.0 de Ansible con pip3 (Por reproducibilidad)
+sudo pip3 install ansible==5.2.0
 ```
 
 Si estás en Windows, lamentablemente, no hay forma de ejecutar Ansible de forma nativa, tu mejor opción es habilitar WSL (Subsistema de Windows para Linux), instalar una distribución de Linux del Microsoft Store (recomiendo Ubuntu) y ejecutar los pasos anteriores en tu máquina virtual Linux.

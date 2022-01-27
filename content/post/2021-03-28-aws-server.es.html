@@ -144,13 +144,13 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <div id="instala-ansible" class="section level2">
 <h2>Instala Ansible</h2>
 <p>Es posible instalar Ansible localmente en la propia instancia EC2 y ejecutar playbooks directamente en ella con <code>connection: local</code> pero no sería práctico porque, entre otras cosas, requeriría que lancemos manualmente la instancia EC2, es mejor ejecutar los playbooks desde un sistema que no sea tu instancia EC2.</p>
-<p>Para instalar Ansible, si tienes un sistema basado en Unix (es decir, Linux, macOS) a tu disposición, tienes suerte, instalar la última versión de Ansible es muy simple.</p>
+<p>Para instalar Ansible, si tienes un sistema basado en Unix (es decir, Linux, macOS) a tu disposición, tienes suerte, instalar Ansible es muy simple.</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Instala python3</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install python3 <span class="co"># En macOS usa `brew install python3`</span></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Instala pip3</span></span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install python3-pip </span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Instala la última versión de Ansible con pip3</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> pip3 install ansible</span></code></pre></div>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Instala la versión 5.2.0 de Ansible con pip3 (Por reproducibilidad)</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> pip3 install ansible==5.2.0</span></code></pre></div>
 <p>Si estás en Windows, lamentablemente, no hay forma de ejecutar Ansible de forma nativa, tu mejor opción es habilitar WSL (Subsistema de Windows para Linux), instalar una distribución de Linux del Microsoft Store (recomiendo Ubuntu) y ejecutar los pasos anteriores en tu máquina virtual Linux.</p>
 <p>Puedes encontrar una guía detallada para instalar WSL <a href="https://docs.microsoft.com/en-us/windows/wsl/install-win10">aquí</a> y puede encontrar más información sobre la instalación de Ansible en el <a href="https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html">sitio de documentación oficial</a>.</p>
 <p>Además, dado que vamos a estar probando esto en una instancia EC2 con poca potencia, algunas de estas tareas van a tomar bastante tiempo y la conexión <code>SSH</code> podría cerrarse automáticamente por inactividad, para evitar esta situación, activa el envío de paquetes “keep-alive” al servidor editando el archivo <code>ssh_config</code> con <code>sudo nano /etc/ssh/ssh_config</code> y agregando estas dos líneas debajo de <code>Host *</code>:</p>
