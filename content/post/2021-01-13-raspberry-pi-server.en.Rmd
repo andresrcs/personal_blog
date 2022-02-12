@@ -26,13 +26,13 @@ output:
     highlight: zenburn
 ---
 
-I have a [previous post](/2018/11/21/shiny_rstudio_server/) about installing Shiny and RStudio server natively on Raspbian Stretch but since it was written for this old version of the operating system, it is outdated now and it only works as a general guideline instead of a working installation guide, so I decided to come up with an updated version for the new Raspberry Pi OS Lite (32-bit) but in the process, I realized that going through a bunch of commands that take a very long time to execute is a mood killer, so, What can I do about it? well... Automate the process!.
+I have a [previous post](/2018/11/21/shiny_rstudio_server/) about installing Shiny and RStudio server natively on Raspbian Stretch but since it was written for this old version of the operating system, it is outdated now and it only works as a general guideline instead of a working installation guide, so I decided to come up with an updated version for the new Raspberry Pi OS Lite but in the process, I realized that going through a bunch of commands that take a very long time to execute is a mood killer, so, What can I do about it? well... Automate the process!.
 
 To automate the installation and configuration process I decided to use [Ansible](https://en.wikipedia.org/wiki/Ansible_(software)), those in DevOps must be familiar with the power of Ansible but even if you've never heard of it, don't worry, you don't need to know Ansible in order to take advantage of its automation capabilities, I'm not an Ansible expert myself and I've been capable of accomplishing this project with just basic knowledge of the tool, so if I can do it, so can you. I'm going to guide you through the process assuming you have no prior experience with this tool and just some basic Linux terminal skills.
 
 Ansible is an open-source software provisioning, configuration management, and application-deployment tool enabling infrastructure as code. It runs on many Unix-like systems, and can configure both Unix-like systems as well as Microsoft Windows. In layman's terms, it lets you automate tasks in your infrastructure (One, or many Raspberry Pi SBCs at once in our case) by defining a set of steps to execute in [YAML](https://en.wikipedia.org/wiki/YAML) files called "playbooks". I took one for the team and wrote some Ansible playbooks to automate most of the installation process but leaving some room for you to configure the installation to your liking without having to modify the playbooks (which will require you to know how to edit them) via a config file. Although, if you want to have a basic understanding of how this tool works, there is a nice Ansible 101 series on [Jeff Geerling's YouTube channel](https://www.youtube.com/playlist?list=PL2_OBreMn7FqZkvMYt6ATmgC0KAGGJNAN).
 
-> :pencil2: Note that this has only been tested on a Raspberry Pi 3B+ with Raspberry Pi OS (32-bit) and with the software versions specified in the config file, most likely this will work on a Raspberry Pi 4 as well without any changes and it is still possible that this could work on other Debian based operating systems (like Ubuntu) and with other versions of the installed software but it might require some modifications to the playbooks.
+> :pencil2: Note that this has only been tested on a Raspberry Pi 3B+ with Raspberry Pi OS and with the software versions specified in the config file, most likely this will work on a Raspberry Pi 4 as well without any changes and it is still possible that this could work on other Debian based operating systems (like Ubuntu) and with other versions of the installed software but it might require some modifications to the playbooks.
 
 ## Prepare the Raspberry Pi
 
@@ -42,11 +42,20 @@ Download "Raspberry Pi Imager" from the [official site](https://www.raspberrypi.
 
 ![](/post/2020-12-22-raspberry-pi-server.en_files/Raspberry%20Pi%20Imager.jpg){width="400px" height="300px"}
 
-Once the process is done, you have a clean installation of Raspberry Pi OS Lite in your micro SD card. Insert the card into your Raspberry Pi, plug a keyboard and a screen, and turn it on so you can set some basic configurations with `raspi-config`.
+Once the process is done, you have a clean installation of Raspberry Pi OS Lite in your micro SD card. Insert the card into your Raspberry Pi, plug a keyboard and a screen, and turn it on.
+
+Log into the system (the default user and password are `pi` and `raspberry` respectively) and run an initial system update with these commands:
+
+```{bash update, eval=FALSE}
+sudo apt update
+sudo apt dist-upgrade
+```
+
+Then we can start setting some basic configurations with `raspi-config`.
 
 ![](/post/2020-12-22-raspberry-pi-server.en_files/raspi-config.jpg){width="600px" height="300px"}
 
-Log into the system (the default user and password are `pi` and `raspberry` respectively), run `sudo raspi-config`, and perform the following tasks:
+Run `sudo raspi-config`, and perform the following tasks:
 
 -   Optionally, change the password for the "pi" user (System Options --\> Password)
 -   Enable the SSH server (Interface Options --\> SSH)
@@ -159,7 +168,7 @@ Now, if you want to change the default installation settings, you can do it by e
 # System Configurations ########################################################
 
 # Swap parameters
-swap_file_path: '/var/swap.1'
+swap_file_path: /var/swap.1
 # Use any of the following suffixes
 # c=1
 # w=2
@@ -171,11 +180,11 @@ swap_file_path: '/var/swap.1'
 # xM=M
 # GB=1000*1000*1000
 # G=1024*1024*1024
-swap_file_size: '3GB'
+swap_file_size: 3GB
 swappiness: '10'
 
-# Disable Wifi interface?
-disable_wifi: true
+# Disable WiFi interface?
+disable_wifi: false
 
 # Security Configurations ######################################################
 
@@ -184,7 +193,7 @@ exposed_ports:
   - { rule: 'allow', port: 22, proto: 'tcp' }   # ssh
   - { rule: 'allow', port: 22, proto: 'udp' }
   - { rule: 'allow', port: 80, proto: 'tcp' }   # http
-  - { rule: 'allow', port: 5432, proto: 'tcp' }   # PostgreSQL
+  - { rule: 'allow', port: 5432, proto: 'tcp' }   # Postgresql
   - { rule: 'allow', port: 5432, proto: 'udp' }
 
 # Notification email for fail2ban
@@ -194,23 +203,25 @@ fail2ban_email: your_email@something.com
 # Password for the main PostgreSQL user
 postgres_password: 'very_secure_password'
 
-# Access rules for PostgreSQL
+# Access rules for Postgresql
 postgresql_rules:
   - { contype: local, users: all, address: samehost, method: trust }
   - { contype: local, users: postgres, address: samehost, method: trust }
   - { contype: host, users: all, address: "{{ ansible_default_ipv4.network }}/24", method: trust }
   - { contype: host, users: all, address: 0.0.0.0/0, method: password }
+  - { contype: host, users: all, address: 127.0.0.1/32, method: md5 }
+  - { contype: host, users: all, address: '::1/128', method: trust }
 
 # Main Software Versions #######################################################
 
 # R version to install
-r_version: '4.0.3'
+r_version: '4.1.2'
 
-# shiny-server version to install
-shiny_server_version: 'v1.5.16.958'
+# Shiny-server version to install
+shiny_server_version: 'v1.5.17.973'
 
-# rstudio-server version to install
-rstudio_version: 'v1.4.1103'
+# RStudio version to install
+rstudio_version: 'v2021.09.1+372'
 ```
 
 ## Run the Playbooks
