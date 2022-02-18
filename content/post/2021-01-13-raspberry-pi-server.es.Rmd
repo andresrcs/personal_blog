@@ -223,7 +223,7 @@ r_version: '4.1.2'
 shiny_server_version: 'v1.5.17.973'
 
 # Versión del servidor rstudio-server para instalar
-rstudio_version: 'v2021.09.1+372'
+rstudio_version: 'v2021.09.2+382'
 ```
 
 ## Ejecuta los Playbooks
