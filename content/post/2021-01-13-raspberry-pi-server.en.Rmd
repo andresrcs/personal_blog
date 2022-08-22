@@ -40,7 +40,7 @@ Even if most of the process can be automated with Ansible, we still need at leas
 
 Download "Raspberry Pi Imager" from the [official site](https://www.raspberrypi.com/software/) and install it in your system, execute "Raspberry Pi Imager", select "Raspberry Pi OS Lite" (either 32-bit or 64-bit) as the "Operating System", choose your "SD Card" and press "Write".
 
-![](/post/2020-12-22-raspberry-pi-server.en_files/Raspberry%20Pi%20Imager.jpg){width="400px" height="300px"}
+![](/post/2021-01-13-raspberry-pi-server.en_files/raspberri_pi_imager.jpg){width=400px height=300px}
 
 Once the process is done, you have a clean installation of Raspberry Pi OS Lite in your micro SD card. Insert the card into your Raspberry Pi, plug a keyboard and a screen, and turn it on.
 
@@ -53,7 +53,7 @@ sudo apt dist-upgrade
 
 Then we can start setting some basic configurations with `raspi-config`.
 
-![](/post/2020-12-22-raspberry-pi-server.en_files/raspi-config.jpg){width="600px" height="300px"}
+![](/post/2021-01-13-raspberry-pi-server.en_files/raspi_config.jpg){width=600px height=300px}
 
 Run `sudo raspi-config`, and perform the following tasks:
 

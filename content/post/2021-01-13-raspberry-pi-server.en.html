@@ -93,11 +93,11 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 
 <div id="TOC">
 <ul>
-<li><a href="#prepare-the-raspberry-pi">Prepare the Raspberry Pi</a></li>
-<li><a href="#install-ansible">Install Ansible</a></li>
-<li><a href="#download-and-configure-the-playbooks">Download and Configure the Playbooks</a></li>
-<li><a href="#run-the-playbooks">Run the Playbooks</a></li>
-<li><a href="#final-notes">Final Notes</a></li>
+<li><a href="#prepare-the-raspberry-pi" id="toc-prepare-the-raspberry-pi">Prepare the Raspberry Pi</a></li>
+<li><a href="#install-ansible" id="toc-install-ansible">Install Ansible</a></li>
+<li><a href="#download-and-configure-the-playbooks" id="toc-download-and-configure-the-playbooks">Download and Configure the Playbooks</a></li>
+<li><a href="#run-the-playbooks" id="toc-run-the-playbooks">Run the Playbooks</a></li>
+<li><a href="#final-notes" id="toc-final-notes">Final Notes</a></li>
 </ul>
 </div>
 
@@ -111,13 +111,13 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <h2>Prepare the Raspberry Pi</h2>
 <p>Even if most of the process can be automated with Ansible, we still need at least one working Raspberry Pi to configure, so, we need to start by loading a fresh image of Raspberry Pi OS Lite onto our SD card (I recommend at least 32GB class 10 HC1).</p>
 <p>Download “Raspberry Pi Imager” from the <a href="https://www.raspberrypi.com/software/">official site</a> and install it in your system, execute “Raspberry Pi Imager”, select “Raspberry Pi OS Lite” (either 32-bit or 64-bit) as the “Operating System”, choose your “SD Card” and press “Write”.</p>
-<p><img src="/post/2020-12-22-raspberry-pi-server.en_files/Raspberry%20Pi%20Imager.jpg" width="400" height="300" /></p>
+<p><img src="/post/2021-01-13-raspberry-pi-server.en_files/raspberri_pi_imager.jpg" width="400" height="300" /></p>
 <p>Once the process is done, you have a clean installation of Raspberry Pi OS Lite in your micro SD card. Insert the card into your Raspberry Pi, plug a keyboard and a screen, and turn it on.</p>
 <p>Log into the system (the default user and password are <code>pi</code> and <code>raspberry</code> respectively) and run an initial system update with these commands:</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt update</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt dist-upgrade</span></code></pre></div>
 <p>Then we can start setting some basic configurations with <code>raspi-config</code>.</p>
-<p><img src="/post/2020-12-22-raspberry-pi-server.en_files/raspi-config.jpg" width="600" height="300" /></p>
+<p><img src="/post/2021-01-13-raspberry-pi-server.en_files/raspi_config.jpg" width="600" height="300" /></p>
 <p>Run <code>sudo raspi-config</code>, and perform the following tasks:</p>
 <ul>
 <li>Optionally, change the password for the “pi” user (System Options –&gt; Password)</li>

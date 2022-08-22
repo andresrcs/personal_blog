@@ -41,8 +41,8 @@ Incluso si la mayor parte del proceso se puede automatizar con Ansible, todavía
 
 Descarga "Raspberry Pi Imager" del [sitio oficial](https://www.raspberrypi.com/software/), e instálalo en tu sistema, ejecuta "Raspberry Pi Imager", selecciona Raspberry Pi OS Lite (ya sea de 32 o 64 bits) como el "Sistema Operativo", elige tu "Tarjeta SD" y presiona "Escribir".
 
-![](/post/2020-12-22-raspberry-pi-server.en_files/Raspberry Pi Imager.jpg){width=400px height=300px}
- 
+![](/post/2021-01-13-raspberry-pi-server.es_files/raspberri_pi_imager.jpg){width=400px height=300px}
+
 Una vez que finalice el proceso, tendras una instalación limpia de Raspberry Pi OS Lite en tu tarjeta micro SD. Inserta la tarjeta en tu Raspberry Pi, conecta un teclado y una pantalla, y enciéndela.
 
 Inicia sesión en el sistema (el usuario y la contraseña predeterminados son `pi` y` raspberry` respectivamente), ejecuta una actualización inicial del sistema con estos comandosÑ
@@ -54,7 +54,7 @@ sudo apt dist-upgrade
 
 Luego podemos empezar estableciendo algunas configuraciones básicas con `raspi-config`.
 
-![](/post/2020-12-22-raspberry-pi-server.en_files/raspi-config.jpg){width=600px height=300px}
+![](/post/2021-01-13-raspberry-pi-server.es_files/raspi_config.jpg){width=600px height=300px}
 
 Ejecuta `sudo raspi-config` y realiza las siguientes tareas:
 
