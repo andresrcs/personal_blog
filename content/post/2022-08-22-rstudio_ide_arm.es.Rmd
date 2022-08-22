@@ -37,7 +37,7 @@ Luego, la dependencia más importante para RStudio es, como era de esperarse, el
 Puedes instalar la versión R que viene con los repositorios estándar de Ubuntu, que es la 4.1.2, es la opción más fácil pero esta versión es un poco antigua:
 
 ```{bash install_r_ubuntu, eval=FALSE}
-sudo apt install install r-base
+sudo apt install r-base
 ```
 
 Otra opción es compilar la última versión de R tu mismo (4.2.1 al momento de escribir), esto lleva bastante tiempo pero brinda la mayor flexibilidad ya que puedes elegir opciones como compilar con BLAS y LAPACK:

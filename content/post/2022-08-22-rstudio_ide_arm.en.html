@@ -102,7 +102,7 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt dist-upgrade</span></code></pre></div>
 <p>Then, the most important dependency for RStudio is, unsurprisingly, the R language. You have some options for installing R in Ubuntu 22.04 (arm64), each one with its own pros and cons.</p>
 <p>You can install the R version that comes with Ubuntu standard repositories, which is 4.1.2, this is the easiest option but this version is a little old:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install install r-base</span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install r-base</span></code></pre></div>
 <p>Another option is to compile the latest R version yourself (4.2.1 at the moment of writing), this is time-consuming but it gives you the most flexibility since you can choose options like compiling with BLAS and LAPACK:</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install <span class="at">-y</span> g++ gcc gfortran libreadline-dev libx11-dev libxt-dev <span class="dt">\</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>                    libpng-dev libjpeg-dev libcairo2-dev xvfb <span class="dt">\</span></span>
