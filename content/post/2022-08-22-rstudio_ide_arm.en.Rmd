@@ -1,6 +1,6 @@
 ---
 title: Take the RStudio IDE experimental support for arm64 architectures out for a spin
-description: "Learn how to install the experimental builds of the RStudio IDE for arm64 on a Raspberry Pi SBC (currently only for Ubuntu 22.04)."
+description: "Learn how to install the experimental builds of the RStudio IDE for arm64 on a Raspberry Pi SBC, compatible with both Raspberry Pi OS and Ubuntu 22.04.1"
 author: andres-castro
 date: '2022-08-22'
 slug: rstudio_ide_arm
@@ -21,20 +21,20 @@ output:
     highlight: zenburn
 ---
 
-Apple's bet on the arm architecture with their M1 and M2 processors has had an interesting side effect, developers of mainstream software are now forced to support the arm64 architecture and, since they are already supporting macOS for Apple Silicon processors anyways, supporting Linux arm64 distributions is no longer that much of a burden for them. The RStudio IDE development team is not strange to this circumstance and they have been working on general arm64 support. Currently, they have made available experimental builds for the arm64 architecture (also known as aarch64) compiled for Ubuntu 22.04 (possibly compatible with Debian 12 as well) and since Ubuntu 22.04.1 LTS has official support for Raspberry Pi SBCs, I have decided to give it a try. If you are interested, join me in the installation process.
+Apple's bet on the arm architecture with their M1 and M2 processors has had an interesting side effect, developers of mainstream software are now forced to support the arm64 architecture and, since they are already supporting macOS for Apple Silicon processors anyways, supporting Linux arm64 distributions is no longer that much of a burden for them. The RStudio IDE development team is not strange to this circumstance and they have been working on general arm64 support, currently, they have made available experimental builds for the arm64 architecture (also known as aarch64) compiled for Ubuntu 22.04 and Ubuntu 18/20, the latter being compatible with Raspberry Pi OS x64. I have decided to give them a try on my Raspberry Pi SBC, if you are interested, join me in the installation process.
 
 ## Basic Set Up and Dependencies
 
-The first thing you need is a Raspberry Pi SBC (2/3/4) with Ubuntu 22.04.1 LTS installed and updated, make sure to update your system libraries before you start.
+The first thing you need is a Raspberry Pi (2/3/4) with Raspberry Pi OS or Ubuntu 22.04.1 LTS installed and updated, make sure to update your system libraries before you start:
 
 ```{bash update_pi, eval=FALSE}
 sudo apt update
 sudo apt dist-upgrade
 ```
 
-Then, the most important dependency for RStudio is, unsurprisingly, the R language. You have some options for installing R in Ubuntu 22.04 (arm64), each one with its own pros and cons.
+Then, the most important dependency for RStudio is, unsurprisingly, the R language. You have some options for installing R on a Raspberry Pi, each one with its own pros and cons.
 
-You can install the R version that comes with Ubuntu standard repositories, which is 4.1.2, this is the easiest option but this version is a little old:
+You can install the R version that comes with the standard repositories for your OS, which is 4.0.0 for Raspberry Pi OS and 4.1.2 for Ubuntu 22.04.1. This is the easiest option but these versions are quite old:
 
 ```{bash install_r_ubuntu, eval=FALSE}
 sudo apt install r-base
@@ -65,13 +65,21 @@ exit
 cd
 ```
 
-Just to rule this option out, for the time being, using a precompiled binary from the [R4Pi](https://r4pi.org/ "R for the Raspberry Pi") project is not a viable option for this particular application, there is no arm64 R binary publicly available from them yet but the people from the R4Pi project have been kind enough to make a link available with an experimental arm64 binary for me to try out, sadly, it has been compiled for Raspberry Pi OS 64-bit which, at the time of writing, is based on Debian 11, and Ubuntu 22.04 is Debian 12 based so it is not compatible. I'll update this section if things change in the future since it would be a very nice option.
+And my new favorite, you can use a precompiled binary from the [R4Pi](https://r4pi.org/ "R for the Raspberry Pi") project, they are not publicly offering an arm64 binary on their website at the moment (work in progress) but they have been kind enough to make available a link with an experimental arm64 binary for me to try out (big thanks to Mark Sellors [@sellorm](https://twitter.com/sellorm)), it works great with Raspberry Pi OS x64 (Debian 11 based) but sadly it is not compatible with Ubuntu 22.04 (Debian 12 based). This option sacrifices the flexibility of choosing your own compiling options but the gain in installation time (also for R packages) definitely worth it:
 
-```{r echo=FALSE}
-blogdown::shortcode('tweet', '1561534196883013632')
+```{bash install_r_r4pi, eval=FALSE}
+# These are temporary installation instructions until a proper deb repository is set in place
+sudo apt install gdebi
+wget http://dl.sellorm.com/rpi/r-release_4.2.1-2_arm64.deb
+sudo gdebi r-release_4.2.1-2_arm64.deb
+sudo chmod 755 /usr/bin/R
 ```
 
-The experimental RStudio IDE builds do not come with Pandoc nor Quarto bundled since they do not offer official support for arm64. Pandoc you can easily install from the Ubuntu repositories and the IDE will recognize the system version automatically:
+```{r echo=FALSE}
+blogdown::shortcode('tweet', '1561494517785804801')
+```
+
+The experimental RStudio IDE builds do not come with Pandoc nor Quarto bundled since they do not offer official support for arm64. Pandoc you can easily install from the standard repositories for your OS and the IDE will recognize the system version automatically:
 
 ```{bash install_pandoc, eval=FALSE}
 sudo apt install pandoc pandoc-citeproc
@@ -81,7 +89,7 @@ Quarto is a different story, the problem with it is that one of its dependencies
 
 I have tried using an [alternative source](https://github.com/LukeChannings/deno-arm64) for the Deno binary but I can't find an alternative source for the Deno DOM plug-in so I guess we will have to live without Quarto capabilities on arm64 for the time being (or if you are more clever than me you can find out a way around this and share with the rest of us).
 
-Lastly, for installing the RStudio IDE deb file, as you would do on an x86_64 system, you might want to install `gdebi`:
+Lastly, for installing the RStudio IDE deb file, as you would do on an x86_64 system, you might want to install `gdebi` to handle package dependencies for you:
 
 ```{bash install_gdebi, eval=FALSE}
 sudo apt install gdebi
@@ -89,11 +97,11 @@ sudo apt install gdebi
 
 ## Installing the RStudio IDE
 
-Now we get to the point, there is no stable release of the RStudio IDE for arm64 but there are experimental daily builds available [here](https://dailies.rstudio.com/rstudio/elsbeth-geranium/), both for the server and desktop versions, I'm going to try out the server version because I prefer to work with the IDE on my regular computer instead of directly on the Raspberry Pi but you can install the desktop version the same way if you prefer, just change the link accordingly.
+Now we get to the point. There is no stable release of the RStudio IDE for arm64 but there are experimental daily builds available [here](https://dailies.rstudio.com/rstudio/elsbeth-geranium/), both for the server and desktop versions and compiled for Ubuntu 22.04 and Ubuntu 18/20. I'm going to try out the server version for Ubuntu 18/20 because it is compatible with Raspberry Pi OS x64 and I prefer to work with the IDE on my regular computer instead of directly on the Raspberry Pi, but you can install the desktop version the same way if you prefer, just change the link accordingly.
 
 ```{bash install_rstudio, eval=FALSE}
-wget https://s3.amazonaws.com/rstudio-ide-build/server/jammy/arm64/rstudio-server-2022.11.0-daily-123-arm64.deb
-sudo gdebi rstudio-server-2022.11.0-daily-123-arm64.deb
+wget https://s3.amazonaws.com/rstudio-ide-build/server/bionic/arm64/rstudio-server-2022.11.0-daily-134-arm64.deb
+sudo gdebi rstudio-server-2022.11.0-daily-134-arm64.deb
 ```
 
 Once the installation process is completed, you get a working RStudio IDE installation running on your Raspberry Pi, if you have chosen to install the server version as I did, you can open an RStudio session by opening a browser on any device in your network and typing the proper address i.e. `http:\\your_pi_ip_addres:8787`
@@ -102,10 +110,8 @@ Once the installation process is completed, you get a working RStudio IDE instal
 
 ## Final Comments
 
-Have in mind that these are experimental builds of the development version of the RStudio IDE and they are likely to be unstable and buggy so do not trust this for any sort of critical job.
+Have in mind that these are experimental builds of the development version of the RStudio IDE and they are likely to be unstable and buggy so do not trust this for any sort of critical job. You can follow along with the progress on this [GitHub issue](https://github.com/rstudio/rstudio/issues/8809).
 
-Currently, the experimental builds are for Ubuntu 22.04 only and they are believed to be compatible with Debian 12 out of the box (not confirmed yet) but they are looking into building for older Ubuntu LTS releases (Based on Debian 11) which might make them compatible with the latest Raspberry Pi OS x64 version. You can follow along with the progress on this [GitHub issue](https://github.com/rstudio/rstudio/issues/8809).
+Performance on the Raspberry Pi is acceptable, within reason for under-powered systems like these SBCs, but it is pretty far from the performance you would get on more powerful systems like Apple Silicon or full-size arm64 computers if you have access to one of those. If you want to get the most performance out of your Pi, use Raspberry Pi OS since it's the lightest option.
 
-Performance on the Raspberry Pi is acceptable, within reason for under-powered systems like these SBCs, but it is pretty far from the performance you would get on more powerful systems like Apple Silicon or full-size arm64 computers, if you have access to one of those.
-
-I hope you found this article useful, I will be updating the content as things develop, especially if installation on Raspberry Pi OS 64-bit becomes a viable option.
+I hope you found this article useful, I will be updating the content as things develop.
