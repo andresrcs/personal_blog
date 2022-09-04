@@ -65,13 +65,14 @@ exit
 cd
 ```
 
-And my new favorite, you can use a precompiled binary from the [R4Pi](https://r4pi.org/ "R for the Raspberry Pi") project, they are not publicly offering an arm64 binary on their website at the moment (work in progress) but they have been kind enough to make available a link with an experimental arm64 binary for me to try out (big thanks to Mark Sellors [@sellorm](https://twitter.com/sellorm)), it works great with Raspberry Pi OS x64 (Debian 11 based) but sadly it is not compatible with Ubuntu 22.04 (Debian 12 based). This option sacrifices the flexibility of choosing your own compiling options but the gain in installation time (also for R packages) definitely worth it:
+And my new favorite, you can use a precompiled binary from the [R4Pi](https://r4pi.org/ "R for the Raspberry Pi") project, they have been kind enough to make available an arm64 binary for us to try out (big thanks to Mark Sellors [@sellorm](https://twitter.com/sellorm)), it works great with Raspberry Pi OS x64 (Debian 11 based) but sadly it is not compatible with Ubuntu 22.04 (Debian 12 based). This option sacrifices the flexibility of choosing your own compiling options but the gain in installation time (also for R packages) is definitely worth it:
 
 ```{bash install_r_r4pi, eval=FALSE}
-# These are temporary installation instructions until a proper deb repository is set in place
-sudo apt install gdebi
-wget http://dl.sellorm.com/rpi/r-release_4.2.1-2_arm64.deb
-sudo gdebi r-release_4.2.1-2_arm64.deb
+curl -O  http://debs.r4pi.org/pool/main/r/r4pi-repo-conf/r4pi-repo-conf_0.1.0-6_armhf.deb
+sudo dpkg -i  r4pi-repo-conf_0.1.0-6_armhf.deb
+sudo apt update
+sudo apt install r4pi
+rm r4pi-repo-conf_0.1.0-6_armhf.deb
 sudo chmod 755 /usr/bin/R
 ```
 
