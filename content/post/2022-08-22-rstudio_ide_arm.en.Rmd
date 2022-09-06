@@ -71,6 +71,7 @@ And my new favorite, you can use a precompiled binary from the [R4Pi](https://r4
 curl -O  https://pkgs.r4pi.org/dl/r4pi-repo-conf_0.0.1-1_all.deb
 sudo dpkg -i  r4pi-repo-conf_0.0.1-1_all.deb
 sudo apt update
+sudo apt upgrade
 sudo apt install r4pi
 rm r4pi-repo-conf_0.0.1-1_all.deb
 ```

@@ -128,8 +128,9 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-O</span>  https://pkgs.r4pi.org/dl/r4pi-repo-conf_0.0.1-1_all.deb</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> dpkg <span class="at">-i</span>  r4pi-repo-conf_0.0.1-1_all.deb</span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt update</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install r4pi</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> r4pi-repo-conf_0.0.1-1_all.deb</span></code></pre></div>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt upgrade</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install r4pi</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> r4pi-repo-conf_0.0.1-1_all.deb</span></code></pre></div>
 {{% tweet "1561494517785804801" %}}
 <p>Las compilaciones experimentales del IDE de RStudio no vienen con Pandoc ni Quarto ya que no ofrecen soporte oficial para arm64. Pandoc se puede instalar fácilmente desde los repositorios oficiales para tu sistema operativo y el IDE reconocerá la versión del sistema automáticamente:</p>
 <div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install pandoc pandoc-citeproc</span></code></pre></div>

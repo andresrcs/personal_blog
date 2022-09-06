@@ -113,6 +113,7 @@ Para instalar R en tu Pi tienes algunas opciones, cada una con sus pros y sus co
     curl -O  https://pkgs.r4pi.org/dl/r4pi-repo-conf_0.0.1-1_all.deb
     sudo dpkg -i  r4pi-repo-conf_0.0.1-1_all.deb
     sudo apt update
+    sudo apt upgrade
     sudo apt install r4pi
     rm r4pi-repo-conf_0.0.1-1_all.deb
     ```
