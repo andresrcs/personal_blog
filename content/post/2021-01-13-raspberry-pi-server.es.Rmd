@@ -1,6 +1,6 @@
 ---
-title: Instalación automática de Shiny y RStudio server en Raspberry Pi OS (32 y 64 bits) con Ansible
-description: "En esta publicación, les daré instrucciones paso a paso para instalar y configurar automáticamente un servidor de ciencia de datos basado en R completo en una Raspberry Pi, que incluye servicios de soporte como Nginx y PostgreSQL y utilizando un Playbook de Ansible que les proporcionaré. No se necesitan conocimientos previos de Ansible."
+title: Instalación automática de Shiny y RStudio server en Raspberry Pi con Ansible
+description: "En esta publicación, les daré instrucciones paso a paso para instalar y configurar automáticamente un servidor de ciencia de datos completo basado en R que incluye servicios de soporte como Nginx y PostgreSQL en una Raspberry Pi SBC (con Raspberry Pi OS o Ubuntu) utilizando un Playbook de Ansible que les proporcionaré. No se necesitan conocimientos previos de Ansible."
 author: andres-castro
 date: '2021-01-13'
 slug: raspberry_pi_server
@@ -26,48 +26,76 @@ output:
     highlight: zenburn
 ---
 
-Tengo una [publicación anterior](/es/2018/11/21/shiny_rstudio_server/) sobre la instalación nativa de Shiny y RStudio server en Raspbian Stretch, pero como fue escrito para esta versión antigua del sistema operativo, ahora está desactualizada y solo funciona como una pauta general en lugar de una guía de instalación funcional, así que decidí crear una versión actualizada para el nuevo sistema operativo Raspberry Pi OS Lite pero en el proceso, me di cuenta de que seguir un montón de comandos que requieren mucho tiempo para ejecutarse mata los animos a cualquiera, entonces, ¿qué puedo hacer al respecto? bueno… ¡Automatizar el proceso!.
+Tengo una [publicación relacionada](/es/2022/09/05/shiny_rstudio_server/) sobre la instalación manual de Shiny y RStudio Server en una Raspberry Pi, pero incluso con los últimos avances en el soporte de software para la arquitectura ARM, este proceso aún consume mucho tiempo y requiere mucho copiar/pegar y observar la terminal esperando que se complete una tarea para poder comenzar con la siguiente, así que decidí idear una mejor solución, y es automatizar el proceso para que pueda dejarse desatendido y regresar más tarde cuando haya terminado.
 
 Para automatizar el proceso de instalación y configuración, decidí usar [Ansible](https://es.wikipedia.org/wiki/Ansible_(software)), aquellos en DevOps deben estar familiarizados con el poder de Ansible, pero incluso si nunca has escuchado de ello, no te preocupes, no necesitas conocer Ansible para aprovechar sus capacidades de automatización, yo mismo no soy un experto en Ansible y he sido capaz de realizar este proyecto con solo conocimientos básicos de la herramienta, así que si yo puedo hacerlo, tú también puedes. Te guiaré a través del proceso asumiendo que no tienes experiencia previa con esta herramienta y solo algunas habilidades básicas de terminal de Linux.
 
-Ansible es una herramienta de implementación de aplicaciones, administración de configuración y aprovisionamiento de software de código abierto que habilita la infraestructura como código. Se ejecuta en muchos sistemas de tipo Unix y puede configurar tanto sistemas tipo Unix como Microsoft Windows. En términos simples, te permite automatizar tareas en tu infraestructura (una, o muchas Raspberry Pi a la vez en nuestro caso) definiendo un conjunto de pasos para ejecutar en archivos [YAML](https://es.wikipedia.org/wiki/YAML)  llamados "playbooks". Me sacrifique por el equipo y escribí algunos playbooks de Ansible para automatizar la mayor parte del proceso de instalación, pero dejé algo de espacio para que configures la instalación a tu gusto sin tener que modificar los playbooks (lo que requeriría que sepas cómo editarlos) a través de un archivo de configuración. Aunque, si deseas tener una comprensión básica de cómo funciona esta herramienta, hay una buena serie de Ansible para principiantes en el [canal de YouTube de Jeff Geerling](https://www.youtube.com/playlist?list=PL2_OBreMn7FqZkvMYt6ATmgC0KAGGJNAN) y si eres de los que prefiere leer cosas en vez de verlas, aqui hay un [Tutorial de Ansible para Principiantes](https://spacelift.io/blog/ansible-tutorial) bastante agradable pero lamentablemente, está sólo en inglés.
+Ansible es una herramienta de implementación de aplicaciones, administración de configuración y aprovisionamiento de software de código abierto que habilita la infraestructura como código. Se ejecuta en muchos sistemas de tipo Unix y puede configurar tanto sistemas tipo Unix como Microsoft Windows. En términos simples, te permite automatizar tareas en tu infraestructura (una, o muchas Raspberry Pi a la vez en nuestro caso) definiendo un conjunto de pasos para ejecutar en archivos [YAML](https://es.wikipedia.org/wiki/YAML)  llamados "playbooks". Me sacrifique por el equipo y escribí algunos playbooks de Ansible para automatizar la mayor parte del proceso de instalación, pero dejando algo de espacio para que configures la instalación a tu gusto a través de un archivo de configuración, por lo que no necesitas modificar los playbooks (lo que requerirá que sepas cómo funcionan). Aunque, si deseas tener una comprensión básica de cómo funciona esta herramienta, hay una buena serie de Ansible para principiantes en [el canal de YouTube de Jeff Geerling](https://www.youtube.com/playlist?list=PL2_OBreMn7FqZkvMYt6ATmgC0KAGGJNAN) y si eres el tipo de personas que prefiere leer en lugar de ver cosas, aquí hay un [Tutorial de Ansible para principiantes](https://spacelift.io/blog/ansible-tutorial) bastante agradable pero lamentablemente, está sólo en inglés.
 
->:pencil2: Ten en cuenta que esto solo se ha probado en una Raspberry Pi 3B+ con Raspberry Pi OS y con las versiones de software especificadas en el archivo de configuración, lo más probable es que también funcione en una Raspberry Pi 4 sin ningún cambio y es posible que funcione en otros sistemas operativos basados en Debian (como Ubuntu) y con otras versiones del software instalado, pero podría requerir algunas modificaciones a los playbooks.
+> :pencil2: Ten en cuenta que esto solo se ha probado con las versiones de software especificadas en el archivo `config_vars.yml`, es muy probable que funcione aún con las versiones de software más nuevas, pero en algunos casos, podría requerir algunas modificaciones a los playbooks, las que haré tan pronto como note el problema.
 
 
 ## Prepara la Raspberry Pi
 
-Incluso si la mayor parte del proceso se puede automatizar con Ansible, todavía necesitamos al menos una Raspberry Pi funcional que configurar, por lo que debemos comenzar cargando una imagen de Raspberry Pi OS Lite (32-bits) en nuestra tarjeta SD (Recomiendo al menos 32 GB clase 10 HC1).
+Incluso si la mayor parte del proceso se puede automatizar con Ansible, aún necesitamos al menos una Raspberry Pi en funcionamiento para configurar, por lo tanto, debemos comenzar cargando un sistema operativo (SO) en una tarjeta SD (recomiendo al menos 32 GB clase 10 HC1). Ten en cuenta que RStudio Server es compatible solo con los sistemas operativos arm64, por lo que si deseas poder instalarlo, deberás elegir un sistema operativo de 64 bits, los playbooks funcionan tanto con Raspberry Pi OS como con Ubuntu.
 
-Descarga "Raspberry Pi Imager" del [sitio oficial](https://www.raspberrypi.com/software/), e instálalo en tu sistema, ejecuta "Raspberry Pi Imager", selecciona Raspberry Pi OS Lite (ya sea de 32 o 64 bits) como el "Sistema Operativo", elige tu "Tarjeta SD" y presiona "Escribir".
+Descarga "Raspberry Pi Imager" del [sitio oficial](https://www.raspberrypi.com/software/) e instálalo en tu sistema, ejecuta "Raspberry Pi Imager", selecciona un sistema operativo adecuado, elije tu "Tarjeta SD " y presiona "Escribir".
 
-![](/post/2021-01-13-raspberry-pi-server.es_files/raspberri_pi_imager.jpg){width=400px height=300px}
+![](/post/2021-01-13-raspberry-pi-server.en_files/raspberri_pi_imager.jpg){width="400px" height="300px"}
 
-Una vez que finalice el proceso, tendras una instalación limpia de Raspberry Pi OS Lite en tu tarjeta micro SD. Inserta la tarjeta en tu Raspberry Pi, conecta un teclado y una pantalla, y enciéndela.
+Una vez finalizado el proceso, tendras una instalación limpia de un sistema operativo en tu tarjeta micro SD, inserta la tarjeta en tu Raspberry Pi, conecta un teclado y una pantalla y enciéndela.
 
-Inicia sesión en el sistema (el usuario y la contraseña predeterminados son `pi` y` raspberry` respectivamente), ejecuta una actualización inicial del sistema con estos comandosÑ
+Inicia sesión en el sistema (el usuario y la contraseña predeterminados son `pi` y `raspberry` para Raspberry Pi OS, y en Ubuntu es `ubuntu` tanto para el usuario como para la contraseña) y ejecuta una actualización inicial del sistema con estos comandos:
 
-```{bash update, eval=FALSE}
+```{bash update_system, eval=FALSE}
 sudo apt update
 sudo apt dist-upgrade
 ```
 
-Luego podemos empezar estableciendo algunas configuraciones básicas con `raspi-config`.
+A continuación, debes configurar una IP estática para que puedas encontrar tu Pi fácilmente en tu red más adelante.
+
+Para configurar una IP estática en Raspberry Pi OS, edita este archivo, `sudo nano /etc/dhcpcd.conf`, de acuerdo con tus propias necesidades. Esta es una configuración de IP de muestra para una conexión por cable:
+
+```{bash set_ip_rpiOS, eval=FALSE}
+# Configuración IP de muestra:
+interface eth0
+static ip_address=192.168.0.101/24
+static routers=192.168.0.1
+static domain_name_servers=192.168.0.1 8.8.8.8
+```
+
+Y para configurar la IP en Ubuntu, debes crear este archivo, `sudo nano /etc/netplan/01-netcfg.yaml`, agregar el siguiente contenido (edita según sea necesario) y aplicar la configuración con `sudo netplan apply`.
+
+```{bash set_ip_ubuntu, eval=FALSE}
+network:
+    version: 2
+    renderer: networkd
+    ethernets:
+        eth0:
+            dhcp4: false
+            addresses:
+                - 192.168.0.101/24
+            nameservers:
+                addresses: [8.8.8.8, 8.8.4.4, 192.168.0.1]
+            routes:
+                - to: default
+                  via: 192.168.0.1
+```
+
+Luego necesitamos establecer algunas configuraciones básicas con `raspi-config`. Ejecuta `sudo raspi-config` y realiza las siguientes tareas (en Ubuntu debes instalarlo primero con `sudo apt install raspi-config`):
 
 ![](/post/2021-01-13-raspberry-pi-server.es_files/raspi_config.jpg){width=600px height=300px}
 
-Ejecuta `sudo raspi-config` y realiza las siguientes tareas:
-
 * Opcionalmente, cambia la contraseña del usuario "pi" (System Options --> Password)
 * Habilita el servidor SSH (Interface Options --> SSH)
-* Reduce la memoria de la GPU a 16 MB (Performance Options --> GPU memory)
+* Establece la memoria de la GPU, en Raspberry Pi OS, a 16 MB, y en Ubuntu, establece la partición de la memoria a [240 240MiB for ARM, 16MiB for VideoCore" (Performance Options --> GPU memory)
 * Establece tu configuración regional (Localization Options)
 * Expande el sistema de archivos para utilizar la capacidad total de tu tarjeta SD (Advanced Options --> Expand Filesystem)
 * Deshabilita los nombres de interfaz de red predecibles (Advanced Options --> Network Interface Names)
 
-Cuando hayas terminado, sal de la herramienta `raspi-config` y reinicia tu Pi con `sudo reboot now`.
+Cuando hayas terminado, sal de la herramienta `raspi-config` y reinicia tu Pi.
 
-A continuación, debes crear una clave SSH, incluso si es posible usar Ansible proporcionando una contraseña para tus hosts de manera interactiva, una forma más conveniente y segura de hacerlo es usar un par de claves SSH. Para crear uno, ejecuta los siguientes comandos en la terminal:
+Si no tienes una, debes crear una clave SSH, incluso si es posible usar Ansible proporcionando una contraseña para tus hosts de forma interactiva, una forma más conveniente y segura de hacerlo es usando un par de claves SSH. Para crear una, ejecuta los siguientes comandos en la terminal:
 
 ```{bash ssh, eval=FALSE}
 # Crea la carpeta .ssh
@@ -91,21 +119,9 @@ sudo apt install putty-tools
 puttygen id_rsa -o id_rsa.ppk
 ```
 
-Copia los archivos id_rsa e id_rsa.pub (id_rsa.ppk si corresponde) a la máquina que va a usar para ejecutar los playbooks, a mí me gusta usar `sftp` pero puedes hacerlo de la manera que prefieras (por ejemplo, con una  memoria USB). Después de haber copiado los archivos de clave, elimínalos de tu Pi con `rm ~/.ssh/id_rsa*`
+Copia los archivos id_rsa e id_rsa.pub (id_rsa.ppk si corresponde) a la máquina que va a usar para ejecutar los playbooks, a mí me gusta usar `sftp` pero puedes hacerlo de la manera que prefieras (por ejemplo, con una  memoria USB). Después de haber copiado los archivos de clave, elimínalos de tu Pi con `rm ~/.ssh/id_rsa*`. Si ya tienes una clave SSH, confío en que sabes cómo agregarla a tu sistema operativo en el momento de cargarlo con Raspberry Pi Imager.
 
-El siguiente paso es establecer una IP estática para que siempre puedas saber dónde ubicar tu Pi, edita el archivo `dhcpcd.conf` de acuerdo con tus propias necesidades con `sudo nano /etc/dhcpcd.conf`.
-
-Esta es una configuración de IP de muestra para la interfaz ethernet:
-
-```{bash static_ip, eval=FALSE}
-# Ejemplo de configuración de IP estática
-interface eth0
-static ip_address=192.168.0.10/24
-static routers=192.168.0.1
-static domain_name_servers=192.168.0.1 8.8.8.8
-```
-
-Ahora tu Pi está lista para funcionar, desconecta el teclado y el monitor, conecta la Raspberry Pi a tu red (recomiendo usar una conexión por cable) y reiníciala.
+Ahora tu Pi está lista, desconecta el teclado y el monitor, conecta la Raspberry Pi a tu red (recomiendo usar una conexión por cable).
 
 ## Instala Ansible
 
@@ -116,22 +132,22 @@ Para instalar Ansible, si tienes un sistema basado en Unix (es decir, Linux, mac
 ```{bash install_ansible, eval=FALSE}
 # Instala pip3
 sudo apt install python3-pip
-# Instala la versión 5.2.0 de Ansible con pip3 (Por reproducibilidad) 
-sudo pip3 install ansible==5.2.0
+# Instala la versión 6.3.0 de Ansible con pip3 (Por reproducibilidad) 
+sudo pip3 install ansible==6.3.0
 ```
 
 Si estás en Windows, lamentablemente, no hay forma de ejecutar Ansible de forma nativa, tu mejor opción es habilitar WSL (Subsistema de Windows para Linux), instalar una distribución de Linux del Microsoft Store (recomiendo Ubuntu) y ejecutar los pasos anteriores en tu máquina virtual Linux.
 
 Puedes encontrar una guía detallada para instalar WSL [aquí](https://docs.microsoft.com/en-us/windows/wsl/install-win10) y puede encontrar más información sobre la instalación de Ansible en el [sitio de documentación oficial](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html).
 
-Además, dado que vamos a estar instalando varios paquetes desde la fuente en una SBC de baja potencia, algunas de estas tareas van a tomar bastante tiempo y la conexión `SSH` podría cerrarse automáticamente por inactividad, para evitar esta situación, activa el envío de paquetes "keep-alive" al servidor editando el archivo `ssh_config` con `sudo nano /etc/ssh/ssh_config` y agregando estas dos líneas debajo de `Host *`:
+Además, dado que vamos a estar instalando varios paquetes desde la fuente en una SBC de baja potencia, algunas de estas tareas van a tomar bastante tiempo y la conexión `SSH` podría cerrarse automáticamente por inactividad, para evitar esta situación, activa el envío de paquetes "keep-alive" al servidor editando el archivo `ssh_config` con `sudo nano /etc/ssh/ssh_config` en la computadora que está ejecuntado Ansible y agregando estas dos líneas debajo de `Host *`:
 
 ```{bash keep_alive, eval=FALSE}
     ServerAliveInterval 300
     ServerAliveCountMax 2
 ```
 
->:warning: Es muy importante no saltarse el paso anterior, de lo contrario, la conexión SSH fallará silenciosamente mientras se ejecutan tareas largas en Ansible y vas a estar esperando inútilmente con tu Raspberry Pi sin hacer nada en realidad.
+>:warning: Es muy importante no saltarse el paso anterior, de lo contrario, la conexión SSH podría fallar silenciosamente mientras se ejecutan tareas largas en Ansible y vas a estar esperando inútilmente con tu Raspberry Pi sin hacer nada en realidad.
 
 ## Descarga y configura los Playbooks
 
@@ -144,26 +160,38 @@ sudo apt install git
 git clone https://github.com/andresrcs/raspberry_pi_server.git --depth 1
 ```
 
+Ansible no ejecuta playbooks en "carpetas de escritura global", por lo que debes configurar los permisos de la carpeta `raspberry_pi_server` en `755`.
+
+```{bash set_permissions, eval=FALSE}
+sudo chmod 755 raspberry_pi_server
+```
+
+Ten en cuenta que en WSL es necesario volver a montar la unidad `C` para poder cambiar los permisos de los archivos, por lo que debes hacer esto antes de cambiar los permisos:
+
+```{bash mount_c_drive, eval=FALSE}
+sudo umount /mnt/c 
+sudo mount -t drvfs C: /mnt/c -o metadata
+```
+
 Para configurar los playbooks, primero debes definir tu "inventario", esta es una lista de los hosts a los que te vas a conectar, edita el archivo `raspberry_pi_server/inventory.ini` y agrega la IP de tu(s) Raspberry Pi(s):
 
 ```{bash inventory, eval=FALSE}
 [raspberries] # Esto representa un grupo de Raspberries
-raspberry_01 ansible_host=192.168.0.10 # Este es el nombre de host y la IP de una Raspberry Pi individual
+raspberry_01 ansible_host=192.168.0.101 # Este es el nombre de host y la IP de una Raspberry Pi individual
 # Puedes agregar tantas Raspberries como necesites
 ```
 
-Luego, configura las variables comunes para el grupo `[raspberries]` editando el archivo `raspberry_pi_server/group_vars/raspberries.yml`, lo más importante para verificar aquí es la ruta a tu clave ssh.
+Luego, configura las variables comunes para el grupo `[raspberries]` editando el archivo `raspberry_pi_server/group_vars/raspberries.yml`, lo más importante para verificar aquí es la ruta a tu clave ssh y el usuario predeterminado para el sistema operativo que estes usando.
 
 ```{bash group_vars, eval=FALSE}
 ---
-ansible_user: pi # Este es el usuario predeterminado para Raspberry Pi OS
+ansible_user: pi # Este es el usuario predeterminado para el sistema operativo
 ansible_become_method: sudo
-ansible_python_interpreter: /usr/bin/python3 # También funciona con python2 pero no se recomienda.
-ansible_ssh_private_key_file: ~/.ssh/raspberrypi_key # La ubicación de la clave ssh en tu PC local.
+ansible_python_interpreter: /usr/bin/python3
+ansible_ssh_private_key_file: ~/.ssh/raspberrypi_key # La ubicación de la clave ssh en la computadora que está ejecuntando Ansible.
 ```
 
-Ahora, si deseas cambiar la configuración predeterminada de instalación, puedes hacerlo editando las variables en el archivo `raspberry_pi_server/vars/config_vars.yml`, aunque las opciones predeterminadas están bien para la mayoría de casos de uso, incluida una configuración de seguridad razonable para usar en aplicaciones reales.
-Lo único que sin duda desea cambiar aquí es la dirección de correo electrónico para las notificaciones de seguridad y la contraseña del usuario principal de PostgreSQL.
+Ahora, para configurar las opciones de instalación, puedes hacerlo editando las variables en el archivo `raspberry_pi_server/vars/config_vars.yml`, aunque las opciones predeterminadas están bien para la mayoría de los casos de uso, incluida una configuración de seguridad razonable. Las opciones a las que debes prestar atención aquí son, la contraseña para el usuario principal de PostgreSQL y elegir un método adecuado para instalar R, ten en cuenta que usar el [Proyecto R4Pi](https://r4pi.org/) (proporciona binarios de R precompilados) solo es posible con Raspberry Pi OS.
 
 ```{bash config_vars, eval=FALSE}
 ---
@@ -185,22 +213,23 @@ swap_file_path: '/var/swap.1'
 swap_file_size: '3GB'
 swappiness: '10'
 
-# ¿Deshabilitar la interfaz Wifi?
-disable_wifi: true
+# Instalar Nginx?
+install_nginx: true
+
+# Instalar PostgreSQL?
+install_postgresql: true
 
 # Configuraciones de seguridad #################################################
 
 # Puertos para abrir
 exposed_ports:
-  - { rule: 'allow', port: 22, proto: 'tcp' }   # ssh
-  - { rule: 'allow', port: 22, proto: 'udp' }
-  - { rule: 'allow', port: 80, proto: 'tcp' }   # http
-  - { rule: 'allow', port: 5432, proto: 'tcp' }   # PostgreSQL
-  - { rule: 'allow', port: 5432, proto: 'udp' }
-
-# Correo electrónico de notificación para fail2ban
-send_email: true
-fail2ban_email: your_email@something.com
+  - { rule: 'allow', port: 22, proto: 'tcp' }     # ssh
+  - { rule: 'allow', port: 22, proto: 'udp' }     # ssh
+  - { rule: 'allow', port: 80, proto: 'tcp' }     # http
+  - { rule: 'allow', port: 5432, proto: 'tcp' }   # Postgresql (omitir si Postgresql no está instalado)
+  - { rule: 'allow', port: 5432, proto: 'udp' }   # Postgresql (omitir si Postgresql no está instalado)
+  # - { rule: 'allow', port: 8787, proto: 'tcp' } # RStudio Server (descomentar si Nginx no está instalado)
+  # - { rule: 'allow', port: 3838, proto: 'tcp' } # Shiny Server (descomentar si Nginx no está instalado)
 
 # Contraseña para el usuario principal de PostgreSQL
 postgres_password: 'very_secure_password'
@@ -217,25 +246,26 @@ postgresql_rules:
 # Versiones principales de software ############################################
 
 # Versión de R para instalar
-r_version: '4.1.2'
+use_r4pi: true # Si se establece en "false", R se compilará desde la fuente, si se establece en true, se instalará la última versión de R, esto solo es compatible con Raspberry Pi OS.
+r_version: '' # (por ejemplo '4.2.1') Actualmente, solo se puede elegir la versión de R si se va a compilar.
 
 # Versión de shiny-server para instalar
-shiny_server_version: 'v1.5.17.973'
+shiny_server_version: 'v1.5.19.995'
 
 # Versión del servidor rstudio-server para instalar
-rstudio_version: 'v2021.09.1+372'
+rstudio_version: '2022.11.0-daily+166'
 ```
 
 ## Ejecuta los Playbooks
 
-En teoría, simplemente podrías acceder a la carpeta `raspberry_pi_server` y ejecutar el playbook `main.yml` para instalar todo a la vez, pero esto tomaría mucho, mucho, mucho tiempo en completarse, así que creo que no es práctico, el uso real para este playbook es verificar la configuración correcta de tu servidor si has realizado algunos cambios posteriormente, ya que las tareas son "idempotentes", lo que significa que se pueden aplicar varias veces sin realizar cambios más allá de la aplicación inicial.
+En condiciones ideales, como usando el último modelo de Raspberry Pi, con 8 GB de RAM, una tarjeta micro SD rápida y confiable, y conectado a una red estable, puedes simplemente acceder a la carpeta `raspberry_pi_server` y ejecutar el libro de jugadas `main.yml` para instalar todo de una sóla vez:
 
 ```{bash main_playbook, eval=FALSE}
 cd raspberry_pi_server
 ansible-playbook main.yml
 ```
 
-Para mitigar este problema y hacer que el proceso de instalación sea más flexible, he dividido el proceso en tres playbooks individuales:
+Pero en condiciones menos que ideales, es muy probable que encuentres algunos errores aleatorios causados por la sobrecarga de la Pi o conexiones de red inestables, por lo que, para mitigar este problema y hacer que el proceso de instalación sea más flexible, he dividido el proceso en tres playbooks individuales:
 
 ```{bash playbooks, eval=FALSE}
 cd raspberry_pi_server
@@ -244,9 +274,9 @@ ansible-playbook install_shiny_server.yml
 ansible-playbook install_rstudio_server.yml
 ```
 
-Cada uno de ellos todavía tarda mucho en completarse, pero es un tiempo de espera más razonable (esto ya no es cierto, la instalación de la última versión de RStudio server, es decir v2021.09.1+372, puede llevar hasta 3 días si usas una Raspberry Pi de 1GB de RAM, así que tenlo presente si decides instalarlo), también, si decides que solo necesitas Shiny server o RStudio server pero no el otro, o ya tienes instalados los servicios de soporte que necesitas, puedes ejecutar solo los playbooks que desees.
+Si decides que solo necesitas el servidor Shiny o el servidor RStudio pero no el otro, o si ya has instalado los servicios de soporte que deseas, puedes ejecutar solo los playbooks que necesitas.
 
-Si deseas actualizar algo en el futuro, como R, RStudio o Shiny server (no puedo garantizar que siempre funcionará sin necesidad de cambios), simplemente puedes cambiar la versión en el archivo de configuración y ejecutar la parte específica del playbook aprovechando las "etiquetas" definidas.
+Si deseas actualizar algo en el futuro, como R, RStudio o Shiny server (no puedo garantizar que siempre funcionará sin necesidad de cambios), puedes simplemente cambiar la versión en el archivo de configuración y ejecutar la parte específica del playbook aprovechando las "etiquetas" definidas.
 
 Por ejemplo, esto solo instalará la versión R definida en el archivo de configuración y nada más:
 
@@ -280,12 +310,12 @@ ansible-playbook install_basic_services.yml --skip-tags "postgresql"
 
 Después de ejecutar con éxito todos los playbooks, tendrás una instalación completamente funcional lista para ser utilizada, por lo que podras simplemente abrir una sesión de RStudio en `http://ip_de_tu_servidor/rstudio` y/o publicar tus aplicaciones Shiny en la carpeta `/srv/shiny-server` y acceder a ellas en `http://ip_de_tu_servidor/shiny/nombre_de_tu_app`.
 
->:warning: Si la configuración de Nginx no ha sido establecida por el playbook `install_basic_services.yml` porque lo has omitido, debes configurar el proxy inverso manualmente o acceder a los servicios con el puerto específico, por ejemplo `http://your_server_ip/3838/your_app_name`, esto también requiere que abras el puerto en el firewall.
+>:warning: Si la configuración de Nginx no ha sido establecida por el playbook `install_basic_services.yml` porque lo has omitido, debes configurar el proxy inverso manualmente o acceder a los servicios con su puerto específico, por ejemplo `http://your_server_ip/3838/your_app_name`, esto también requiere que abras el puerto correspondiente en el firewall.
 
 ## Notas Finales
 
 Incluso con la automatización, la instalación de forma nativa llevará mucho más tiempo que, por ejemplo, con el uso de contenedores, especialmente si usas una Raspberry Pi con poca memoria RAM (< 4GB) pero como está automatizado, simplemente puedes dejar que se ejecute y volver más tarde, y disfrutarás de la facilidad de gestión de una instalación nativa.
 
-Además, ten en cuenta que el proceso de instalación llevará tu Raspberry Pi a sus límites, por lo que puedes esperar algunos errores aleatorios, pero eso no significa que no funcionará, simplemente reinicia tu Pi, vuelve a ejecutar el playbook problemático y ve si funciona la segunda vez. He hecho todo lo posible para que esto sea funcional a largo plazo estableciendo versiones de software específicas, pero aún es posible que una actualización de librerias del sistema inutilice los playbooks. Si encuentras algún problema, ve al repositorio de GitHub para los playbooks y registra un "issue", o mejor aún, si sabes cómo solucionarlo, haz un "pull request".
+Además, ten en cuenta que el proceso de instalación llevará tu Raspberry Pi a sus límites, por lo que puedes esperar algunos errores aleatorios, pero eso no significa que no va ha funcionar, simplemente reinicia tu Pi, vuelve a ejecutar el playbook problemático y ve si funciona la segunda vez. He hecho todo lo posible para que esto sea funcional a largo plazo estableciendo versiones de software específicas, pero aún es posible que una actualización de librerias del sistema inutilice los playbooks. Si encuentras algún problema, ve al repositorio de GitHub para los playbooks y registra un "issue", o mejor aún, si sabes cómo solucionarlo, haz un "pull request".
 
-Como nota final, quiero señalar que este enfoque se puede extender aún más de acuerdo con tus propias necesidades, por ejemplo, puedes implementar la restauración automática de tu servidor, incluido el contenido desplegado. Tengo un playbook adicional para restaurar las aplicaciones, servicios y bases de datos que normalmente ejecuto en mi Raspberry Pi, por lo que, en caso de una falla catastrófica, puedo volver a un estado de funcionamiento en un período corto de tiempo y con poco esfuerzo, comparado con hacer una restauración manual del sistema.
+Como nota final, quiero señalar que este enfoque se puede extender aún más de acuerdo con tus propias necesidades, por ejemplo, puedes implementar la restauración automática de tu servidor, incluido el contenido desplegado. Por ejemplo, yo tengo un playbook adicional para restaurar las aplicaciones, servicios y bases de datos que normalmente ejecuto en mi Raspberry Pi, por lo que, en caso de una falla catastrófica, puedo volver a un estado operativo en un período corto de tiempo y con poco esfuerzo, comparado con hacer una restauración manual de mi sistema.

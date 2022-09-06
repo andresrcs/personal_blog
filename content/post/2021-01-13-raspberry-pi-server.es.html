@@ -1,6 +1,6 @@
 ---
-title: Instalación automática de Shiny y RStudio server en Raspberry Pi OS (32 y 64 bits) con Ansible
-description: "En esta publicación, les daré instrucciones paso a paso para instalar y configurar automáticamente un servidor de ciencia de datos basado en R completo en una Raspberry Pi, que incluye servicios de soporte como Nginx y PostgreSQL y utilizando un Playbook de Ansible que les proporcionaré. No se necesitan conocimientos previos de Ansible."
+title: Instalación automática de Shiny y RStudio server en Raspberry Pi con Ansible
+description: "En esta publicación, les daré instrucciones paso a paso para instalar y configurar automáticamente un servidor de ciencia de datos completo basado en R que incluye servicios de soporte como Nginx y PostgreSQL en una Raspberry Pi SBC (con Raspberry Pi OS o Ubuntu) utilizando un Playbook de Ansible que les proporcionaré. No se necesitan conocimientos previos de Ansible."
 author: andres-castro
 date: '2021-01-13'
 slug: raspberry_pi_server
@@ -101,173 +101,192 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 </ul>
 </div>
 
-<p>Tengo una <a href="/es/2018/11/21/shiny_rstudio_server/">publicación anterior</a> sobre la instalación nativa de Shiny y RStudio server en Raspbian Stretch, pero como fue escrito para esta versión antigua del sistema operativo, ahora está desactualizada y solo funciona como una pauta general en lugar de una guía de instalación funcional, así que decidí crear una versión actualizada para el nuevo sistema operativo Raspberry Pi OS Lite pero en el proceso, me di cuenta de que seguir un montón de comandos que requieren mucho tiempo para ejecutarse mata los animos a cualquiera, entonces, ¿qué puedo hacer al respecto? bueno… ¡Automatizar el proceso!.</p>
+<p>Tengo una <a href="/es/2022/09/05/shiny_rstudio_server/">publicación relacionada</a> sobre la instalación manual de Shiny y RStudio Server en una Raspberry Pi, pero incluso con los últimos avances en el soporte de software para la arquitectura ARM, este proceso aún consume mucho tiempo y requiere mucho copiar/pegar y observar la terminal esperando que se complete una tarea para poder comenzar con la siguiente, así que decidí idear una mejor solución, y es automatizar el proceso para que pueda dejarse desatendido y regresar más tarde cuando haya terminado.</p>
 <p>Para automatizar el proceso de instalación y configuración, decidí usar <a href="https://es.wikipedia.org/wiki/Ansible_(software)">Ansible</a>, aquellos en DevOps deben estar familiarizados con el poder de Ansible, pero incluso si nunca has escuchado de ello, no te preocupes, no necesitas conocer Ansible para aprovechar sus capacidades de automatización, yo mismo no soy un experto en Ansible y he sido capaz de realizar este proyecto con solo conocimientos básicos de la herramienta, así que si yo puedo hacerlo, tú también puedes. Te guiaré a través del proceso asumiendo que no tienes experiencia previa con esta herramienta y solo algunas habilidades básicas de terminal de Linux.</p>
-<p>Ansible es una herramienta de implementación de aplicaciones, administración de configuración y aprovisionamiento de software de código abierto que habilita la infraestructura como código. Se ejecuta en muchos sistemas de tipo Unix y puede configurar tanto sistemas tipo Unix como Microsoft Windows. En términos simples, te permite automatizar tareas en tu infraestructura (una, o muchas Raspberry Pi a la vez en nuestro caso) definiendo un conjunto de pasos para ejecutar en archivos <a href="https://es.wikipedia.org/wiki/YAML">YAML</a> llamados “playbooks”. Me sacrifique por el equipo y escribí algunos playbooks de Ansible para automatizar la mayor parte del proceso de instalación, pero dejé algo de espacio para que configures la instalación a tu gusto sin tener que modificar los playbooks (lo que requeriría que sepas cómo editarlos) a través de un archivo de configuración. Aunque, si deseas tener una comprensión básica de cómo funciona esta herramienta, hay una buena serie de Ansible para principiantes en el <a href="https://www.youtube.com/playlist?list=PL2_OBreMn7FqZkvMYt6ATmgC0KAGGJNAN">canal de YouTube de Jeff Geerling</a> y si eres de los que prefiere leer cosas en vez de verlas, aqui hay un <a href="https://spacelift.io/blog/ansible-tutorial">Tutorial de Ansible para Principiantes</a> bastante agradable pero lamentablemente, está sólo en inglés.</p>
+<p>Ansible es una herramienta de implementación de aplicaciones, administración de configuración y aprovisionamiento de software de código abierto que habilita la infraestructura como código. Se ejecuta en muchos sistemas de tipo Unix y puede configurar tanto sistemas tipo Unix como Microsoft Windows. En términos simples, te permite automatizar tareas en tu infraestructura (una, o muchas Raspberry Pi a la vez en nuestro caso) definiendo un conjunto de pasos para ejecutar en archivos <a href="https://es.wikipedia.org/wiki/YAML">YAML</a> llamados “playbooks”. Me sacrifique por el equipo y escribí algunos playbooks de Ansible para automatizar la mayor parte del proceso de instalación, pero dejando algo de espacio para que configures la instalación a tu gusto a través de un archivo de configuración, por lo que no necesitas modificar los playbooks (lo que requerirá que sepas cómo funcionan). Aunque, si deseas tener una comprensión básica de cómo funciona esta herramienta, hay una buena serie de Ansible para principiantes en <a href="https://www.youtube.com/playlist?list=PL2_OBreMn7FqZkvMYt6ATmgC0KAGGJNAN">el canal de YouTube de Jeff Geerling</a> y si eres el tipo de personas que prefiere leer en lugar de ver cosas, aquí hay un <a href="https://spacelift.io/blog/ansible-tutorial">Tutorial de Ansible para principiantes</a> bastante agradable pero lamentablemente, está sólo en inglés.</p>
 <blockquote>
-<p>:pencil2: Ten en cuenta que esto solo se ha probado en una Raspberry Pi 3B+ con Raspberry Pi OS y con las versiones de software especificadas en el archivo de configuración, lo más probable es que también funcione en una Raspberry Pi 4 sin ningún cambio y es posible que funcione en otros sistemas operativos basados en Debian (como Ubuntu) y con otras versiones del software instalado, pero podría requerir algunas modificaciones a los playbooks.</p>
+<p>:pencil2: Ten en cuenta que esto solo se ha probado con las versiones de software especificadas en el archivo <code>config_vars.yml</code>, es muy probable que funcione aún con las versiones de software más nuevas, pero en algunos casos, podría requerir algunas modificaciones a los playbooks, las que haré tan pronto como note el problema.</p>
 </blockquote>
 <div id="prepara-la-raspberry-pi" class="section level2">
 <h2>Prepara la Raspberry Pi</h2>
-<p>Incluso si la mayor parte del proceso se puede automatizar con Ansible, todavía necesitamos al menos una Raspberry Pi funcional que configurar, por lo que debemos comenzar cargando una imagen de Raspberry Pi OS Lite (32-bits) en nuestra tarjeta SD (Recomiendo al menos 32 GB clase 10 HC1).</p>
-<p>Descarga “Raspberry Pi Imager” del <a href="https://www.raspberrypi.com/software/">sitio oficial</a>, e instálalo en tu sistema, ejecuta “Raspberry Pi Imager”, selecciona Raspberry Pi OS Lite (ya sea de 32 o 64 bits) como el “Sistema Operativo”, elige tu “Tarjeta SD” y presiona “Escribir”.</p>
-<p><img src="/post/2021-01-13-raspberry-pi-server.es_files/raspberri_pi_imager.jpg" width="400" height="300" /></p>
-<p>Una vez que finalice el proceso, tendras una instalación limpia de Raspberry Pi OS Lite en tu tarjeta micro SD. Inserta la tarjeta en tu Raspberry Pi, conecta un teclado y una pantalla, y enciéndela.</p>
-<p>Inicia sesión en el sistema (el usuario y la contraseña predeterminados son <code>pi</code> y<code>raspberry</code> respectivamente), ejecuta una actualización inicial del sistema con estos comandosÑ</p>
+<p>Incluso si la mayor parte del proceso se puede automatizar con Ansible, aún necesitamos al menos una Raspberry Pi en funcionamiento para configurar, por lo tanto, debemos comenzar cargando un sistema operativo (SO) en una tarjeta SD (recomiendo al menos 32 GB clase 10 HC1). Ten en cuenta que RStudio Server es compatible solo con los sistemas operativos arm64, por lo que si deseas poder instalarlo, deberás elegir un sistema operativo de 64 bits, los playbooks funcionan tanto con Raspberry Pi OS como con Ubuntu.</p>
+<p>Descarga “Raspberry Pi Imager” del <a href="https://www.raspberrypi.com/software/">sitio oficial</a> e instálalo en tu sistema, ejecuta “Raspberry Pi Imager”, selecciona un sistema operativo adecuado, elije tu “Tarjeta SD” y presiona “Escribir”.</p>
+<p><img src="/post/2021-01-13-raspberry-pi-server.en_files/raspberri_pi_imager.jpg" width="400" height="300" /></p>
+<p>Una vez finalizado el proceso, tendras una instalación limpia de un sistema operativo en tu tarjeta micro SD, inserta la tarjeta en tu Raspberry Pi, conecta un teclado y una pantalla y enciéndela.</p>
+<p>Inicia sesión en el sistema (el usuario y la contraseña predeterminados son <code>pi</code> y <code>raspberry</code> para Raspberry Pi OS, y en Ubuntu es <code>ubuntu</code> tanto para el usuario como para la contraseña) y ejecuta una actualización inicial del sistema con estos comandos:</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt update</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt dist-upgrade</span></code></pre></div>
-<p>Luego podemos empezar estableciendo algunas configuraciones básicas con <code>raspi-config</code>.</p>
+<p>A continuación, debes configurar una IP estática para que puedas encontrar tu Pi fácilmente en tu red más adelante.</p>
+<p>Para configurar una IP estática en Raspberry Pi OS, edita este archivo, <code>sudo nano /etc/dhcpcd.conf</code>, de acuerdo con tus propias necesidades. Esta es una configuración de IP de muestra para una conexión por cable:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Configuración IP de muestra:</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">interface</span> eth0</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="ex">static</span> ip_address=192.168.0.101/24</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="ex">static</span> routers=192.168.0.1</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="ex">static</span> domain_name_servers=192.168.0.1 8.8.8.8</span></code></pre></div>
+<p>Y para configurar la IP en Ubuntu, debes crear este archivo, <code>sudo nano /etc/netplan/01-netcfg.yaml</code>, agregar el siguiente contenido (edita según sea necesario) y aplicar la configuración con <code>sudo netplan apply</code>.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">network:</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">version:</span> 2</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="ex">renderer:</span> networkd</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="ex">ethernets:</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>        <span class="ex">eth0:</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>            <span class="ex">dhcp4:</span> false</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>            <span class="ex">addresses:</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>                <span class="ex">-</span> 192.168.0.101/24</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>            <span class="ex">nameservers:</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>                <span class="ex">addresses:</span> [8.8.8.8, 8.8.4.4, 192.168.0.1]</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>            <span class="ex">routes:</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>                <span class="ex">-</span> to: default</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>                  <span class="ex">via:</span> 192.168.0.1</span></code></pre></div>
+<p>Luego necesitamos establecer algunas configuraciones básicas con <code>raspi-config</code>. Ejecuta <code>sudo raspi-config</code> y realiza las siguientes tareas (en Ubuntu debes instalarlo primero con <code>sudo apt install raspi-config</code>):</p>
 <p><img src="/post/2021-01-13-raspberry-pi-server.es_files/raspi_config.jpg" width="600" height="300" /></p>
-<p>Ejecuta <code>sudo raspi-config</code> y realiza las siguientes tareas:</p>
 <ul>
 <li>Opcionalmente, cambia la contraseña del usuario “pi” (System Options –&gt; Password)</li>
 <li>Habilita el servidor SSH (Interface Options –&gt; SSH)</li>
-<li>Reduce la memoria de la GPU a 16 MB (Performance Options –&gt; GPU memory)</li>
+<li>Establece la memoria de la GPU, en Raspberry Pi OS, a 16 MB, y en Ubuntu, establece la partición de la memoria a [240 240MiB for ARM, 16MiB for VideoCore” (Performance Options –&gt; GPU memory)</li>
 <li>Establece tu configuración regional (Localization Options)</li>
 <li>Expande el sistema de archivos para utilizar la capacidad total de tu tarjeta SD (Advanced Options –&gt; Expand Filesystem)</li>
 <li>Deshabilita los nombres de interfaz de red predecibles (Advanced Options –&gt; Network Interface Names)</li>
 </ul>
-<p>Cuando hayas terminado, sal de la herramienta <code>raspi-config</code> y reinicia tu Pi con <code>sudo reboot now</code>.</p>
-<p>A continuación, debes crear una clave SSH, incluso si es posible usar Ansible proporcionando una contraseña para tus hosts de manera interactiva, una forma más conveniente y segura de hacerlo es usar un par de claves SSH. Para crear uno, ejecuta los siguientes comandos en la terminal:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Crea la carpeta .ssh</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ~</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> .ssh</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> .ssh</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Crea el archivo authorized_keys</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="fu">touch</span> authorized_keys</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Establece permisos de acceso adecuados</span></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="fu">chmod</span> 700 ~/.ssh</span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="fu">chmod</span> 600 ~/.ssh/authorized_keys</span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Crea el par de claves</span></span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="fu">ssh-keygen</span></span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Agregua la nueva clave al archivo authorized_keys</span></span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> id_rsa.pub <span class="op">&gt;&gt;</span> authorized_keys</span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Si usas Putty como tu cliente SSH (Windows), genera una clave ppk; de lo contrario, ignora estos pasos</span></span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install putty-tools</span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="ex">puttygen</span> id_rsa <span class="at">-o</span> id_rsa.ppk</span></code></pre></div>
-<p>Copia los archivos id_rsa e id_rsa.pub (id_rsa.ppk si corresponde) a la máquina que va a usar para ejecutar los playbooks, a mí me gusta usar <code>sftp</code> pero puedes hacerlo de la manera que prefieras (por ejemplo, con una memoria USB). Después de haber copiado los archivos de clave, elimínalos de tu Pi con <code>rm ~/.ssh/id_rsa*</code></p>
-<p>El siguiente paso es establecer una IP estática para que siempre puedas saber dónde ubicar tu Pi, edita el archivo <code>dhcpcd.conf</code> de acuerdo con tus propias necesidades con <code>sudo nano /etc/dhcpcd.conf</code>.</p>
-<p>Esta es una configuración de IP de muestra para la interfaz ethernet:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Ejemplo de configuración de IP estática</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">interface</span> eth0</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="ex">static</span> ip_address=192.168.0.10/24</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="ex">static</span> routers=192.168.0.1</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="ex">static</span> domain_name_servers=192.168.0.1 8.8.8.8</span></code></pre></div>
-<p>Ahora tu Pi está lista para funcionar, desconecta el teclado y el monitor, conecta la Raspberry Pi a tu red (recomiendo usar una conexión por cable) y reiníciala.</p>
+<p>Cuando hayas terminado, sal de la herramienta <code>raspi-config</code> y reinicia tu Pi.</p>
+<p>Si no tienes una, debes crear una clave SSH, incluso si es posible usar Ansible proporcionando una contraseña para tus hosts de forma interactiva, una forma más conveniente y segura de hacerlo es usando un par de claves SSH. Para crear una, ejecuta los siguientes comandos en la terminal:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Crea la carpeta .ssh</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ~</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> .ssh</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> .ssh</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Crea el archivo authorized_keys</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="fu">touch</span> authorized_keys</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Establece permisos de acceso adecuados</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="fu">chmod</span> 700 ~/.ssh</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="fu">chmod</span> 600 ~/.ssh/authorized_keys</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Crea el par de claves</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="fu">ssh-keygen</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Agregua la nueva clave al archivo authorized_keys</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> id_rsa.pub <span class="op">&gt;&gt;</span> authorized_keys</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Si usas Putty como tu cliente SSH (Windows), genera una clave ppk; de lo contrario, ignora estos pasos</span></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install putty-tools</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a><span class="ex">puttygen</span> id_rsa <span class="at">-o</span> id_rsa.ppk</span></code></pre></div>
+<p>Copia los archivos id_rsa e id_rsa.pub (id_rsa.ppk si corresponde) a la máquina que va a usar para ejecutar los playbooks, a mí me gusta usar <code>sftp</code> pero puedes hacerlo de la manera que prefieras (por ejemplo, con una memoria USB). Después de haber copiado los archivos de clave, elimínalos de tu Pi con <code>rm ~/.ssh/id_rsa*</code>. Si ya tienes una clave SSH, confío en que sabes cómo agregarla a tu sistema operativo en el momento de cargarlo con Raspberry Pi Imager.</p>
+<p>Ahora tu Pi está lista, desconecta el teclado y el monitor, conecta la Raspberry Pi a tu red (recomiendo usar una conexión por cable).</p>
 </div>
 <div id="instala-ansible" class="section level2">
 <h2>Instala Ansible</h2>
 <p>En teoría, podrías instalar Ansible en la propia Raspberry Pi y ejecutar los playbooks directamente en ella con <code>connection: local</code> pero no sería práctico, es mejor ejecutar los playbooks desde una computadora que no sea tu Raspberry Pi.</p>
 <p>Para instalar Ansible, si tienes un sistema basado en Unix (es decir, Linux, macOS) a tu disposición, tienes suerte, instalar Ansible es muy simple.</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Instala pip3</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install python3-pip</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Instala la versión 5.2.0 de Ansible con pip3 (Por reproducibilidad) </span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> pip3 install ansible==5.2.0</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Instala pip3</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install python3-pip</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Instala la versión 6.3.0 de Ansible con pip3 (Por reproducibilidad) </span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> pip3 install ansible==6.3.0</span></code></pre></div>
 <p>Si estás en Windows, lamentablemente, no hay forma de ejecutar Ansible de forma nativa, tu mejor opción es habilitar WSL (Subsistema de Windows para Linux), instalar una distribución de Linux del Microsoft Store (recomiendo Ubuntu) y ejecutar los pasos anteriores en tu máquina virtual Linux.</p>
 <p>Puedes encontrar una guía detallada para instalar WSL <a href="https://docs.microsoft.com/en-us/windows/wsl/install-win10">aquí</a> y puede encontrar más información sobre la instalación de Ansible en el <a href="https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html">sitio de documentación oficial</a>.</p>
-<p>Además, dado que vamos a estar instalando varios paquetes desde la fuente en una SBC de baja potencia, algunas de estas tareas van a tomar bastante tiempo y la conexión <code>SSH</code> podría cerrarse automáticamente por inactividad, para evitar esta situación, activa el envío de paquetes “keep-alive” al servidor editando el archivo <code>ssh_config</code> con <code>sudo nano /etc/ssh/ssh_config</code> y agregando estas dos líneas debajo de <code>Host *</code>:</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>    <span class="ex">ServerAliveInterval</span> 300</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">ServerAliveCountMax</span> 2</span></code></pre></div>
+<p>Además, dado que vamos a estar instalando varios paquetes desde la fuente en una SBC de baja potencia, algunas de estas tareas van a tomar bastante tiempo y la conexión <code>SSH</code> podría cerrarse automáticamente por inactividad, para evitar esta situación, activa el envío de paquetes “keep-alive” al servidor editando el archivo <code>ssh_config</code> con <code>sudo nano /etc/ssh/ssh_config</code> en la computadora que está ejecuntado Ansible y agregando estas dos líneas debajo de <code>Host *</code>:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>    <span class="ex">ServerAliveInterval</span> 300</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">ServerAliveCountMax</span> 2</span></code></pre></div>
 <blockquote>
-<p>:warning: Es muy importante no saltarse el paso anterior, de lo contrario, la conexión SSH fallará silenciosamente mientras se ejecutan tareas largas en Ansible y vas a estar esperando inútilmente con tu Raspberry Pi sin hacer nada en realidad.</p>
+<p>:warning: Es muy importante no saltarse el paso anterior, de lo contrario, la conexión SSH podría fallar silenciosamente mientras se ejecutan tareas largas en Ansible y vas a estar esperando inútilmente con tu Raspberry Pi sin hacer nada en realidad.</p>
 </blockquote>
 </div>
 <div id="descarga-y-configura-los-playbooks" class="section level2">
 <h2>Descarga y configura los Playbooks</h2>
 <p>Los playbooks están en un repositorio público en GitHub, puedes clonar el repositorio con estos comandos:</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Instala git si aún no lo tienes</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install git</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Clonar el último commit del repositorio</span></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone https://github.com/andresrcs/raspberry_pi_server.git <span class="at">--depth</span> 1</span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Instala git si aún no lo tienes</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install git</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Clonar el último commit del repositorio</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone https://github.com/andresrcs/raspberry_pi_server.git <span class="at">--depth</span> 1</span></code></pre></div>
+<p>Ansible no ejecuta playbooks en “carpetas de escritura global”, por lo que debes configurar los permisos de la carpeta <code>raspberry_pi_server</code> en <code>755</code>.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chmod 755 raspberry_pi_server</span></code></pre></div>
+<p>Ten en cuenta que en WSL es necesario volver a montar la unidad <code>C</code> para poder cambiar los permisos de los archivos, por lo que debes hacer esto antes de cambiar los permisos:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> umount /mnt/c </span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> mount <span class="at">-t</span> drvfs C: /mnt/c <span class="at">-o</span> metadata</span></code></pre></div>
 <p>Para configurar los playbooks, primero debes definir tu “inventario”, esta es una lista de los hosts a los que te vas a conectar, edita el archivo <code>raspberry_pi_server/inventory.ini</code> y agrega la IP de tu(s) Raspberry Pi(s):</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">[raspberries]</span> <span class="co"># Esto representa un grupo de Raspberries</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ex">raspberry_01</span> ansible_host=192.168.0.10 <span class="co"># Este es el nombre de host y la IP de una Raspberry Pi individual</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Puedes agregar tantas Raspberries como necesites</span></span></code></pre></div>
-<p>Luego, configura las variables comunes para el grupo <code>[raspberries]</code> editando el archivo <code>raspberry_pi_server/group_vars/raspberries.yml</code>, lo más importante para verificar aquí es la ruta a tu clave ssh.</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">---</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible_user:</span> pi <span class="co"># Este es el usuario predeterminado para Raspberry Pi OS</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible_become_method:</span> sudo</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible_python_interpreter:</span> /usr/bin/python3 <span class="co"># También funciona con python2 pero no se recomienda.</span></span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible_ssh_private_key_file:</span> ~/.ssh/raspberrypi_key <span class="co"># La ubicación de la clave ssh en tu PC local.</span></span></code></pre></div>
-<p>Ahora, si deseas cambiar la configuración predeterminada de instalación, puedes hacerlo editando las variables en el archivo <code>raspberry_pi_server/vars/config_vars.yml</code>, aunque las opciones predeterminadas están bien para la mayoría de casos de uso, incluida una configuración de seguridad razonable para usar en aplicaciones reales.
-Lo único que sin duda desea cambiar aquí es la dirección de correo electrónico para las notificaciones de seguridad y la contraseña del usuario principal de PostgreSQL.</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">---</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Configuraciones del sistema ##################################################</span></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Parametros Swap</span></span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="ex">swap_file_path:</span> <span class="st">&#39;/var/swap.1&#39;</span></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Utiliza cualquiera de los siguientes sufijos</span></span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="co"># c=1</span></span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="co"># w=2</span></span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="co"># b=512</span></span>
-<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="co"># kB=1000</span></span>
-<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="co"># K=1024</span></span>
-<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="co"># MB=1000*1000</span></span>
-<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="co"># M=1024*1024</span></span>
-<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a><span class="co"># xM=M</span></span>
-<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a><span class="co"># GB=1000*1000*1000</span></span>
-<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a><span class="co"># G=1024*1024*1024</span></span>
-<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a><span class="ex">swap_file_size:</span> <span class="st">&#39;3GB&#39;</span></span>
-<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a><span class="ex">swappiness:</span> <span class="st">&#39;10&#39;</span></span>
-<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a><span class="co"># ¿Deshabilitar la interfaz Wifi?</span></span>
-<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a><span class="ex">disable_wifi:</span> true</span>
-<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a><span class="co"># Configuraciones de seguridad #################################################</span></span>
-<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a><span class="co"># Puertos para abrir</span></span>
-<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a><span class="ex">exposed_ports:</span></span>
-<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> { rule: <span class="st">&#39;allow&#39;</span>, port: 22, proto: <span class="st">&#39;tcp&#39;</span> }   <span class="co"># ssh</span></span>
-<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> { rule: <span class="st">&#39;allow&#39;</span>, port: 22, proto: <span class="st">&#39;udp&#39;</span> }</span>
-<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> { rule: <span class="st">&#39;allow&#39;</span>, port: 80, proto: <span class="st">&#39;tcp&#39;</span> }   <span class="co"># http</span></span>
-<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> { rule: <span class="st">&#39;allow&#39;</span>, port: 5432, proto: <span class="st">&#39;tcp&#39;</span> }   <span class="co"># PostgreSQL</span></span>
-<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> { rule: <span class="st">&#39;allow&#39;</span>, port: 5432, proto: <span class="st">&#39;udp&#39;</span> }</span>
-<span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-33"><a href="#cb9-33" aria-hidden="true" tabindex="-1"></a><span class="co"># Correo electrónico de notificación para fail2ban</span></span>
-<span id="cb9-34"><a href="#cb9-34" aria-hidden="true" tabindex="-1"></a><span class="ex">send_email:</span> true</span>
-<span id="cb9-35"><a href="#cb9-35" aria-hidden="true" tabindex="-1"></a><span class="ex">fail2ban_email:</span> your_email@something.com</span>
-<span id="cb9-36"><a href="#cb9-36" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-37"><a href="#cb9-37" aria-hidden="true" tabindex="-1"></a><span class="co"># Contraseña para el usuario principal de PostgreSQL</span></span>
-<span id="cb9-38"><a href="#cb9-38" aria-hidden="true" tabindex="-1"></a><span class="ex">postgres_password:</span> <span class="st">&#39;very_secure_password&#39;</span></span>
-<span id="cb9-39"><a href="#cb9-39" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-40"><a href="#cb9-40" aria-hidden="true" tabindex="-1"></a><span class="co"># Reglas de acceso para PostgreSQL</span></span>
-<span id="cb9-41"><a href="#cb9-41" aria-hidden="true" tabindex="-1"></a><span class="ex">postgresql_rules:</span></span>
-<span id="cb9-42"><a href="#cb9-42" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> { contype: local, users: all, address: samehost, method: trust }</span>
-<span id="cb9-43"><a href="#cb9-43" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> { contype: local, users: postgres, address: samehost, method: trust }</span>
-<span id="cb9-44"><a href="#cb9-44" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> { contype: host, users: all, address: <span class="st">&quot;{{ ansible_default_ipv4.network }}/24&quot;</span>, method: trust }</span>
-<span id="cb9-45"><a href="#cb9-45" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> { contype: host, users: all, address: 0.0.0.0/0, method: password }</span>
-<span id="cb9-46"><a href="#cb9-46" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> { contype: host, users: all, address: 127.0.0.1/32, method: md5 }</span>
-<span id="cb9-47"><a href="#cb9-47" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> { contype: host, users: all, address: <span class="st">&#39;::1/128&#39;</span>, method: trust }</span>
-<span id="cb9-48"><a href="#cb9-48" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-49"><a href="#cb9-49" aria-hidden="true" tabindex="-1"></a><span class="co"># Versiones principales de software ############################################</span></span>
-<span id="cb9-50"><a href="#cb9-50" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-51"><a href="#cb9-51" aria-hidden="true" tabindex="-1"></a><span class="co"># Versión de R para instalar</span></span>
-<span id="cb9-52"><a href="#cb9-52" aria-hidden="true" tabindex="-1"></a><span class="ex">r_version:</span> <span class="st">&#39;4.1.2&#39;</span></span>
-<span id="cb9-53"><a href="#cb9-53" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-54"><a href="#cb9-54" aria-hidden="true" tabindex="-1"></a><span class="co"># Versión de shiny-server para instalar</span></span>
-<span id="cb9-55"><a href="#cb9-55" aria-hidden="true" tabindex="-1"></a><span class="ex">shiny_server_version:</span> <span class="st">&#39;v1.5.17.973&#39;</span></span>
-<span id="cb9-56"><a href="#cb9-56" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-57"><a href="#cb9-57" aria-hidden="true" tabindex="-1"></a><span class="co"># Versión del servidor rstudio-server para instalar</span></span>
-<span id="cb9-58"><a href="#cb9-58" aria-hidden="true" tabindex="-1"></a><span class="ex">rstudio_version:</span> <span class="st">&#39;v2021.09.1+372&#39;</span></span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">[raspberries]</span> <span class="co"># Esto representa un grupo de Raspberries</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="ex">raspberry_01</span> ansible_host=192.168.0.101 <span class="co"># Este es el nombre de host y la IP de una Raspberry Pi individual</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Puedes agregar tantas Raspberries como necesites</span></span></code></pre></div>
+<p>Luego, configura las variables comunes para el grupo <code>[raspberries]</code> editando el archivo <code>raspberry_pi_server/group_vars/raspberries.yml</code>, lo más importante para verificar aquí es la ruta a tu clave ssh y el usuario predeterminado para el sistema operativo que estes usando.</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">---</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible_user:</span> pi <span class="co"># Este es el usuario predeterminado para el sistema operativo</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible_become_method:</span> sudo</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible_python_interpreter:</span> /usr/bin/python3</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible_ssh_private_key_file:</span> ~/.ssh/raspberrypi_key <span class="co"># La ubicación de la clave ssh en la computadora que está ejecuntando Ansible.</span></span></code></pre></div>
+<p>Ahora, para configurar las opciones de instalación, puedes hacerlo editando las variables en el archivo <code>raspberry_pi_server/vars/config_vars.yml</code>, aunque las opciones predeterminadas están bien para la mayoría de los casos de uso, incluida una configuración de seguridad razonable. Las opciones a las que debes prestar atención aquí son, la contraseña para el usuario principal de PostgreSQL y elegir un método adecuado para instalar R, ten en cuenta que usar el <a href="https://r4pi.org/">Proyecto R4Pi</a> (proporciona binarios de R precompilados) solo es posible con Raspberry Pi OS.</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">---</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Configuraciones del sistema ##################################################</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Parametros Swap</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="ex">swap_file_path:</span> <span class="st">&#39;/var/swap.1&#39;</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Utiliza cualquiera de los siguientes sufijos</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="co"># c=1</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="co"># w=2</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="co"># b=512</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a><span class="co"># kB=1000</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a><span class="co"># K=1024</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a><span class="co"># MB=1000*1000</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a><span class="co"># M=1024*1024</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a><span class="co"># xM=M</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a><span class="co"># GB=1000*1000*1000</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a><span class="co"># G=1024*1024*1024</span></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a><span class="ex">swap_file_size:</span> <span class="st">&#39;3GB&#39;</span></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a><span class="ex">swappiness:</span> <span class="st">&#39;10&#39;</span></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a><span class="co"># Instalar Nginx?</span></span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a><span class="ex">install_nginx:</span> true</span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a><span class="co"># Instalar PostgreSQL?</span></span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a><span class="ex">install_postgresql:</span> true</span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a><span class="co"># Configuraciones de seguridad #################################################</span></span>
+<span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-28"><a href="#cb12-28" aria-hidden="true" tabindex="-1"></a><span class="co"># Puertos para abrir</span></span>
+<span id="cb12-29"><a href="#cb12-29" aria-hidden="true" tabindex="-1"></a><span class="ex">exposed_ports:</span></span>
+<span id="cb12-30"><a href="#cb12-30" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> { rule: <span class="st">&#39;allow&#39;</span>, port: 22, proto: <span class="st">&#39;tcp&#39;</span> }     <span class="co"># ssh</span></span>
+<span id="cb12-31"><a href="#cb12-31" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> { rule: <span class="st">&#39;allow&#39;</span>, port: 22, proto: <span class="st">&#39;udp&#39;</span> }     <span class="co"># ssh</span></span>
+<span id="cb12-32"><a href="#cb12-32" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> { rule: <span class="st">&#39;allow&#39;</span>, port: 80, proto: <span class="st">&#39;tcp&#39;</span> }     <span class="co"># http</span></span>
+<span id="cb12-33"><a href="#cb12-33" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> { rule: <span class="st">&#39;allow&#39;</span>, port: 5432, proto: <span class="st">&#39;tcp&#39;</span> }   <span class="co"># Postgresql (omitir si Postgresql no está instalado)</span></span>
+<span id="cb12-34"><a href="#cb12-34" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> { rule: <span class="st">&#39;allow&#39;</span>, port: 5432, proto: <span class="st">&#39;udp&#39;</span> }   <span class="co"># Postgresql (omitir si Postgresql no está instalado)</span></span>
+<span id="cb12-35"><a href="#cb12-35" aria-hidden="true" tabindex="-1"></a>  <span class="co"># - { rule: &#39;allow&#39;, port: 8787, proto: &#39;tcp&#39; } # RStudio Server (descomentar si Nginx no está instalado)</span></span>
+<span id="cb12-36"><a href="#cb12-36" aria-hidden="true" tabindex="-1"></a>  <span class="co"># - { rule: &#39;allow&#39;, port: 3838, proto: &#39;tcp&#39; } # Shiny Server (descomentar si Nginx no está instalado)</span></span>
+<span id="cb12-37"><a href="#cb12-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-38"><a href="#cb12-38" aria-hidden="true" tabindex="-1"></a><span class="co"># Contraseña para el usuario principal de PostgreSQL</span></span>
+<span id="cb12-39"><a href="#cb12-39" aria-hidden="true" tabindex="-1"></a><span class="ex">postgres_password:</span> <span class="st">&#39;very_secure_password&#39;</span></span>
+<span id="cb12-40"><a href="#cb12-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-41"><a href="#cb12-41" aria-hidden="true" tabindex="-1"></a><span class="co"># Reglas de acceso para PostgreSQL</span></span>
+<span id="cb12-42"><a href="#cb12-42" aria-hidden="true" tabindex="-1"></a><span class="ex">postgresql_rules:</span></span>
+<span id="cb12-43"><a href="#cb12-43" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> { contype: local, users: all, address: samehost, method: trust }</span>
+<span id="cb12-44"><a href="#cb12-44" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> { contype: local, users: postgres, address: samehost, method: trust }</span>
+<span id="cb12-45"><a href="#cb12-45" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> { contype: host, users: all, address: <span class="st">&quot;{{ ansible_default_ipv4.network }}/24&quot;</span>, method: trust }</span>
+<span id="cb12-46"><a href="#cb12-46" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> { contype: host, users: all, address: 0.0.0.0/0, method: password }</span>
+<span id="cb12-47"><a href="#cb12-47" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> { contype: host, users: all, address: 127.0.0.1/32, method: md5 }</span>
+<span id="cb12-48"><a href="#cb12-48" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> { contype: host, users: all, address: <span class="st">&#39;::1/128&#39;</span>, method: trust }</span>
+<span id="cb12-49"><a href="#cb12-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-50"><a href="#cb12-50" aria-hidden="true" tabindex="-1"></a><span class="co"># Versiones principales de software ############################################</span></span>
+<span id="cb12-51"><a href="#cb12-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-52"><a href="#cb12-52" aria-hidden="true" tabindex="-1"></a><span class="co"># Versión de R para instalar</span></span>
+<span id="cb12-53"><a href="#cb12-53" aria-hidden="true" tabindex="-1"></a><span class="ex">use_r4pi:</span> true <span class="co"># Si se establece en &quot;false&quot;, R se compilará desde la fuente, si se establece en true, se instalará la última versión de R, esto solo es compatible con Raspberry Pi OS.</span></span>
+<span id="cb12-54"><a href="#cb12-54" aria-hidden="true" tabindex="-1"></a><span class="ex">r_version:</span> <span class="st">&#39;&#39;</span> <span class="co"># (por ejemplo &#39;4.2.1&#39;) Actualmente, solo se puede elegir la versión de R si se va a compilar.</span></span>
+<span id="cb12-55"><a href="#cb12-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-56"><a href="#cb12-56" aria-hidden="true" tabindex="-1"></a><span class="co"># Versión de shiny-server para instalar</span></span>
+<span id="cb12-57"><a href="#cb12-57" aria-hidden="true" tabindex="-1"></a><span class="ex">shiny_server_version:</span> <span class="st">&#39;v1.5.19.995&#39;</span></span>
+<span id="cb12-58"><a href="#cb12-58" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-59"><a href="#cb12-59" aria-hidden="true" tabindex="-1"></a><span class="co"># Versión del servidor rstudio-server para instalar</span></span>
+<span id="cb12-60"><a href="#cb12-60" aria-hidden="true" tabindex="-1"></a><span class="ex">rstudio_version:</span> <span class="st">&#39;2022.11.0-daily+166&#39;</span></span></code></pre></div>
 </div>
 <div id="ejecuta-los-playbooks" class="section level2">
 <h2>Ejecuta los Playbooks</h2>
-<p>En teoría, simplemente podrías acceder a la carpeta <code>raspberry_pi_server</code> y ejecutar el playbook <code>main.yml</code> para instalar todo a la vez, pero esto tomaría mucho, mucho, mucho tiempo en completarse, así que creo que no es práctico, el uso real para este playbook es verificar la configuración correcta de tu servidor si has realizado algunos cambios posteriormente, ya que las tareas son “idempotentes”, lo que significa que se pueden aplicar varias veces sin realizar cambios más allá de la aplicación inicial.</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> raspberry_pi_server</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible-playbook</span> main.yml</span></code></pre></div>
-<p>Para mitigar este problema y hacer que el proceso de instalación sea más flexible, he dividido el proceso en tres playbooks individuales:</p>
-<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> raspberry_pi_server</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible-playbook</span> install_basic_services.yml</span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible-playbook</span> install_shiny_server.yml</span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible-playbook</span> install_rstudio_server.yml</span></code></pre></div>
-<p>Cada uno de ellos todavía tarda mucho en completarse, pero es un tiempo de espera más razonable (esto ya no es cierto, la instalación de la última versión de RStudio server, es decir v2021.09.1+372, puede llevar hasta 3 días si usas una Raspberry Pi de 1GB de RAM, así que tenlo presente si decides instalarlo), también, si decides que solo necesitas Shiny server o RStudio server pero no el otro, o ya tienes instalados los servicios de soporte que necesitas, puedes ejecutar solo los playbooks que desees.</p>
-<p>Si deseas actualizar algo en el futuro, como R, RStudio o Shiny server (no puedo garantizar que siempre funcionará sin necesidad de cambios), simplemente puedes cambiar la versión en el archivo de configuración y ejecutar la parte específica del playbook aprovechando las “etiquetas” definidas.</p>
+<p>En condiciones ideales, como usando el último modelo de Raspberry Pi, con 8 GB de RAM, una tarjeta micro SD rápida y confiable, y conectado a una red estable, puedes simplemente acceder a la carpeta <code>raspberry_pi_server</code> y ejecutar el libro de jugadas <code>main.yml</code> para instalar todo de una sóla vez:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> raspberry_pi_server</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible-playbook</span> main.yml</span></code></pre></div>
+<p>Pero en condiciones menos que ideales, es muy probable que encuentres algunos errores aleatorios causados por la sobrecarga de la Pi o conexiones de red inestables, por lo que, para mitigar este problema y hacer que el proceso de instalación sea más flexible, he dividido el proceso en tres playbooks individuales:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> raspberry_pi_server</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible-playbook</span> install_basic_services.yml</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible-playbook</span> install_shiny_server.yml</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible-playbook</span> install_rstudio_server.yml</span></code></pre></div>
+<p>Si decides que solo necesitas el servidor Shiny o el servidor RStudio pero no el otro, o si ya has instalado los servicios de soporte que deseas, puedes ejecutar solo los playbooks que necesitas.</p>
+<p>Si deseas actualizar algo en el futuro, como R, RStudio o Shiny server (no puedo garantizar que siempre funcionará sin necesidad de cambios), puedes simplemente cambiar la versión en el archivo de configuración y ejecutar la parte específica del playbook aprovechando las “etiquetas” definidas.</p>
 <p>Por ejemplo, esto solo instalará la versión R definida en el archivo de configuración y nada más:</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> raspberry_pi_server</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible-playbook</span> install_basic_services.yml <span class="at">--tags</span> <span class="st">&quot;r&quot;</span></span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> raspberry_pi_server</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible-playbook</span> install_basic_services.yml <span class="at">--tags</span> <span class="st">&quot;r&quot;</span></span></code></pre></div>
 <p>Las etiquetas disponibles son:</p>
 <ul>
 <li>install_basic_services.yml
@@ -291,16 +310,16 @@ Lo único que sin duda desea cambiar aquí es la dirección de correo electróni
 </ul></li>
 </ul>
 <p>También puedes hacer lo contrario y omitir partes específicas de los playbooks usando la opción <code>--skip-tags</code>, por ejemplo, si no necesitas PostgreSQL, puedes evitar instalarlo ejecutando el playbook de esta manera:</p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> raspberry_pi_server</span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible-playbook</span> install_basic_services.yml <span class="at">--skip-tags</span> <span class="st">&quot;postgresql&quot;</span></span></code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> raspberry_pi_server</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible-playbook</span> install_basic_services.yml <span class="at">--skip-tags</span> <span class="st">&quot;postgresql&quot;</span></span></code></pre></div>
 <p>Después de ejecutar con éxito todos los playbooks, tendrás una instalación completamente funcional lista para ser utilizada, por lo que podras simplemente abrir una sesión de RStudio en <code>http://ip_de_tu_servidor/rstudio</code> y/o publicar tus aplicaciones Shiny en la carpeta <code>/srv/shiny-server</code> y acceder a ellas en <code>http://ip_de_tu_servidor/shiny/nombre_de_tu_app</code>.</p>
 <blockquote>
-<p>:warning: Si la configuración de Nginx no ha sido establecida por el playbook <code>install_basic_services.yml</code> porque lo has omitido, debes configurar el proxy inverso manualmente o acceder a los servicios con el puerto específico, por ejemplo <code>http://your_server_ip/3838/your_app_name</code>, esto también requiere que abras el puerto en el firewall.</p>
+<p>:warning: Si la configuración de Nginx no ha sido establecida por el playbook <code>install_basic_services.yml</code> porque lo has omitido, debes configurar el proxy inverso manualmente o acceder a los servicios con su puerto específico, por ejemplo <code>http://your_server_ip/3838/your_app_name</code>, esto también requiere que abras el puerto correspondiente en el firewall.</p>
 </blockquote>
 </div>
 <div id="notas-finales" class="section level2">
 <h2>Notas Finales</h2>
 <p>Incluso con la automatización, la instalación de forma nativa llevará mucho más tiempo que, por ejemplo, con el uso de contenedores, especialmente si usas una Raspberry Pi con poca memoria RAM (&lt; 4GB) pero como está automatizado, simplemente puedes dejar que se ejecute y volver más tarde, y disfrutarás de la facilidad de gestión de una instalación nativa.</p>
-<p>Además, ten en cuenta que el proceso de instalación llevará tu Raspberry Pi a sus límites, por lo que puedes esperar algunos errores aleatorios, pero eso no significa que no funcionará, simplemente reinicia tu Pi, vuelve a ejecutar el playbook problemático y ve si funciona la segunda vez. He hecho todo lo posible para que esto sea funcional a largo plazo estableciendo versiones de software específicas, pero aún es posible que una actualización de librerias del sistema inutilice los playbooks. Si encuentras algún problema, ve al repositorio de GitHub para los playbooks y registra un “issue”, o mejor aún, si sabes cómo solucionarlo, haz un “pull request”.</p>
-<p>Como nota final, quiero señalar que este enfoque se puede extender aún más de acuerdo con tus propias necesidades, por ejemplo, puedes implementar la restauración automática de tu servidor, incluido el contenido desplegado. Tengo un playbook adicional para restaurar las aplicaciones, servicios y bases de datos que normalmente ejecuto en mi Raspberry Pi, por lo que, en caso de una falla catastrófica, puedo volver a un estado de funcionamiento en un período corto de tiempo y con poco esfuerzo, comparado con hacer una restauración manual del sistema.</p>
+<p>Además, ten en cuenta que el proceso de instalación llevará tu Raspberry Pi a sus límites, por lo que puedes esperar algunos errores aleatorios, pero eso no significa que no va ha funcionar, simplemente reinicia tu Pi, vuelve a ejecutar el playbook problemático y ve si funciona la segunda vez. He hecho todo lo posible para que esto sea funcional a largo plazo estableciendo versiones de software específicas, pero aún es posible que una actualización de librerias del sistema inutilice los playbooks. Si encuentras algún problema, ve al repositorio de GitHub para los playbooks y registra un “issue”, o mejor aún, si sabes cómo solucionarlo, haz un “pull request”.</p>
+<p>Como nota final, quiero señalar que este enfoque se puede extender aún más de acuerdo con tus propias necesidades, por ejemplo, puedes implementar la restauración automática de tu servidor, incluido el contenido desplegado. Por ejemplo, yo tengo un playbook adicional para restaurar las aplicaciones, servicios y bases de datos que normalmente ejecuto en mi Raspberry Pi, por lo que, en caso de una falla catastrófica, puedo volver a un estado operativo en un período corto de tiempo y con poco esfuerzo, comparado con hacer una restauración manual de mi sistema.</p>
 </div>
