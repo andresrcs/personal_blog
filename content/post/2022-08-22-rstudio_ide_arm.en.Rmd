@@ -68,12 +68,11 @@ cd
 And my new favorite, you can use a precompiled binary from the [R4Pi](https://r4pi.org/ "R for the Raspberry Pi") project, they have been kind enough to make available an arm64 binary for us to try out (big thanks to Mark Sellors [@sellorm](https://twitter.com/sellorm)), it works great with Raspberry Pi OS x64 (Debian 11 based) but sadly it is not compatible with Ubuntu 22.04 (Debian 12 based). This option sacrifices the flexibility of choosing your own compiling options but the gain in installation time (also for R packages) is definitely worth it:
 
 ```{bash install_r_r4pi, eval=FALSE}
-curl -O  http://debs.r4pi.org/pool/main/r/r4pi-repo-conf/r4pi-repo-conf_0.1.0-6_armhf.deb
-sudo dpkg -i  r4pi-repo-conf_0.1.0-6_armhf.deb
+curl -O  https://pkgs.r4pi.org/dl/r4pi-repo-conf_0.0.1-1_all.deb
+sudo dpkg -i  r4pi-repo-conf_0.0.1-1_all.deb
 sudo apt update
 sudo apt install r4pi
-rm r4pi-repo-conf_0.1.0-6_armhf.deb
-sudo chmod 755 /usr/bin/R
+rm r4pi-repo-conf_0.0.1-1_all.deb
 ```
 
 ```{r echo=FALSE}

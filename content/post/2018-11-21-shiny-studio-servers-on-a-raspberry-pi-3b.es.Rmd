@@ -1,8 +1,8 @@
 ---
-title: Instalando su propio Servidor Shiny y RStudio en una Raspberry Pi 3B+
-description: Este artículo le muestra como instalar un Servidor Shiny y RStudio en una Raspberry Pi 3B+ junto con el software complementario más común para tener un servidor completamente funcional no solo para alojar, sino también para desarrollar aplicaciones Shiny.
+title: Instalando tu propio Servidor Shiny y RStudio en una Raspberry Pi
+description: 'Este artículo le muestra cómo instalar Shiny y RStudio Server en una Raspberry Pi (con Raspberry Pi OS o Ubuntu) junto con las herramientas complementarias más comunes para tener un servidor completamente funcional no solo para alojar, sino también para desarrollar sus propios proyectos de ciencia de datos y aplicaciones Shiny.'
 author: andres-castro
-date: '2018-11-21'
+date: '2022-09-05'
 slug: shiny_rstudio_server
 categories:
   - R
@@ -28,177 +28,162 @@ output:
     highlight: zenburn
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(collapse = TRUE)
-```
+Este artículo se publicó originalmente en 2018 y muchas cosas han cambiado desde entonces, por lo que lo reescribí por completo para tener en cuenta los avances más recientes en la compatibilidad con la arquitectura arm64 dentro del ecosistema R.
 
-Recientemente participé en un tema en [RStudio Community](https://community.rstudio.com/t/raspberry-pi-as-a-viable-shiny-server/18672?u=andresrcs) donde [\@jladata](https://twitter.com/jladata) estaba preguntando si una Raspberry Pi 3B+ podría funcionar como un servidor Shiny viable, actualmente uso una Raspberry Pi para ese propósito y se me hizo notar que este podría ser un tema interesante para algunas personas, así que voy a compartir con ustedes mi experiencia instalando un Servidor Shiny y RStudio en una Raspberry Pi 3B+. :thumbsup:
+En 2018, participé en un tema de foro en [Community RStudio](https://community.rstudio.com/t/raspberry-pi-as-a-viable-shiny-server/18672?u=andresrcs) donde [\@jladata](https://twitter.com/jladata) preguntaba si una Raspberry Pi 3B+ podría convertirse en un servidor Shiny viable. De hecho, yo uso una Raspberry Pi para ese mismo propósito, así que decidí compartir con la comunidad R mi experiencia al configurar Shiny y Rstudio Server de forma nativa en una Raspberry Pi.
 
-Voy a instalar todo el software directamente en el sistema operativo (Raspbian), sé que hay otras opciones, como los contenedores Docker, pero este es el método que prefiero.
+En esos días había casi **cero soporte para arquitecturas ARM** (ya sea x32 o x64), por lo que la mayor parte del software tenía que compilarse desde la fuente en el mismo Pi, lo que hace que el proceso de instalación sea un esfuerzo titánico con muchisimas horas de espera.
 
-Además, los pasos que voy a compartir con usted son aplicables para esta configuración específica:
+Hoy en día, las cosas han cambiado y tenemos un mejor soporte para la arquitectura arm64 debido a los esfuerzos de la comunidad e incluso soporte oficial de RStudio en proceso. En este renovado artículo, te guiaré a través de las opciones de instalación que tenemos disponibles actualmente.
 
-**"Raspberry Pi 3B+ ejecutando Raspbian Stretch Lite (aún no probado en el nuevo Raspbian Buster)"**
- 
->:warning: Esta guía no funciona directamente con las versiones más recientes de Raspberry Pi OS y el software de RStudio, para un enfoque actualizado, eche un vistazo a este [artículo más reciente](/es/2021/01/13/raspberry_pi_server/).
+> :pencil2: También tengo un [artículo relacionado](/es/2021/01/13/raspberry_pi_server/) que muestra cómo automatizar el proceso de instalación usando Ansible.
 
 ## Preparando la Raspberry Pi
 
-Primero, debemos comenzar por cargar una imagen nueva de Raspbian Stretch Lite en nuestra tarjeta SD (recomiendo al menos 32 GB clase 10), puede descargarla desde el [sitio oficial de Raspbian](https://www.raspberrypi.org/downloads/raspbian/). 
+Primero, necesitas un sistema operativo de 64 bits para tu Pi (asegúrate de que sea de 64 bits ya que RStudio solo es compatible con la arquitectura arm64), estas instrucciones de instalación funcionan tanto para Raspberry Pi OS como para Ubuntu, puedes descargar cualquiera de los dos usando el software Raspberry Pi Imager ([sitio oficial](https://www.raspberrypi.com/software/)). También, asegúrate de actualizar las bibliotecas de tu sistema con `sudo apt update && sudo apt dist-upgrade` antes de comenzar.
 
-Aunque no es obligatorio, recomiendo realizar las siguientes acciones utilizando la aplicación `sudo raspi-config`:
+Aunque no es obligatorio, recomiendo realizar las siguientes acciones utilizando la aplicación `sudo raspi-config` (en Ubuntu, primero debes instalarla con `sudo apt install raspi-config`):
 
-* Expandir sistema de archivos (Advanced Options / Expand Filesystem).
-* Reducir la memoria de la GPU a 16 MB (Advanced Options / Memory Split).
-* Deshabilitar "Interfaces de red predecibles" (Network Options / Network interface names).
+* Expandir el sistema de archivos (Advanced Options / Expand Filesystem).
+* Definir tu configuración regional, asegúrate de elegir una opción UTF.8 para evitar problemas de compilación (Localisation Options / Locale).
+* Configura la memoria para la GPU, en Raspberry Pi OS configúrala en 16 MB, y en Ubuntu configura la división de memoria a "240 240MiB for ARM, 16MiB for VideoCore" (Performance Options/ GPU Memory).
+* Deshabilitar "Interfaces de red predecibles" (Advanced Options / Network Interface Names).
 
-También recomiendo usar una conexión a internet por cable y deshabilitar el módulo wifi/Bluetooth integrado. Puede deshabilitarlo de manera persistente editando este archivo: `sudo nano/boot/config.txt`, agregando estas dos líneas:
+A continuación, debes configurar una IP estática para que puedas encontrar la Pi fácilmente en tu red.
 
-```{bash eval=FALSE}
-dtoverlay=pi3-disable-bt
-dtoverlay=pi3-disable-wifi
-```
+Para configurar una IP estática en Raspberry Pi OS, edita este archivo, `sudo nano /etc/dhcpcd.conf`, de acuerdo con tus propias necesidades. Esta es una configuración IP de muestra para una conexión por cable:
 
-Luego, necesitamos establecer una IP estática para nuestra Raspberry Pi, edite este archivo: `sudo nano/etc/dhcpcd.conf`, de acuerdo con sus propias necesidades. Esta es una configuración de IP de muestra:
-
-```{bash eval=FALSE}
+```{bash set_ip_rpiOS, eval=FALSE}
 # Configuración IP de muestra:
 interface eth0
-static ip_address=192.168.1.101/24
-#static ip6_address=fd51:42f8:caae:d92e::ff/64
-static routers=192.168.1.1
-static domain_name_servers=192.168.1.1 8.8.8.8 fd51:42f8:caae:d92e::1
+static ip_address=192.168.0.101/24
+static routers=192.168.0.1
+static domain_name_servers=192.168.0.1 8.8.8.8
 ```
 
-Habilite todos los repositorios descomentando todas las líneas en este archivo: `sudo nano /etc/apt/sources.list` y luego realice las actualizaciones obligatorias con este comando `sudo apt update && sudo apt full-upgrade`.
+Y para configurar la IP en Ubuntu, debes crear este archivo, `sudo nano /etc/netplan/01-netcfg.yaml`, agregar este contenido (edítalo según sea necesario) y aplicar la configuración con este comando, `sudo netplan apply`.
 
-Debe agregar al menos 1 GB de memoria de intercambio para esta instalación, pero necesitará más luego para instalar/compilar algunas bibliotecas R, por lo que con 3GB estaría bien, puede hacerlo con estos comandos:
+```{bash set_ip_ubuntu, eval=FALSE}
+network:
+    version: 2
+    renderer: networkd
+    ethernets:
+        eth0:
+            dhcp4: false
+            addresses:
+                - 192.168.0.101/24
+            nameservers:
+                addresses: [8.8.8.8, 8.8.4.4, 192.168.0.1]
+            routes:
+                - to: default
+                  via: 192.168.0.1
+```
 
-```{bash eval=FALSE}
+En caso de que tengas un modelo de Raspberry Pi con poca RAM, debes agregar algo de memoria sawp para el proceso de instalación. Para los modelos Pi de 1 GB, 3 GB de sawp serían suficientes, puedes hacerlo con estos comandos:
+
+```{bash create_swap, eval=FALSE}
 sudo /bin/dd if=/dev/zero of=/var/swap.1 bs=1M count=3072
+sudo chmod 600 /var/swap.1
 sudo /sbin/mkswap /var/swap.1
 sudo /sbin/swapon /var/swap.1
 sudo sh -c 'echo "/var/swap.1 swap swap defaults 0 0 " >> /etc/fstab'
 ```
 
-Evite el uso innecesario de la memoria de intercambio para proteger su tarjeta SD:
+Para evitar el uso innecesario de la memoria swap y proteger tu tarjeta SD, abre este archivo, `sudo nano /etc/sysctl.conf`, y agrega esta línea al final:
 
-```{bash eval=FALSE}
-sudo nano /etc/sysctl.conf
-# Agregue esto al final
+```{bash set_swappiness, eval=FALSE}
     vm.swappiness=10
 ```
 
-## Configurando el Servidor
+## Instalar R
 
-Para mayor comodidad, necesitamos un servidor HTML y Nginx es una muy buena opción debido a sus requisitos reducidos. Puede instalar Nginx con estos comandos:
+Para instalar R en tu Pi tienes algunas opciones, cada una con sus pros y sus contras:
 
-```{bash eval=FALSE}
-sudo apt install nginx
-sudo chown -R www-data:pi /var/www/html/
-sudo chmod -R 770 /var/www/html/
+-   Los repositorios deb estándar para de tu sistema operativo proporcionan archivos binarios de R que son muy simples de instalar, pero son versiones antiguas de R (4.0.0 para Raspberry Pi OS y 4.1.2 para Ubuntu 22.04.1).
+
+    ```{bash install_r_deb, eval=FALSE}
+    sudo apt install r-base
+    ```
+
+-   El [Proyecto R4Pi](https://r4pi.org/) proporciona un repositorio deb para archivos binarios precompilados de 32 bits para R desde 2021 y archivos binarios de 64 bits desde septiembre de 2022. Instalar R desde estos archivos binarios precompilados es mucho más rápido que compilarlos tu mismo, y también proporcionan un repositorio con binarios precompilados de paquetes que hace que la instalación de paquetes sea mucho más rápida y sencilla.
+
+    Lamentablemente, sólo son compatibles con Raspberry Pi OS, si has elegido este sistema operativo, te recomiendo usar esta opción ya que las ganancias en velocidad son considerables.
+    
+    ```{bash install_r_r4pi, eval=FALSE}
+    curl -O  https://pkgs.r4pi.org/dl/r4pi-repo-conf_0.0.1-1_all.deb
+    sudo dpkg -i  r4pi-repo-conf_0.0.1-1_all.deb
+    sudo apt update
+    sudo apt install r4pi
+    rm r4pi-repo-conf_0.0.1-1_all.deb
+    ```
+
+-   Siempre puedes compilar R desde la fuente, independientemente del sistema operativo que estés utilizando, esto te ofrece la oportunidad de elegir las opciones de compilación, pero a costa de esperar mucho tiempo para que se complete el proceso de compilación.
+
+    ```{bash install_r_compile, eval=FALSE}
+    # Especifíca la version R para instalar
+    R_VERSION=4.2.1
+
+    sudo apt install -y g++ gcc gfortran libreadline-dev libx11-dev libxt-dev \
+                        libpng-dev libjpeg-dev libcairo2-dev xvfb \
+                        libbz2-dev libzstd-dev liblzma-dev libtiff5 \
+                        libssh-dev libgit2-dev libcurl4-openssl-dev \
+                        libblas-dev liblapack-dev libopenblas-base \
+                        zlib1g-dev openjdk-11-jdk \
+                        texinfo texlive texlive-fonts-extra \
+                        screen wget libpcre2-dev make cmake
+    cd /usr/local/src
+    sudo wget https://cran.rstudio.com/src/base/R-${R_VERSION:0:1}/R-$R_VERSION.tar.gz
+    sudo su
+    tar zxvf R-$R_VERSION.tar.gz
+    cd R-$R_VERSION
+    ./configure --enable-R-shlib --with-blas --with-lapack #BLAS and LAPACK are optional
+    make
+    make install
+    cd ..
+    rm -rf R-$R_VERSION*
+    exit
+    ```
+
+## Instalar Shiny Server
+
+Actualmente, `shiny-server` no ofrece compatibilidad con ARM, por lo que la única opción para instalarlo en una Pi es compilar desde la fuente. Hay esperanza de que esto cambie en el futuro según la respuesta a este [GitHub Issue](https://github.com/rstudio/shiny-server/issues/532#issuecomment-1223282001), pero por el momento estamos atrapado con esto.
+
+Primero, debes instalar las dependencias de paquetes R, si estás utilizando un repositorio CRAN, esto llevará un tiempo, pero es mucho más rápido si estás utilizando el repositorio R4Pi (disponible con R instalado desde R4Pi):
+
+```{bash install_r_packages, eval=FALSE}
+# Define tu repositorio de paquetes R
+REPO="'http://cran.rstudio.com/'" # Para R instalado desde un repositorio estándar o compilado desde CRAN
+REPO="c('https://pkgs.r4pi.org/aarch64', 'http://cran.rstudio.com/')" # Para R instalado desde R4Pi
+
+# Asegúrate de que las dependencias del sistema estén instaladas
+sudo apt install libcairo2-dev libxt-dev git cmake pandoc pandoc-citeproc
+
+# Instala los paquetes R requeridos como sudo
+sudo su - -c "R -e \"install.packages('Rcpp', repos=$REPO)\""
+sudo su - -c "R -e \"install.packages('later', repos=$REPO)\""
+sudo su - -c "R -e \"install.packages('fs', repos=$REPO)\""
+sudo su - -c "R -e \"install.packages('R6', repos=$REPO)\""
+sudo su - -c "R -e \"install.packages('Cairo', repos=$REPO)\""
+sudo su - -c "R -e \"install.packages('httpuv', repos=$REPO)\""
+sudo su - -c "R -e \"install.packages('mime', repos=$REPO)\""
+sudo su - -c "R -e \"install.packages('jsonlite', repos=$REPO)\""
+sudo su - -c "R -e \"install.packages('digest', repos=$REPO)\""
+sudo su - -c "R -e \"install.packages('htmltools', repos=$REPO)\""
+sudo su - -c "R -e \"install.packages('xtable', repos=$REPO)\""
+sudo su - -c "R -e \"install.packages('sourcetools', repos=$REPO)\""
+sudo su - -c "R -e \"install.packages('shiny', repos=$REPO)\""
+sudo su - -c "R -e \"install.packages('rmarkdown', repos=$REPO)\""
 ```
 
-Luego, necesitamos un servidor SQL para almacenar y manipular nuestros datos, personalmente prefiero PostgreSQL ya que es de código abierto y tiene capacidades impresionantes, pero depende de usted cuál elegir. Puede instalar PostgreSQL con este comando:
+> :pencil2: Es necesario instalar los paquetes de R como sudo para que shiny-server pueda usarlos, no instales estos paquetes desde la consola de R usando tu usuario habitual.
 
-```{bash eval=FALSE}
-sudo apt install postgresql libpq-dev postgresql-client postgresql-client-common
-````
+Ahora, puedes instalar shiny-server con estos comandos:
 
-Configure PostgreSQL para aceptar conexiones locales y remotas editando estos archivos y modifique/agregue/comente estas líneas:
+```{bash install_shiny_server, eval=FALSE}
+# Descarga el código fuente de la última versión shiny-server desde GitHub
+git clone --depth 1 --branch v1.5.19.995 https://github.com/rstudio/shiny-server.git
 
-```{bash eval=FALSE}
-sudo nano /etc/postgresql/9.6/main/pg_hba.conf # Editar como se indica
-    local all all md5 # Modificar
-    host all all 192.168.1.0/24 trust # Agregar
-    host all all 0.0.0.0/0 password # Agregar
-
-sudo nano /etc/postgresql/9.6/main/postgresql.conf # Editar como se indica
-    #listen_addresses # Comentar 
-    listen_addresses='*' # Agregar
-```
-
-Reiniciar el servicio PostgreSQL:
-
-```{bash eval=FALSE}
-sudo systemctl restart postgresql
-```
-
-Cree el usuario pi y la base de datos en el servidor PostgreSQL:
-
-```{bash eval=FALSE}
-sudo su postgres
-createuser pi -P --interactive
-psql
-create database pi;
-\q
-exit
-```
-
-Ahora, llegamos a la parte específica R del proceso, vamos a instalar la última versión de R desde la fuente con estos comandos:
-
-```{bash eval=FALSE}
-sudo apt-get install -y gfortran libreadline6-dev libx11-dev libxt-dev \
-                               libpng-dev libjpeg-dev libcairo2-dev xvfb \
-                               libbz2-dev libzstd-dev liblzma-dev \
-                               libcurl4-openssl-dev \
-                               texinfo texlive texlive-fonts-extra \
-                               screen wget libpcre2-dev
-cd /usr/local/src
-sudo wget https://cran.rstudio.com/src/base/R-4/R-4.0.3.tar.gz
-sudo su
-tar zxvf R-4.0.3.tar.gz
-cd R-4.0.3
-./configure --enable-R-shlib #--with-blas --with-lapack #optional
-make
-make install
-cd ..
-rm -rf R-4.0.3*
-exit
-cd
-```
-
-:heavy_exclamation_mark: **_ADVERTENCIA: TODO LUEGO DE ESTE PUNTO CONSUME DEMASIADO TIEMPO_****, por ejemplo, instalar RStudio desde la fuente en Raspbian puede tomar alrededor de 27 horas** :open_mouth:
-
-## Instalando Shiny Server
-
-Vamos a instalar el Servidor Shiny desde la fuente, pero primero, tenemos que instalar sus dependencias.
-
->:pencil2: Es necesario instalar paquetes R como superusuario, para que Shiny pueda usarlos.
-
-```{bash eval=FALSE}
-sudo su - -c "R -e \"install.packages('later', repos='http://cran.rstudio.com/')\""
-sudo su - -c "R -e \"install.packages('fs', repos='http://cran.rstudio.com/')\""
-sudo su - -c "R -e \"install.packages('Rcpp', repos='http://cran.rstudio.com/')\""
-sudo su - -c "R -e \"install.packages('httpuv', repos='http://cran.rstudio.com/')\""
-sudo su - -c "R -e \"install.packages('mime', repos='http://cran.rstudio.com/')\""
-sudo su - -c "R -e \"install.packages('jsonlite', repos='http://cran.rstudio.com/')\""
-sudo su - -c "R -e \"install.packages('digest', repos='http://cran.rstudio.com/')\""
-sudo su - -c "R -e \"install.packages('htmltools', repos='http://cran.rstudio.com/')\""
-sudo su - -c "R -e \"install.packages('xtable', repos='http://cran.rstudio.com/')\""
-sudo su - -c "R -e \"install.packages('R6', repos='http://cran.rstudio.com/')\""
-sudo su - -c "R -e \"install.packages('Cairo', repos='http://cran.rstudio.com/')\""
-sudo su - -c "R -e \"install.packages('sourcetools', repos='http://cran.rstudio.com/')\""
-sudo su - -c "R -e \"install.packages('shiny', repos='http://cran.rstudio.com/')\""
-```
-
-Instale cmake desde la fuente:
-
-```{bash eval=FALSE}
-wget https://cmake.org/files/v3.19/cmake-3.19.1.tar.gz # Buscar la ultima version en https://cmake.org/files/
-tar xzf cmake-3.19.1.tar.gz
-cd cmake-3.19.1
-./configure; make
-sudo make install
-cd
-rm cmake-3.19.1.tar.gz
-rm -rf cmake-3.19.1
-```
-
-Ahora podemos instalar Shiny Server con estos comandos:
-
-```{bash eval=FALSE}
-git clone https://github.com/rstudio/shiny-server.git
+# Compila el código fuente
 cd shiny-server
 DIR=`pwd`
 PATH=$DIR/bin:$PATH
@@ -208,23 +193,27 @@ PYTHON=`which python`
 sudo cmake -DCMAKE_INSTALL_PREFIX=/usr/local -DPYTHON="$PYTHON" ../
 sudo make
 mkdir ../build
-sed -i '8s/.*/NODE_SHA256=abef7d431d6d0e067fe5797d4fe44039a5577f01ed9e40d7a3496cbb22502f55/' ../external/node/install-node.sh # node-v12.20.0-linux-armv7l.tar.xz
-sed -i 's/linux-x64.tar.xz/linux-armv7l.tar.xz/' ../external/node/install-node.sh
+
+# Modifique algunos enlaces de descarga y SHASUMs para compatibilidad con arm64
+sed -i '8s/.*/NODE_SHA256=5a6e818c302527a4b1cdf61d3188408c8a3e4a1bbca1e3f836c93ea8469826ce/' ../external/node/install-node.sh # SHAMSUM para node-v16.14.0-linux-arm64.tar.xz
+sed -i 's/linux-x64.tar.xz/linux-arm64.tar.xz/' ../external/node/install-node.sh
 sed -i 's/https:\/\/github.com\/jcheng5\/node-centos6\/releases\/download\//https:\/\/nodejs.org\/dist\//' ../external/node/install-node.sh
+sed -i 's/sha512-3RAVyfbptsR6HOFA0BFNLyw8ZXXDRWf5P3tIslbNt12kTikaRWepRR9vLHMyibIZeNfScI9uGqcn1KfbIAeuXA==/sha512-ZwrJM2WaOJesJGZlejLqAiBAE6Ts2PZNk1pQ\/x1uTMsQw83BaXWShjqCbhh5bPQUNrlx2Ijz1dOr0hLmlkxKag==/' ../npm-shrinkwrap.json
+
+# Instala el node para arm64 y reconstruye los módulos node
 (cd .. && sudo ./external/node/install-node.sh)
 (cd .. && ./bin/npm --python="${PYTHON}" install --no-optional)
 (cd .. && ./bin/node ./ext/node/lib/node_modules/npm/node_modules/node-gyp/bin/node-gyp.js --python="${PYTHON}" rebuild)
+
+# Instala shiny-server
 sudo make install
+
+# Configura shiny-server
 sudo mkdir -p /etc/shiny-server
 sudo cp ../config/default.config /etc/shiny-server/shiny-server.conf
+sudo cp ../config/init.d/debian/shiny-server /etc/init.d/shiny-server
 cd
 sudo rm -rf shiny-server
-```
-
-Después de instalarlo, debe configurar Shiny Server con estos comandos:
-
-```{bash eval=FALSE}
-cd
 sudo ln -s /usr/local/shiny-server/bin/shiny-server /usr/bin/shiny-server
 sudo useradd -r -m shiny
 sudo mkdir -p /var/log/shiny-server
@@ -232,33 +221,38 @@ sudo mkdir -p /srv/shiny-server
 sudo mkdir -p /var/lib/shiny-server
 sudo chown shiny /var/log/shiny-server
 sudo mkdir -p /etc/shiny-server
-cd
-sudo wget \
-https://raw.github.com/rstudio/shiny-server/master/config/upstart/shiny-server.conf \
--O /etc/init/shiny-server.conf
-sudo chmod 777 -R /srv
-# Configurar inicio automático de shiny-server
-sudo nano /lib/systemd/system/shiny-server.service # Pegue lo siguiente
+
+# Edita el archivo shiny-server.service
+sudo nano /lib/systemd/system/shiny-server.service # Pega el siguiente contenido
     #!/usr/bin/env bash
     [Unit]
     Description=ShinyServer
+    
     [Service]
     Type=simple
     ExecStart=/usr/bin/shiny-server
-    Restart=always
-    # Environment="LANG=en_US.UTF-8"
+    KillMode=process
     ExecReload=/bin/kill -HUP $MAINPID
     ExecStopPost=/bin/sleep 5
+    Restart=on-failure
     RestartSec=1
+    StartLimitInterval=45
+    StartLimitBurst=3
+    
     [Install]
     WantedBy=multi-user.target
 
-sudo chown shiny /lib/systemd/system/shiny-server.service
+sudo chown root:root /lib/systemd/system/shiny-server.service
+sudo chmod 644 /lib/systemd/system/shiny-server.service
 sudo systemctl daemon-reload
 sudo systemctl enable shiny-server
 sudo systemctl start shiny-server
+sudo ln -s -f /usr/bin/pandoc /usr/local/shiny-server/ext/pandoc/pandoc
+sudo ln -s -f /usr/bin/pandoc-citeproc /usr/local/shiny-server/ext/pandoc/pandoc-citeproc
+sudo ln -s /usr/local/shiny-server/samples/sample-apps /srv/shiny-server/sample-apps
+sudo ln -s /usr/local/shiny-server/samples/welcome.html /srv/shiny-server/index.html
 
-# Configurar los permisos adecuados
+# Establece los permisos de usuario adecuados, estoy asumiendo que tu usuario es "pi", cámbialo si no lo es
 sudo groupadd shiny-apps
 sudo usermod -aG shiny-apps pi
 sudo usermod -aG shiny-apps shiny
@@ -266,131 +260,127 @@ cd /srv/shiny-server
 sudo chown -R pi:shiny-apps .
 sudo chmod g+w .
 sudo chmod g+s .
-```
-
-## Instalando Rstudio Server
-
-Vamos a instalar el servidor RStudio desde la fuente, esto lleva mucho tiempo (aproximadamente 27 horas la última vez que lo verifiqué), así que consiga algo que hacer mientras Raspberry Pi instala las dependencias y compila todo.
-
-```{bash eval=FALSE}
-# Clonar el repositorio de RStudio
-sudo git clone https://github.com/rstudio/rstudio.git
-
-# Evitar instalar crashpad y sentry-cli
-sudo nano /home/pi/rstudio/dependencies/common/install-common
-    # Comente estas lineas
-        #./install-sentry-cli
-        # ./install-crashpad
-        # sudo ./install-crashpad
-
-# Instale las dependencias del sistema
-cd rstudio/dependencies/linux
-sudo su
-./install-dependencies-stretch --exclude-qt-sdk
-apt-get install -y openjdk-8-jdk
-apt autoremove
-
-# Configure Java
-java -Xms1800m
-
-# Instale la ultima version de Closure compiler (ya no se actualiza)
-cd /home/pi/rstudio
-wget https://dl.google.com/closure-compiler/compiler-20200719.zip
-unzip compiler-20200719.zip
-rm COPYING README.md compiler-20200719.zip
-mv closure-compiler-v20200719.jar /home/pi/rstudio/src/gwt/tools/compiler/compiler.jar
-
-# Compile é instale RStudio
-mkdir build
-cd build
-cmake .. -DRSTUDIO_TARGET=Server -DCMAKE_BUILD_TYPE=Release
-make install
-
-#Configure Rstudio
 cd
-useradd -r rstudio-server
-cp /usr/local/lib/rstudio-server/extras/init.d/debian/rstudio-server /etc/init.d/rstudio-server
-chmod +x /etc/init.d/rstudio-server 
-update-rc.d rstudio-server defaults
-ln -f -s /usr/local/lib/rstudio-server/bin/rstudio-server /usr/sbin/rstudio-server
-chmod 777 -R /usr/local/lib/R/site-library/
-mkdir -p /var/run/rstudio-server
-mkdir -p /var/lock/rstudio-server
-mkdir -p /var/log/rstudio-server
-mkdir -p /var/lib/rstudio-server
-rm -rf /home/pi/rstudio
-nano /etc/init.d/rstudio-server
-    # Modifique su variable PATH para que utilizar la versión compilada de R
-        # PATH=/usr/local/bin/:/sbin:/usr/sbin:/bin:/usr/bin
-systemctl daemon-reload
-rstudio-server start
-exit
 ```
 
-## Pasos Adicionales
+## Instala RStudio Server
 
-Crea URLs bonitas para Shiny y Rstudio Server (Por ejemplo: `http://su-ip/shiny/su-aplicacion` en vez de `http://su-ip:3838/su-aplicacion`) editando el archivo de configuración de Nginx: `sudo nano /etc/nginx/sites-enabled/default` y agregando las siguientes líneas antes de la línea que dice `server {`
+En el pasado, la única forma de instalar RStudio Server en una Pi era compilar desde la fuente y esto requería mucho tiempo (me tomó 3 días la última vez que probé en una Pi 3B+) y era muy propenso a fallar porque RStudio IDE está en desarrollo activo.
 
-```{bash eval=FALSE}
+Afortunadamente, en los últimos días, RStudio ha puesto a disposición compilaciones "experimentales" del IDE para arm64 (escribí un [artículo al respecto](/es/2022/08/22/rstudio_ide_arm/)), están compiladas para Ubuntu 18/20 y 22, pero Ubuntu 18/20 también es compatible con Raspberry Pi OS. Puedes consultar las compilaciones diarias disponibles [aquí](https://dailies.rstudio.com/rstudio/elsbeth-geranium/). Elije un enlace de acuerdo con el sistema operativo que estás utilizando, también ten en cuenta que estas compilaciones están destinadas a pruebas, por lo que es probable que tengan errores o sean inestables, si tienes problemas para instalar la última versión disponible, intenta con una versión anterior .
+
+Las siguientes instrucciones usan un enlace para Ubuntu 18/20 (compatible con Raspberry Pi OS), recuerda cambiar el enlace si deseas usar otro sistema operativo o una versión IDE más reciente:
+
+```{bash install_rstudio, eval=FALSE}
+sudo apt install gdebi
+wget https://s3.amazonaws.com/rstudio-ide-build/server/bionic/arm64/rstudio-server-2022.11.0-daily-164-arm64.deb
+sudo gdebi rstudio-server-2022.11.0-daily-164-arm64.deb
+sudo rm rstudio-server-2022.11.0-daily-164-arm64.deb
+```
+
+> :pencil2: Actualizaré esta sección una vez que el soporte arm64 se convierta en una función estable del RStudio IDE.
+
+## Instalar Servicios de Soporte Adicionales (opcional)
+
+Nginx es un servidor web de bajos requisitos, que resulta útil para autohospedar archivos HTML, pero también para usarlo como proxy inverso (más información sobre esto en la siguiente sección). Puedes instalarlo con este comando:
+
+```{bash install_nginx, eval=FALSE}
+sudo apt install nginx
+```
+
+También, para trabajar con conjuntos de datos "más grandes que la memoria" (ten en cuenta que la Pi no tiene mucha RAM), tener un RDBMS es útil. Personalmente prefiero PostgreSQL ya que es de código abierto y tiene capacidades impresionantes, puedes instalar PostgreSQL con este comando:
+
+```{bash install_postgresql, eval=FALSE}
+sudo apt install postgresql libpq-dev postgresql-client postgresql-client-common
+```
+
+## Pasos Adicionales (opcional)
+
+Crea direcciones URL agradables para Shiny y Rstudio Server (por ejemplo, `http://your-ip/shiny/your-app` en lugar de `http://your-ip:3838/your-app`) utilizando Nginx como proxy inverso, solo necesitas reemplazar el contenido de este archivo, `sudo nano /etc/nginx/sites-enabled/default`, con esto:
+
+```{bash nginx_config, eval=FALSE}
 map $http_upgrade $connection_upgrade {
-      default upgrade;
-      ''      close;
-    }
-```
+    default upgrade;
+    ''      close;
+}
 
-Agregue las siguientes líneas justo después de la línea que dice `server_name _;`
+server {
+        listen 80 default_server;
+        listen [::]:80 default_server;
 
-```{bash eval=FALSE}
-    rewrite ^/shiny$ $scheme://$http_host/shiny/ permanent;
+        root /var/www/html;
 
-    location /shiny/ {
-            rewrite ^/shiny/(.*)$ /$1 break;
-            proxy_pass http://localhost:3838;
-            proxy_redirect / $scheme://$http_host/shiny/;
+        index index.html index.htm;
+
+        server_name _;
+        
+        location / {
+                try_files $uri $uri/ =404;
+        }
+        
+        rewrite ^/shiny$ $scheme://$http_host/shiny/ permanent;
+
+        location /shiny/ {
+                 rewrite ^/shiny/(.*)$ /$1 break;
+                 proxy_set_header    Host $host;
+                 proxy_set_header    X-Real-IP $remote_addr;
+                 proxy_set_header    X-Forwarded-For $proxy_add_x_forwarded_for;
+                 proxy_set_header    X-Forwarded-Proto $scheme;
+                 proxy_pass          http://localhost:3838;
+                 proxy_read_timeout  20d;
+                 proxy_buffering off;
+
+                 proxy_set_header Upgrade $http_upgrade;
+                 proxy_set_header Connection $connection_upgrade;
+                 proxy_http_version 1.1;
+
+                 proxy_redirect      / $scheme://$host/shiny/;
+        }
+        
+        location /rstudio/ {
+            rewrite ^/rstudio/(.*)$ /$1 break;
+
+            proxy_pass http://localhost:8787;
+
             proxy_http_version 1.1;
             proxy_set_header Upgrade $http_upgrade;
             proxy_set_header Connection $connection_upgrade;
             proxy_read_timeout 20d;
             proxy_buffering off;
-    }
-    
-    rewrite ^/rstudio$ $scheme://$http_host/rstudio/ permanent; 
-    
-    location /rstudio/ {
-        rewrite ^/rstudio/(.*)$ /$1 break;
-        proxy_pass http://localhost:8787;
-        proxy_redirect http://localhost:8787/ $scheme://$http_host/rstudio/;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection $connection_upgrade;
-        proxy_read_timeout 20d;
-    }
+
+            proxy_set_header X-RStudio-Root-Path /rstudio;
+
+            proxy_set_header Host $host:$server_port;
+        }
+}
 ```
 
-Ahora debe reiniciar Nginx para aplicar los cambios:
+En Raspberry Pi OS, hay un problema extraño en el que Nginx se inicia antes de que RStudio Server pueda iniciarse y el proxy inverso falla. Una solución para esto es editar este archivo, `sudo nano /etc/systemd/system/multi-user.target.wants/nginx.service`, y reemplazar la parte que dice `After=network.target` con ` After=network-online.target` y recargar el daemon con `sudo systemctl daemon-reload`. Puedes omitir esto si estás usando Ubuntu.
 
-```{bash eval=FALSE}
-sudo service nginx restart
+Ahora tienes que reiniciar Nginx para aplicar los cambios:
+
+```{bash restart_nginx, eval=FALSE}
+sudo systemctl restart nginx
 ```
 
-Si desea tener acceso a su servidor desde orígenes remotos (a través de Internet), debe seguir estos pasos adicionales:
+Si deseas tener acceso a tu servidor desde orígenes remotos (a través de Internet), debes seguir estos pasos adicionales:
 
-* Si no tiene una IP pública estática:
-    * Abra una cuenta en un servicio de DNS dinámico, por ejemplo, https://www.noip.com
-    * Configure el DNS dinámico en su enrutador/módem, si no tiene esa opción, puede instalar un cliente DDNS en su servidor.
-	* Opcionalmente, configure su nombre de dominio personal para que apunte a su servicio DDNS.
-* Configure el reenvío de puertos en su enrutador/módem:
-	* Para SSH, SCP, SFTP abra el puerto TCP/UDP 22
-	* Para PostgreSQL abra el puerto TCP/UDP 5432
-	* Para HTTP abra el puerto TCP 80
-	* Si no ha configurado Nginx, abra el puerto 8787 para RStudio.
-	* Si no ha configurado Nginx, abra el puerto 3838 para el servidor Shiny.
-* Asegúrese de tener "Bloquear tráfico WAN" deshabilitado en su enrutador/módem.
+-   Si no tienes una IP pública estática:
+    -   Abre una cuenta en un servicio de DNS dinámico (por ejemplo, <https://www.noip.com>)
+    -   Configura Dynamic DNS en tu enrutador/módem, si no tiene esa opción, puedes instalar un cliente DDNS en tu servidor.
+    -   Opcionalmente, configura tu nombre de dominio personal para que apunte a tu servicio DDNS.
+-   Configura el reenvío de puertos en tu enrutador/módem:
+    -   Para SSH, SCP y SFPT, abre el puerto TCP/UDP 22
+    -   Si no has configurado Nginx, abre el puerto 8787 para RStudio Server.
+    -   Si no has configurado Nginx, abre el puerto 3838 para Shiny Server.
+    -   Para HTTP abre el puerto TCP 80 (también para usar Nginx como proxy inverso).
+    -   Para PostgreSQL abre el puerto TCP/UDP 5432
+    -   Asegúrate de tener "Block WAN Traffic" deshabilitado en tu enrutador/módem.
 
-Y ya está, está listo para comenzar a desarrollar sus aplicaciones Shiny y desplegarlas en la carpeta `/srv/shiny-server` de su propio servidor, ¡disfrute!
+Si estás interesado, tengo un [artículo](/es/2021/08/16/port_forwarding/) que brinda un ejemplo de cómo configurar el reenvío de puertos en casa.
 
-## Comentarios Finales
+## Comentarios finales
 
-La principal limitación de la Raspberry Pi es la memoria RAM, así que tenga en cuenta que debe mantener sus aplicaciones lo suficientemente simples para que no necesiten más de 1 GB de RAM si su aplicación requiere algo más que eso, va a usar intercambie memoria y eso podría arruinar su tarjeta SD muy rápido.
+El soporte para arm64 en general está aumentando rápidamente, por lo que es muy probable que las cosas cambien en un futuro próximo. Voy a hacer todo lo posible para mantener este artículo actualizado con los últimos desarrollos para que puedan aprovechar los beneficios.
 
-El rendimiento es relativamente lento, especialmente para el trazado, tenga en cuenta que, aunque Raspberry Pi 3B + tiene 4 núcleos, no son rápidos y la mayoría de los paquetes R no usan computación paralela.
+El rendimiento es relativamente pobre, especialmente para gráficos, pero es utilizable. Ten en cuenta que aunque la Raspberry Pi tiene 4 núcleos, no son rápidos y la mayoría de los paquetes R no usan computación paralela.

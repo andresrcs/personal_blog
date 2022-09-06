@@ -1,8 +1,8 @@
 ---
-title: Instalando su propio Servidor Shiny y RStudio en una Raspberry Pi 3B+
-description: Este artículo le muestra como instalar un Servidor Shiny y RStudio en una Raspberry Pi 3B+ junto con el software complementario más común para tener un servidor completamente funcional no solo para alojar, sino también para desarrollar aplicaciones Shiny.
+title: Instalando tu propio Servidor Shiny y RStudio en una Raspberry Pi
+description: 'Este artículo le muestra cómo instalar Shiny y RStudio Server en una Raspberry Pi (con Raspberry Pi OS o Ubuntu) junto con las herramientas complementarias más comunes para tener un servidor completamente funcional no solo para alojar, sino también para desarrollar sus propios proyectos de ciencia de datos y aplicaciones Shiny.'
 author: andres-castro
-date: '2018-11-21'
+date: '2022-09-05'
 slug: shiny_rstudio_server
 categories:
   - R
@@ -28,7 +28,6 @@ output:
     highlight: zenburn
 ---
 
-<script src="/rmarkdown-libs/header-attrs/header-attrs.js"></script>
 <style type="text/css">
 pre > code.sourceCode { white-space: pre; position: relative; }
 pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
@@ -96,305 +95,315 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 
 <div id="TOC">
 <ul>
-<li><a href="#preparando-la-raspberry-pi">Preparando la Raspberry Pi</a></li>
-<li><a href="#configurando-el-servidor">Configurando el Servidor</a></li>
-<li><a href="#instalando-shiny-server">Instalando Shiny Server</a></li>
-<li><a href="#instalando-rstudio-server">Instalando Rstudio Server</a></li>
-<li><a href="#pasos-adicionales">Pasos Adicionales</a></li>
-<li><a href="#comentarios-finales">Comentarios Finales</a></li>
+<li><a href="#preparando-la-raspberry-pi" id="toc-preparando-la-raspberry-pi">Preparando la Raspberry Pi</a></li>
+<li><a href="#instalar-r" id="toc-instalar-r">Instalar R</a></li>
+<li><a href="#instalar-shiny-server" id="toc-instalar-shiny-server">Instalar Shiny Server</a></li>
+<li><a href="#instala-rstudio-server" id="toc-instala-rstudio-server">Instala RStudio Server</a></li>
+<li><a href="#instalar-servicios-de-soporte-adicionales-opcional" id="toc-instalar-servicios-de-soporte-adicionales-opcional">Instalar Servicios de Soporte Adicionales (opcional)</a></li>
+<li><a href="#pasos-adicionales-opcional" id="toc-pasos-adicionales-opcional">Pasos Adicionales (opcional)</a></li>
+<li><a href="#comentarios-finales" id="toc-comentarios-finales">Comentarios finales</a></li>
 </ul>
 </div>
 
-<p>Recientemente participé en un tema en <a href="https://community.rstudio.com/t/raspberry-pi-as-a-viable-shiny-server/18672?u=andresrcs">RStudio Community</a> donde <a href="https://twitter.com/jladata">@jladata</a> estaba preguntando si una Raspberry Pi 3B+ podría funcionar como un servidor Shiny viable, actualmente uso una Raspberry Pi para ese propósito y se me hizo notar que este podría ser un tema interesante para algunas personas, así que voy a compartir con ustedes mi experiencia instalando un Servidor Shiny y RStudio en una Raspberry Pi 3B+. :thumbsup:</p>
-<p>Voy a instalar todo el software directamente en el sistema operativo (Raspbian), sé que hay otras opciones, como los contenedores Docker, pero este es el método que prefiero.</p>
-<p>Además, los pasos que voy a compartir con usted son aplicables para esta configuración específica:</p>
-<p><strong>“Raspberry Pi 3B+ ejecutando Raspbian Stretch Lite (aún no probado en el nuevo Raspbian Buster)”</strong></p>
+<p>Este artículo se publicó originalmente en 2018 y muchas cosas han cambiado desde entonces, por lo que lo reescribí por completo para tener en cuenta los avances más recientes en la compatibilidad con la arquitectura arm64 dentro del ecosistema R.</p>
+<p>En 2018, participé en un tema de foro en <a href="https://community.rstudio.com/t/raspberry-pi-as-a-viable-shiny-server/18672?u=andresrcs">Community RStudio</a> donde <a href="https://twitter.com/jladata">@jladata</a> preguntaba si una Raspberry Pi 3B+ podría convertirse en un servidor Shiny viable. De hecho, yo uso una Raspberry Pi para ese mismo propósito, así que decidí compartir con la comunidad R mi experiencia al configurar Shiny y Rstudio Server de forma nativa en una Raspberry Pi.</p>
+<p>En esos días había casi <strong>cero soporte para arquitecturas ARM</strong> (ya sea x32 o x64), por lo que la mayor parte del software tenía que compilarse desde la fuente en el mismo Pi, lo que hace que el proceso de instalación sea un esfuerzo titánico con muchisimas horas de espera.</p>
+<p>Hoy en día, las cosas han cambiado y tenemos un mejor soporte para la arquitectura arm64 debido a los esfuerzos de la comunidad e incluso soporte oficial de RStudio en proceso. En este renovado artículo, te guiaré a través de las opciones de instalación que tenemos disponibles actualmente.</p>
 <blockquote>
-<p>:warning: Esta guía no funciona directamente con las versiones más recientes de Raspberry Pi OS y el software de RStudio, para un enfoque actualizado, eche un vistazo a este <a href="/es/2021/01/13/raspberry_pi_server/">artículo más reciente</a>.</p>
+<p>:pencil2: También tengo un <a href="/es/2021/01/13/raspberry_pi_server/">artículo relacionado</a> que muestra cómo automatizar el proceso de instalación usando Ansible.</p>
 </blockquote>
 <div id="preparando-la-raspberry-pi" class="section level2">
 <h2>Preparando la Raspberry Pi</h2>
-<p>Primero, debemos comenzar por cargar una imagen nueva de Raspbian Stretch Lite en nuestra tarjeta SD (recomiendo al menos 32 GB clase 10), puede descargarla desde el <a href="https://www.raspberrypi.org/downloads/raspbian/">sitio oficial de Raspbian</a>.</p>
-<p>Aunque no es obligatorio, recomiendo realizar las siguientes acciones utilizando la aplicación <code>sudo raspi-config</code>:</p>
+<p>Primero, necesitas un sistema operativo de 64 bits para tu Pi (asegúrate de que sea de 64 bits ya que RStudio solo es compatible con la arquitectura arm64), estas instrucciones de instalación funcionan tanto para Raspberry Pi OS como para Ubuntu, puedes descargar cualquiera de los dos usando el software Raspberry Pi Imager (<a href="https://www.raspberrypi.com/software/">sitio oficial</a>). También, asegúrate de actualizar las bibliotecas de tu sistema con <code>sudo apt update &amp;&amp; sudo apt dist-upgrade</code> antes de comenzar.</p>
+<p>Aunque no es obligatorio, recomiendo realizar las siguientes acciones utilizando la aplicación <code>sudo raspi-config</code> (en Ubuntu, primero debes instalarla con <code>sudo apt install raspi-config</code>):</p>
 <ul>
-<li>Expandir sistema de archivos (Advanced Options / Expand Filesystem).</li>
-<li>Reducir la memoria de la GPU a 16 MB (Advanced Options / Memory Split).</li>
-<li>Deshabilitar “Interfaces de red predecibles” (Network Options / Network interface names).</li>
+<li>Expandir el sistema de archivos (Advanced Options / Expand Filesystem).</li>
+<li>Definir tu configuración regional, asegúrate de elegir una opción UTF.8 para evitar problemas de compilación (Localisation Options / Locale).</li>
+<li>Configura la memoria para la GPU, en Raspberry Pi OS configúrala en 16 MB, y en Ubuntu configura la división de memoria a “240 240MiB for ARM, 16MiB for VideoCore” (Performance Options/ GPU Memory).</li>
+<li>Deshabilitar “Interfaces de red predecibles” (Advanced Options / Network Interface Names).</li>
 </ul>
-<p>También recomiendo usar una conexión a internet por cable y deshabilitar el módulo wifi/Bluetooth integrado. Puede deshabilitarlo de manera persistente editando este archivo: <code>sudo nano/boot/config.txt</code>, agregando estas dos líneas:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="va">dtoverlay=</span>pi3-disable-bt</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="va">dtoverlay=</span>pi3-disable-wifi</span></code></pre></div>
-<p>Luego, necesitamos establecer una IP estática para nuestra Raspberry Pi, edite este archivo: <code>sudo nano/etc/dhcpcd.conf</code>, de acuerdo con sus propias necesidades. Esta es una configuración de IP de muestra:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Configuración IP de muestra:</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">interface</span> eth0</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="ex">static</span> ip_address=192.168.1.101/24</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co">#static ip6_address=fd51:42f8:caae:d92e::ff/64</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="ex">static</span> routers=192.168.1.1</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="ex">static</span> domain_name_servers=192.168.1.1 8.8.8.8 fd51:42f8:caae:d92e::1</span></code></pre></div>
-<p>Habilite todos los repositorios descomentando todas las líneas en este archivo: <code>sudo nano /etc/apt/sources.list</code> y luego realice las actualizaciones obligatorias con este comando <code>sudo apt update &amp;&amp; sudo apt full-upgrade</code>.</p>
-<p>Debe agregar al menos 1 GB de memoria de intercambio para esta instalación, pero necesitará más luego para instalar/compilar algunas bibliotecas R, por lo que con 3GB estaría bien, puede hacerlo con estos comandos:</p>
+<p>A continuación, debes configurar una IP estática para que puedas encontrar la Pi fácilmente en tu red.</p>
+<p>Para configurar una IP estática en Raspberry Pi OS, edita este archivo, <code>sudo nano /etc/dhcpcd.conf</code>, de acuerdo con tus propias necesidades. Esta es una configuración IP de muestra para una conexión por cable:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Configuración IP de muestra:</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">interface</span> eth0</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">static</span> ip_address=192.168.0.101/24</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="ex">static</span> routers=192.168.0.1</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="ex">static</span> domain_name_servers=192.168.0.1 8.8.8.8</span></code></pre></div>
+<p>Y para configurar la IP en Ubuntu, debes crear este archivo, <code>sudo nano /etc/netplan/01-netcfg.yaml</code>, agregar este contenido (edítalo según sea necesario) y aplicar la configuración con este comando, <code>sudo netplan apply</code>.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">network:</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">version:</span> 2</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="ex">renderer:</span> networkd</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="ex">ethernets:</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>        <span class="ex">eth0:</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>            <span class="ex">dhcp4:</span> false</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>            <span class="ex">addresses:</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>                <span class="ex">-</span> 192.168.0.101/24</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>            <span class="ex">nameservers:</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>                <span class="ex">addresses:</span> [8.8.8.8, 8.8.4.4, 192.168.0.1]</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>            <span class="ex">routes:</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>                <span class="ex">-</span> to: default</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>                  <span class="ex">via:</span> 192.168.0.1</span></code></pre></div>
+<p>En caso de que tengas un modelo de Raspberry Pi con poca RAM, debes agregar algo de memoria sawp para el proceso de instalación. Para los modelos Pi de 1 GB, 3 GB de sawp serían suficientes, puedes hacerlo con estos comandos:</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> /bin/dd if=/dev/zero of=/var/swap.1 bs=1M count=3072</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> /sbin/mkswap /var/swap.1</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> /sbin/swapon /var/swap.1</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> sh <span class="at">-c</span> <span class="st">&#39;echo &quot;/var/swap.1 swap swap defaults 0 0 &quot; &gt;&gt; /etc/fstab&#39;</span></span></code></pre></div>
-<p>Evite el uso innecesario de la memoria de intercambio para proteger su tarjeta SD:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> nano /etc/sysctl.conf</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Agregue esto al final</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="ex">vm.swappiness=10</span></span></code></pre></div>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chmod 600 /var/swap.1</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> /sbin/mkswap /var/swap.1</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> /sbin/swapon /var/swap.1</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> sh <span class="at">-c</span> <span class="st">&#39;echo &quot;/var/swap.1 swap swap defaults 0 0 &quot; &gt;&gt; /etc/fstab&#39;</span></span></code></pre></div>
+<p>Para evitar el uso innecesario de la memoria swap y proteger tu tarjeta SD, abre este archivo, <code>sudo nano /etc/sysctl.conf</code>, y agrega esta línea al final:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>    <span class="ex">vm.swappiness=10</span></span></code></pre></div>
 </div>
-<div id="configurando-el-servidor" class="section level2">
-<h2>Configurando el Servidor</h2>
-<p>Para mayor comodidad, necesitamos un servidor HTML y Nginx es una muy buena opción debido a sus requisitos reducidos. Puede instalar Nginx con estos comandos:</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install nginx</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chown <span class="at">-R</span> www-data:pi /var/www/html/</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chmod <span class="at">-R</span> 770 /var/www/html/</span></code></pre></div>
-<p>Luego, necesitamos un servidor SQL para almacenar y manipular nuestros datos, personalmente prefiero PostgreSQL ya que es de código abierto y tiene capacidades impresionantes, pero depende de usted cuál elegir. Puede instalar PostgreSQL con este comando:</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install postgresql libpq-dev postgresql-client postgresql-client-common</span></code></pre></div>
-<p>Configure PostgreSQL para aceptar conexiones locales y remotas editando estos archivos y modifique/agregue/comente estas líneas:</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> nano /etc/postgresql/9.6/main/pg_hba.conf <span class="co"># Editar como se indica</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">local</span> <span class="va">all</span> <span class="va">all</span> <span class="va">md5</span> # <span class="va">Modificar</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    <span class="ex">host</span> all all 192.168.1.0/24 trust <span class="co"># Agregar</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="ex">host</span> all all 0.0.0.0/0 password <span class="co"># Agregar</span></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> nano /etc/postgresql/9.6/main/postgresql.conf <span class="co"># Editar como se indica</span></span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    <span class="co">#listen_addresses # Comentar </span></span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="va">listen_addresses=</span><span class="st">&#39;*&#39;</span> <span class="co"># Agregar</span></span></code></pre></div>
-<p>Reiniciar el servicio PostgreSQL:</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl restart postgresql</span></code></pre></div>
-<p>Cree el usuario pi y la base de datos en el servidor PostgreSQL:</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> su postgres</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">createuser</span> pi <span class="at">-P</span> <span class="at">--interactive</span></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="ex">psql</span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="ex">create</span> database pi<span class="kw">;</span></span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="ex">\q</span></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="bu">exit</span></span></code></pre></div>
-<p>Ahora, llegamos a la parte específica R del proceso, vamos a instalar la última versión de R desde la fuente con estos comandos:</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt-get install <span class="at">-y</span> gfortran libreadline6-dev libx11-dev libxt-dev <span class="dt">\</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>                               libpng-dev libjpeg-dev libcairo2-dev xvfb <span class="dt">\</span></span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>                               libbz2-dev libzstd-dev liblzma-dev <span class="dt">\</span></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>                               libcurl4-openssl-dev <span class="dt">\</span></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>                               texinfo texlive texlive-fonts-extra <span class="dt">\</span></span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>                               screen wget libpcre2-dev</span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> /usr/local/src</span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> wget https://cran.rstudio.com/src/base/R-4/R-4.0.3.tar.gz</span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> su</span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="fu">tar</span> zxvf R-4.0.3.tar.gz</span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> R-4.0.3</span>
-<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a><span class="ex">./configure</span> <span class="at">--enable-R-shlib</span> <span class="co">#--with-blas --with-lapack #optional</span></span>
-<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span></span>
-<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> install</span>
-<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ..</span>
-<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-rf</span> R-4.0.3<span class="pp">*</span></span>
-<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a><span class="bu">exit</span></span>
-<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span></span></code></pre></div>
-<p>:heavy_exclamation_mark: <strong><em>ADVERTENCIA: TODO LUEGO DE ESTE PUNTO CONSUME DEMASIADO TIEMPO</em>, por ejemplo, instalar RStudio desde la fuente en Raspbian puede tomar alrededor de 27 horas</strong> :open_mouth:</p>
-</div>
-<div id="instalando-shiny-server" class="section level2">
-<h2>Instalando Shiny Server</h2>
-<p>Vamos a instalar el Servidor Shiny desde la fuente, pero primero, tenemos que instalar sus dependencias.</p>
-<blockquote>
-<p>:pencil2: Es necesario instalar paquetes R como superusuario, para que Shiny pueda usarlos.</p>
-</blockquote>
-<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> su <span class="at">-</span> <span class="at">-c</span> <span class="st">&quot;R -e </span><span class="dt">\&quot;</span><span class="st">install.packages(&#39;later&#39;, repos=&#39;http://cran.rstudio.com/&#39;)</span><span class="dt">\&quot;</span><span class="st">&quot;</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> su <span class="at">-</span> <span class="at">-c</span> <span class="st">&quot;R -e </span><span class="dt">\&quot;</span><span class="st">install.packages(&#39;fs&#39;, repos=&#39;http://cran.rstudio.com/&#39;)</span><span class="dt">\&quot;</span><span class="st">&quot;</span></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> su <span class="at">-</span> <span class="at">-c</span> <span class="st">&quot;R -e </span><span class="dt">\&quot;</span><span class="st">install.packages(&#39;Rcpp&#39;, repos=&#39;http://cran.rstudio.com/&#39;)</span><span class="dt">\&quot;</span><span class="st">&quot;</span></span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> su <span class="at">-</span> <span class="at">-c</span> <span class="st">&quot;R -e </span><span class="dt">\&quot;</span><span class="st">install.packages(&#39;httpuv&#39;, repos=&#39;http://cran.rstudio.com/&#39;)</span><span class="dt">\&quot;</span><span class="st">&quot;</span></span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> su <span class="at">-</span> <span class="at">-c</span> <span class="st">&quot;R -e </span><span class="dt">\&quot;</span><span class="st">install.packages(&#39;mime&#39;, repos=&#39;http://cran.rstudio.com/&#39;)</span><span class="dt">\&quot;</span><span class="st">&quot;</span></span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> su <span class="at">-</span> <span class="at">-c</span> <span class="st">&quot;R -e </span><span class="dt">\&quot;</span><span class="st">install.packages(&#39;jsonlite&#39;, repos=&#39;http://cran.rstudio.com/&#39;)</span><span class="dt">\&quot;</span><span class="st">&quot;</span></span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> su <span class="at">-</span> <span class="at">-c</span> <span class="st">&quot;R -e </span><span class="dt">\&quot;</span><span class="st">install.packages(&#39;digest&#39;, repos=&#39;http://cran.rstudio.com/&#39;)</span><span class="dt">\&quot;</span><span class="st">&quot;</span></span>
-<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> su <span class="at">-</span> <span class="at">-c</span> <span class="st">&quot;R -e </span><span class="dt">\&quot;</span><span class="st">install.packages(&#39;htmltools&#39;, repos=&#39;http://cran.rstudio.com/&#39;)</span><span class="dt">\&quot;</span><span class="st">&quot;</span></span>
-<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> su <span class="at">-</span> <span class="at">-c</span> <span class="st">&quot;R -e </span><span class="dt">\&quot;</span><span class="st">install.packages(&#39;xtable&#39;, repos=&#39;http://cran.rstudio.com/&#39;)</span><span class="dt">\&quot;</span><span class="st">&quot;</span></span>
-<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> su <span class="at">-</span> <span class="at">-c</span> <span class="st">&quot;R -e </span><span class="dt">\&quot;</span><span class="st">install.packages(&#39;R6&#39;, repos=&#39;http://cran.rstudio.com/&#39;)</span><span class="dt">\&quot;</span><span class="st">&quot;</span></span>
-<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> su <span class="at">-</span> <span class="at">-c</span> <span class="st">&quot;R -e </span><span class="dt">\&quot;</span><span class="st">install.packages(&#39;Cairo&#39;, repos=&#39;http://cran.rstudio.com/&#39;)</span><span class="dt">\&quot;</span><span class="st">&quot;</span></span>
-<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> su <span class="at">-</span> <span class="at">-c</span> <span class="st">&quot;R -e </span><span class="dt">\&quot;</span><span class="st">install.packages(&#39;sourcetools&#39;, repos=&#39;http://cran.rstudio.com/&#39;)</span><span class="dt">\&quot;</span><span class="st">&quot;</span></span>
-<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> su <span class="at">-</span> <span class="at">-c</span> <span class="st">&quot;R -e </span><span class="dt">\&quot;</span><span class="st">install.packages(&#39;shiny&#39;, repos=&#39;http://cran.rstudio.com/&#39;)</span><span class="dt">\&quot;</span><span class="st">&quot;</span></span></code></pre></div>
-<p>Instale cmake desde la fuente:</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">wget</span> https://cmake.org/files/v3.19/cmake-3.19.1.tar.gz <span class="co"># Buscar la ultima version en https://cmake.org/files/</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">tar</span> xzf cmake-3.19.1.tar.gz</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> cmake-3.19.1</span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="ex">./configure</span><span class="kw">;</span> <span class="fu">make</span></span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> make install</span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span></span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> cmake-3.19.1.tar.gz</span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-rf</span> cmake-3.19.1</span></code></pre></div>
-<p>Ahora podemos instalar Shiny Server con estos comandos:</p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone https://github.com/rstudio/shiny-server.git</span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> shiny-server</span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="va">DIR=</span><span class="kw">`</span><span class="bu">pwd</span><span class="kw">`</span></span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="va">PATH=$DIR</span>/bin:<span class="va">$PATH</span></span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> tmp</span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> tmp</span>
-<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="va">PYTHON=</span><span class="kw">`</span><span class="fu">which</span> python<span class="kw">`</span></span>
-<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> cmake <span class="at">-DCMAKE_INSTALL_PREFIX</span><span class="op">=</span>/usr/local <span class="at">-DPYTHON</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$PYTHON</span><span class="st">&quot;</span> ../</span>
-<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> make</span>
-<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> ../build</span>
-<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-i</span> <span class="st">&#39;8s/.*/NODE_SHA256=abef7d431d6d0e067fe5797d4fe44039a5577f01ed9e40d7a3496cbb22502f55/&#39;</span> ../external/node/install-node.sh <span class="co"># node-v12.20.0-linux-armv7l.tar.xz</span></span>
-<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-i</span> <span class="st">&#39;s/linux-x64.tar.xz/linux-armv7l.tar.xz/&#39;</span> ../external/node/install-node.sh</span>
-<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-i</span> <span class="st">&#39;s/https:\/\/github.com\/jcheng5\/node-centos6\/releases\/download\//https:\/\/nodejs.org\/dist\//&#39;</span> ../external/node/install-node.sh</span>
-<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a><span class="kw">(</span><span class="bu">cd</span> .. <span class="kw">&amp;&amp;</span> <span class="fu">sudo</span> ./external/node/install-node.sh<span class="kw">)</span></span>
-<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a><span class="kw">(</span><span class="bu">cd</span> .. <span class="kw">&amp;&amp;</span> <span class="ex">./bin/npm</span> <span class="at">--python</span><span class="op">=</span><span class="st">&quot;</span><span class="va">${PYTHON}</span><span class="st">&quot;</span> install <span class="at">--no-optional</span><span class="kw">)</span></span>
-<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a><span class="kw">(</span><span class="bu">cd</span> .. <span class="kw">&amp;&amp;</span> <span class="ex">./bin/node</span> ./ext/node/lib/node_modules/npm/node_modules/node-gyp/bin/node-gyp.js <span class="at">--python</span><span class="op">=</span><span class="st">&quot;</span><span class="va">${PYTHON}</span><span class="st">&quot;</span> rebuild<span class="kw">)</span></span>
-<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> make install</span>
-<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> mkdir <span class="at">-p</span> /etc/shiny-server</span>
-<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> cp ../config/default.config /etc/shiny-server/shiny-server.conf</span>
-<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span></span>
-<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> rm <span class="at">-rf</span> shiny-server</span></code></pre></div>
-<p>Después de instalarlo, debe configurar Shiny Server con estos comandos:</p>
-<div class="sourceCode" id="cb14"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ln <span class="at">-s</span> /usr/local/shiny-server/bin/shiny-server /usr/bin/shiny-server</span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> useradd <span class="at">-r</span> <span class="at">-m</span> shiny</span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> mkdir <span class="at">-p</span> /var/log/shiny-server</span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> mkdir <span class="at">-p</span> /srv/shiny-server</span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> mkdir <span class="at">-p</span> /var/lib/shiny-server</span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chown shiny /var/log/shiny-server</span>
-<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> mkdir <span class="at">-p</span> /etc/shiny-server</span>
-<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span></span>
-<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> wget <span class="dt">\</span></span>
-<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>https://raw.github.com/rstudio/shiny-server/master/config/upstart/shiny-server.conf <span class="dt">\</span></span>
-<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>-O /etc/init/shiny-server.conf</span>
-<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chmod 777 <span class="at">-R</span> /srv</span>
-<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Configurar inicio automático de shiny-server</span></span>
-<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> nano /lib/systemd/system/shiny-server.service <span class="co"># Pegue lo siguiente</span></span>
-<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>    <span class="co">#!/usr/bin/env bash</span></span>
-<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>    <span class="ex">[Unit]</span></span>
-<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>    <span class="va">Description=</span>ShinyServer</span>
-<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>    <span class="ex">[Service]</span></span>
-<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>    <span class="va">Type=</span>simple</span>
-<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a>    <span class="va">ExecStart=</span>/usr/bin/shiny-server</span>
-<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a>    <span class="va">Restart=</span>always</span>
-<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Environment=&quot;LANG=en_US.UTF-8&quot;</span></span>
-<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a>    <span class="va">ExecReload=</span>/bin/kill <span class="ex">-HUP</span> <span class="va">$MAINPID</span></span>
-<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a>    <span class="va">ExecStopPost=</span>/bin/sleep <span class="ex">5</span></span>
-<span id="cb14-26"><a href="#cb14-26" aria-hidden="true" tabindex="-1"></a>    <span class="va">RestartSec=</span>1</span>
-<span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a>    <span class="ex">[Install]</span></span>
-<span id="cb14-28"><a href="#cb14-28" aria-hidden="true" tabindex="-1"></a>    <span class="va">WantedBy=</span>multi-user.target</span>
-<span id="cb14-29"><a href="#cb14-29" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-30"><a href="#cb14-30" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chown shiny /lib/systemd/system/shiny-server.service</span>
-<span id="cb14-31"><a href="#cb14-31" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl daemon-reload</span>
-<span id="cb14-32"><a href="#cb14-32" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl enable shiny-server</span>
-<span id="cb14-33"><a href="#cb14-33" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl start shiny-server</span>
-<span id="cb14-34"><a href="#cb14-34" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-35"><a href="#cb14-35" aria-hidden="true" tabindex="-1"></a><span class="co"># Configurar los permisos adecuados</span></span>
-<span id="cb14-36"><a href="#cb14-36" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> groupadd shiny-apps</span>
-<span id="cb14-37"><a href="#cb14-37" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> usermod <span class="at">-aG</span> shiny-apps pi</span>
-<span id="cb14-38"><a href="#cb14-38" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> usermod <span class="at">-aG</span> shiny-apps shiny</span>
-<span id="cb14-39"><a href="#cb14-39" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> /srv/shiny-server</span>
-<span id="cb14-40"><a href="#cb14-40" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chown <span class="at">-R</span> pi:shiny-apps .</span>
-<span id="cb14-41"><a href="#cb14-41" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chmod g+w .</span>
-<span id="cb14-42"><a href="#cb14-42" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chmod g+s .</span></code></pre></div>
-</div>
-<div id="instalando-rstudio-server" class="section level2">
-<h2>Instalando Rstudio Server</h2>
-<p>Vamos a instalar el servidor RStudio desde la fuente, esto lleva mucho tiempo (aproximadamente 27 horas la última vez que lo verifiqué), así que consiga algo que hacer mientras Raspberry Pi instala las dependencias y compila todo.</p>
-<div class="sourceCode" id="cb15"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Clonar el repositorio de RStudio</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> git clone https://github.com/rstudio/rstudio.git</span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Evitar instalar crashpad y sentry-cli</span></span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> nano /home/pi/rstudio/dependencies/common/install-common</span>
-<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Comente estas lineas</span></span>
-<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>        <span class="co">#./install-sentry-cli</span></span>
-<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>        <span class="co"># ./install-crashpad</span></span>
-<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>        <span class="co"># sudo ./install-crashpad</span></span>
-<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Instale las dependencias del sistema</span></span>
-<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> rstudio/dependencies/linux</span>
-<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> su</span>
-<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a><span class="ex">./install-dependencies-stretch</span> <span class="at">--exclude-qt-sdk</span></span>
-<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a><span class="ex">apt-get</span> install <span class="at">-y</span> openjdk-8-jdk</span>
-<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a><span class="ex">apt</span> autoremove</span>
-<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Configure Java</span></span>
-<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a><span class="ex">java</span> <span class="at">-Xms1800m</span></span>
-<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Instale la ultima version de Closure compiler (ya no se actualiza)</span></span>
-<span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> /home/pi/rstudio</span>
-<span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a><span class="fu">wget</span> https://dl.google.com/closure-compiler/compiler-20200719.zip</span>
-<span id="cb15-24"><a href="#cb15-24" aria-hidden="true" tabindex="-1"></a><span class="fu">unzip</span> compiler-20200719.zip</span>
-<span id="cb15-25"><a href="#cb15-25" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> COPYING README.md compiler-20200719.zip</span>
-<span id="cb15-26"><a href="#cb15-26" aria-hidden="true" tabindex="-1"></a><span class="fu">mv</span> closure-compiler-v20200719.jar /home/pi/rstudio/src/gwt/tools/compiler/compiler.jar</span>
-<span id="cb15-27"><a href="#cb15-27" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-28"><a href="#cb15-28" aria-hidden="true" tabindex="-1"></a><span class="co"># Compile é instale RStudio</span></span>
-<span id="cb15-29"><a href="#cb15-29" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> build</span>
-<span id="cb15-30"><a href="#cb15-30" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> build</span>
-<span id="cb15-31"><a href="#cb15-31" aria-hidden="true" tabindex="-1"></a><span class="fu">cmake</span> .. <span class="at">-DRSTUDIO_TARGET</span><span class="op">=</span>Server <span class="at">-DCMAKE_BUILD_TYPE</span><span class="op">=</span>Release</span>
-<span id="cb15-32"><a href="#cb15-32" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> install</span>
-<span id="cb15-33"><a href="#cb15-33" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-34"><a href="#cb15-34" aria-hidden="true" tabindex="-1"></a><span class="co">#Configure Rstudio</span></span>
-<span id="cb15-35"><a href="#cb15-35" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span></span>
-<span id="cb15-36"><a href="#cb15-36" aria-hidden="true" tabindex="-1"></a><span class="ex">useradd</span> <span class="at">-r</span> rstudio-server</span>
-<span id="cb15-37"><a href="#cb15-37" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> /usr/local/lib/rstudio-server/extras/init.d/debian/rstudio-server /etc/init.d/rstudio-server</span>
-<span id="cb15-38"><a href="#cb15-38" aria-hidden="true" tabindex="-1"></a><span class="fu">chmod</span> +x /etc/init.d/rstudio-server </span>
-<span id="cb15-39"><a href="#cb15-39" aria-hidden="true" tabindex="-1"></a><span class="ex">update-rc.d</span> rstudio-server defaults</span>
-<span id="cb15-40"><a href="#cb15-40" aria-hidden="true" tabindex="-1"></a><span class="fu">ln</span> <span class="at">-f</span> <span class="at">-s</span> /usr/local/lib/rstudio-server/bin/rstudio-server /usr/sbin/rstudio-server</span>
-<span id="cb15-41"><a href="#cb15-41" aria-hidden="true" tabindex="-1"></a><span class="fu">chmod</span> 777 <span class="at">-R</span> /usr/local/lib/R/site-library/</span>
-<span id="cb15-42"><a href="#cb15-42" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> /var/run/rstudio-server</span>
-<span id="cb15-43"><a href="#cb15-43" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> /var/lock/rstudio-server</span>
-<span id="cb15-44"><a href="#cb15-44" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> /var/log/rstudio-server</span>
-<span id="cb15-45"><a href="#cb15-45" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> /var/lib/rstudio-server</span>
-<span id="cb15-46"><a href="#cb15-46" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-rf</span> /home/pi/rstudio</span>
-<span id="cb15-47"><a href="#cb15-47" aria-hidden="true" tabindex="-1"></a><span class="fu">nano</span> /etc/init.d/rstudio-server</span>
-<span id="cb15-48"><a href="#cb15-48" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Modifique su variable PATH para que utilizar la versión compilada de R</span></span>
-<span id="cb15-49"><a href="#cb15-49" aria-hidden="true" tabindex="-1"></a>        <span class="co"># PATH=/usr/local/bin/:/sbin:/usr/sbin:/bin:/usr/bin</span></span>
-<span id="cb15-50"><a href="#cb15-50" aria-hidden="true" tabindex="-1"></a><span class="ex">systemctl</span> daemon-reload</span>
-<span id="cb15-51"><a href="#cb15-51" aria-hidden="true" tabindex="-1"></a><span class="ex">rstudio-server</span> start</span>
-<span id="cb15-52"><a href="#cb15-52" aria-hidden="true" tabindex="-1"></a><span class="bu">exit</span></span></code></pre></div>
-</div>
-<div id="pasos-adicionales" class="section level2">
-<h2>Pasos Adicionales</h2>
-<p>Crea URLs bonitas para Shiny y Rstudio Server (Por ejemplo: <code>http://su-ip/shiny/su-aplicacion</code> en vez de <code>http://su-ip:3838/su-aplicacion</code>) editando el archivo de configuración de Nginx: <code>sudo nano /etc/nginx/sites-enabled/default</code> y agregando las siguientes líneas antes de la línea que dice <code>server {</code></p>
-<div class="sourceCode" id="cb16"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ex">map</span> <span class="va">$http_upgrade</span> <span class="va">$connection_upgrade</span> {</span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>      <span class="ex">default</span> upgrade<span class="kw">;</span></span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>      <span class="st">&#39;&#39;</span>      close<span class="kw">;</span></span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    <span class="er">}</span></span></code></pre></div>
-<p>Agregue las siguientes líneas justo después de la línea que dice <code>server_name _;</code></p>
-<div class="sourceCode" id="cb17"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>    <span class="ex">rewrite</span> ^/shiny$ <span class="va">$scheme</span>://<span class="va">$http_host</span>/shiny/ permanent<span class="kw">;</span></span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    <span class="ex">location</span> /shiny/ {</span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>            <span class="ex">rewrite</span> ^/shiny/<span class="er">(</span><span class="bu">.</span><span class="pp">*</span><span class="kw">)</span><span class="ex">$</span> /<span class="va">$1</span> break<span class="kw">;</span></span>
-<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>            <span class="ex">proxy_pass</span> http://localhost:3838<span class="kw">;</span></span>
-<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>            <span class="ex">proxy_redirect</span> / <span class="va">$scheme</span>://<span class="va">$http_host</span>/shiny/<span class="kw">;</span></span>
-<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>            <span class="ex">proxy_http_version</span> 1.1<span class="kw">;</span></span>
-<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>            <span class="ex">proxy_set_header</span> Upgrade <span class="va">$http_upgrade</span><span class="kw">;</span></span>
-<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>            <span class="ex">proxy_set_header</span> Connection <span class="va">$connection_upgrade</span><span class="kw">;</span></span>
-<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>            <span class="ex">proxy_read_timeout</span> 20d<span class="kw">;</span></span>
-<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>            <span class="ex">proxy_buffering</span> off<span class="kw">;</span></span>
-<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>    <span class="er">}</span></span>
-<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>    <span class="ex">rewrite</span> ^/rstudio$ <span class="va">$scheme</span>://<span class="va">$http_host</span>/rstudio/ permanent<span class="kw">;</span> </span>
-<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>    <span class="ex">location</span> /rstudio/ {</span>
-<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>        <span class="ex">rewrite</span> ^/rstudio/<span class="er">(</span><span class="bu">.</span><span class="pp">*</span><span class="kw">)</span><span class="ex">$</span> /<span class="va">$1</span> break<span class="kw">;</span></span>
-<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a>        <span class="ex">proxy_pass</span> http://localhost:8787<span class="kw">;</span></span>
-<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a>        <span class="ex">proxy_redirect</span> http://localhost:8787/ <span class="va">$scheme</span>://<span class="va">$http_host</span>/rstudio/<span class="kw">;</span></span>
-<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a>        <span class="ex">proxy_http_version</span> 1.1<span class="kw">;</span></span>
-<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a>        <span class="ex">proxy_set_header</span> Upgrade <span class="va">$http_upgrade</span><span class="kw">;</span></span>
-<span id="cb17-22"><a href="#cb17-22" aria-hidden="true" tabindex="-1"></a>        <span class="ex">proxy_set_header</span> Connection <span class="va">$connection_upgrade</span><span class="kw">;</span></span>
-<span id="cb17-23"><a href="#cb17-23" aria-hidden="true" tabindex="-1"></a>        <span class="ex">proxy_read_timeout</span> 20d<span class="kw">;</span></span>
-<span id="cb17-24"><a href="#cb17-24" aria-hidden="true" tabindex="-1"></a>    <span class="er">}</span></span></code></pre></div>
-<p>Ahora debe reiniciar Nginx para aplicar los cambios:</p>
-<div class="sourceCode" id="cb18"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> service nginx restart</span></code></pre></div>
-<p>Si desea tener acceso a su servidor desde orígenes remotos (a través de Internet), debe seguir estos pasos adicionales:</p>
+<div id="instalar-r" class="section level2">
+<h2>Instalar R</h2>
+<p>Para instalar R en tu Pi tienes algunas opciones, cada una con sus pros y sus contras:</p>
 <ul>
-<li>Si no tiene una IP pública estática:
-<ul>
-<li>Abra una cuenta en un servicio de DNS dinámico, por ejemplo, <a href="https://www.noip.com" class="uri">https://www.noip.com</a></li>
-<li>Configure el DNS dinámico en su enrutador/módem, si no tiene esa opción, puede instalar un cliente DDNS en su servidor.</li>
-<li>Opcionalmente, configure su nombre de dominio personal para que apunte a su servicio DDNS.</li>
-</ul></li>
-<li>Configure el reenvío de puertos en su enrutador/módem:
-<ul>
-<li>Para SSH, SCP, SFTP abra el puerto TCP/UDP 22</li>
-<li>Para PostgreSQL abra el puerto TCP/UDP 5432</li>
-<li>Para HTTP abra el puerto TCP 80</li>
-<li>Si no ha configurado Nginx, abra el puerto 8787 para RStudio.</li>
-<li>Si no ha configurado Nginx, abra el puerto 3838 para el servidor Shiny.</li>
-</ul></li>
-<li>Asegúrese de tener “Bloquear tráfico WAN” deshabilitado en su enrutador/módem.</li>
+<li><p>Los repositorios deb estándar para de tu sistema operativo proporcionan archivos binarios de R que son muy simples de instalar, pero son versiones antiguas de R (4.0.0 para Raspberry Pi OS y 4.1.2 para Ubuntu 22.04.1).</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install r-base</span></code></pre></div></li>
+<li><p>El <a href="https://r4pi.org/">Proyecto R4Pi</a> proporciona un repositorio deb para archivos binarios precompilados de 32 bits para R desde 2021 y archivos binarios de 64 bits desde septiembre de 2022. Instalar R desde estos archivos binarios precompilados es mucho más rápido que compilarlos tu mismo, y también proporcionan un repositorio con binarios precompilados de paquetes que hace que la instalación de paquetes sea mucho más rápida y sencilla.</p>
+<p>Lamentablemente, sólo son compatibles con Raspberry Pi OS, si has elegido este sistema operativo, te recomiendo usar esta opción ya que las ganancias en velocidad son considerables.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-O</span>  https://pkgs.r4pi.org/dl/r4pi-repo-conf_0.0.1-1_all.deb</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> dpkg <span class="at">-i</span>  r4pi-repo-conf_0.0.1-1_all.deb</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt update</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install r4pi</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> r4pi-repo-conf_0.0.1-1_all.deb</span></code></pre></div></li>
+<li><p>Siempre puedes compilar R desde la fuente, independientemente del sistema operativo que estés utilizando, esto te ofrece la oportunidad de elegir las opciones de compilación, pero a costa de esperar mucho tiempo para que se complete el proceso de compilación.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Especifíca la version R para instalar</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="va">R_VERSION</span><span class="op">=</span>4.2.1</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install <span class="at">-y</span> g++ gcc gfortran libreadline-dev libx11-dev libxt-dev <span class="dt">\</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>                    libpng-dev libjpeg-dev libcairo2-dev xvfb <span class="dt">\</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>                    libbz2-dev libzstd-dev liblzma-dev libtiff5 <span class="dt">\</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>                    libssh-dev libgit2-dev libcurl4-openssl-dev <span class="dt">\</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>                    libblas-dev liblapack-dev libopenblas-base <span class="dt">\</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>                    zlib1g-dev openjdk-11-jdk <span class="dt">\</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>                    texinfo texlive texlive-fonts-extra <span class="dt">\</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>                    screen wget libpcre2-dev make cmake</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> /usr/local/src</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> wget https://cran.rstudio.com/src/base/R-<span class="va">${R_VERSION</span><span class="op">:</span><span class="dv">0</span><span class="op">:</span><span class="dv">1</span><span class="va">}</span>/R-<span class="va">$R_VERSION</span>.tar.gz</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> su</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="fu">tar</span> zxvf R-<span class="va">$R_VERSION</span>.tar.gz</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> R-<span class="va">$R_VERSION</span></span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a><span class="ex">./configure</span> <span class="at">--enable-R-shlib</span> <span class="at">--with-blas</span> <span class="at">--with-lapack</span> <span class="co">#BLAS and LAPACK are optional</span></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> install</span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ..</span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-rf</span> R-<span class="va">$R_VERSION</span><span class="pp">*</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a><span class="bu">exit</span></span></code></pre></div></li>
 </ul>
-<p>Y ya está, está listo para comenzar a desarrollar sus aplicaciones Shiny y desplegarlas en la carpeta <code>/srv/shiny-server</code> de su propio servidor, ¡disfrute!</p>
+</div>
+<div id="instalar-shiny-server" class="section level2">
+<h2>Instalar Shiny Server</h2>
+<p>Actualmente, <code>shiny-server</code> no ofrece compatibilidad con ARM, por lo que la única opción para instalarlo en una Pi es compilar desde la fuente. Hay esperanza de que esto cambie en el futuro según la respuesta a este <a href="https://github.com/rstudio/shiny-server/issues/532#issuecomment-1223282001">GitHub Issue</a>, pero por el momento estamos atrapado con esto.</p>
+<p>Primero, debes instalar las dependencias de paquetes R, si estás utilizando un repositorio CRAN, esto llevará un tiempo, pero es mucho más rápido si estás utilizando el repositorio R4Pi (disponible con R instalado desde R4Pi):</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Define tu repositorio de paquetes R</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="va">REPO</span><span class="op">=</span><span class="st">&quot;&#39;http://cran.rstudio.com/&#39;&quot;</span> <span class="co"># Para R instalado desde un repositorio estándar o compilado desde CRAN</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="va">REPO</span><span class="op">=</span><span class="st">&quot;c(&#39;https://pkgs.r4pi.org/aarch64&#39;, &#39;http://cran.rstudio.com/&#39;)&quot;</span> <span class="co"># Para R instalado desde R4Pi</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Asegúrate de que las dependencias del sistema estén instaladas</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install libcairo2-dev libxt-dev git cmake pandoc pandoc-citeproc</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Instala los paquetes R requeridos como sudo</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> su <span class="at">-</span> <span class="at">-c</span> <span class="st">&quot;R -e </span><span class="dt">\&quot;</span><span class="st">install.packages(&#39;Rcpp&#39;, repos=</span><span class="va">$REPO</span><span class="st">)</span><span class="dt">\&quot;</span><span class="st">&quot;</span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> su <span class="at">-</span> <span class="at">-c</span> <span class="st">&quot;R -e </span><span class="dt">\&quot;</span><span class="st">install.packages(&#39;later&#39;, repos=</span><span class="va">$REPO</span><span class="st">)</span><span class="dt">\&quot;</span><span class="st">&quot;</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> su <span class="at">-</span> <span class="at">-c</span> <span class="st">&quot;R -e </span><span class="dt">\&quot;</span><span class="st">install.packages(&#39;fs&#39;, repos=</span><span class="va">$REPO</span><span class="st">)</span><span class="dt">\&quot;</span><span class="st">&quot;</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> su <span class="at">-</span> <span class="at">-c</span> <span class="st">&quot;R -e </span><span class="dt">\&quot;</span><span class="st">install.packages(&#39;R6&#39;, repos=</span><span class="va">$REPO</span><span class="st">)</span><span class="dt">\&quot;</span><span class="st">&quot;</span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> su <span class="at">-</span> <span class="at">-c</span> <span class="st">&quot;R -e </span><span class="dt">\&quot;</span><span class="st">install.packages(&#39;Cairo&#39;, repos=</span><span class="va">$REPO</span><span class="st">)</span><span class="dt">\&quot;</span><span class="st">&quot;</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> su <span class="at">-</span> <span class="at">-c</span> <span class="st">&quot;R -e </span><span class="dt">\&quot;</span><span class="st">install.packages(&#39;httpuv&#39;, repos=</span><span class="va">$REPO</span><span class="st">)</span><span class="dt">\&quot;</span><span class="st">&quot;</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> su <span class="at">-</span> <span class="at">-c</span> <span class="st">&quot;R -e </span><span class="dt">\&quot;</span><span class="st">install.packages(&#39;mime&#39;, repos=</span><span class="va">$REPO</span><span class="st">)</span><span class="dt">\&quot;</span><span class="st">&quot;</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> su <span class="at">-</span> <span class="at">-c</span> <span class="st">&quot;R -e </span><span class="dt">\&quot;</span><span class="st">install.packages(&#39;jsonlite&#39;, repos=</span><span class="va">$REPO</span><span class="st">)</span><span class="dt">\&quot;</span><span class="st">&quot;</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> su <span class="at">-</span> <span class="at">-c</span> <span class="st">&quot;R -e </span><span class="dt">\&quot;</span><span class="st">install.packages(&#39;digest&#39;, repos=</span><span class="va">$REPO</span><span class="st">)</span><span class="dt">\&quot;</span><span class="st">&quot;</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> su <span class="at">-</span> <span class="at">-c</span> <span class="st">&quot;R -e </span><span class="dt">\&quot;</span><span class="st">install.packages(&#39;htmltools&#39;, repos=</span><span class="va">$REPO</span><span class="st">)</span><span class="dt">\&quot;</span><span class="st">&quot;</span></span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> su <span class="at">-</span> <span class="at">-c</span> <span class="st">&quot;R -e </span><span class="dt">\&quot;</span><span class="st">install.packages(&#39;xtable&#39;, repos=</span><span class="va">$REPO</span><span class="st">)</span><span class="dt">\&quot;</span><span class="st">&quot;</span></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> su <span class="at">-</span> <span class="at">-c</span> <span class="st">&quot;R -e </span><span class="dt">\&quot;</span><span class="st">install.packages(&#39;sourcetools&#39;, repos=</span><span class="va">$REPO</span><span class="st">)</span><span class="dt">\&quot;</span><span class="st">&quot;</span></span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> su <span class="at">-</span> <span class="at">-c</span> <span class="st">&quot;R -e </span><span class="dt">\&quot;</span><span class="st">install.packages(&#39;shiny&#39;, repos=</span><span class="va">$REPO</span><span class="st">)</span><span class="dt">\&quot;</span><span class="st">&quot;</span></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> su <span class="at">-</span> <span class="at">-c</span> <span class="st">&quot;R -e </span><span class="dt">\&quot;</span><span class="st">install.packages(&#39;rmarkdown&#39;, repos=</span><span class="va">$REPO</span><span class="st">)</span><span class="dt">\&quot;</span><span class="st">&quot;</span></span></code></pre></div>
+<blockquote>
+<p>:pencil2: Es necesario instalar los paquetes de R como sudo para que shiny-server pueda usarlos, no instales estos paquetes desde la consola de R usando tu usuario habitual.</p>
+</blockquote>
+<p>Ahora, puedes instalar shiny-server con estos comandos:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Descarga el código fuente de la última versión shiny-server desde GitHub</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone <span class="at">--depth</span> 1 <span class="at">--branch</span> v1.5.19.995 https://github.com/rstudio/shiny-server.git</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Compila el código fuente</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> shiny-server</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="va">DIR</span><span class="op">=</span><span class="kw">`</span><span class="bu">pwd</span><span class="kw">`</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="va">PATH</span><span class="op">=</span><span class="va">$DIR</span>/bin:<span class="va">$PATH</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> tmp</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> tmp</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a><span class="va">PYTHON</span><span class="op">=</span><span class="kw">`</span><span class="fu">which</span> python<span class="kw">`</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> cmake <span class="at">-DCMAKE_INSTALL_PREFIX</span><span class="op">=</span>/usr/local <span class="at">-DPYTHON</span><span class="op">=</span><span class="st">&quot;</span><span class="va">$PYTHON</span><span class="st">&quot;</span> ../</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> make</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> ../build</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Modifique algunos enlaces de descarga y SHASUMs para compatibilidad con arm64</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-i</span> <span class="st">&#39;8s/.*/NODE_SHA256=5a6e818c302527a4b1cdf61d3188408c8a3e4a1bbca1e3f836c93ea8469826ce/&#39;</span> ../external/node/install-node.sh <span class="co"># SHAMSUM para node-v16.14.0-linux-arm64.tar.xz</span></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-i</span> <span class="st">&#39;s/linux-x64.tar.xz/linux-arm64.tar.xz/&#39;</span> ../external/node/install-node.sh</span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-i</span> <span class="st">&#39;s/https:\/\/github.com\/jcheng5\/node-centos6\/releases\/download\//https:\/\/nodejs.org\/dist\//&#39;</span> ../external/node/install-node.sh</span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-i</span> <span class="st">&#39;s/sha512-3RAVyfbptsR6HOFA0BFNLyw8ZXXDRWf5P3tIslbNt12kTikaRWepRR9vLHMyibIZeNfScI9uGqcn1KfbIAeuXA==/sha512-ZwrJM2WaOJesJGZlejLqAiBAE6Ts2PZNk1pQ\/x1uTMsQw83BaXWShjqCbhh5bPQUNrlx2Ijz1dOr0hLmlkxKag==/&#39;</span> ../npm-shrinkwrap.json</span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Instala el node para arm64 y reconstruye los módulos node</span></span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a><span class="kw">(</span><span class="bu">cd</span> .. <span class="kw">&amp;&amp;</span> <span class="fu">sudo</span> ./external/node/install-node.sh<span class="kw">)</span></span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a><span class="kw">(</span><span class="bu">cd</span> .. <span class="kw">&amp;&amp;</span> <span class="ex">./bin/npm</span> <span class="at">--python</span><span class="op">=</span><span class="st">&quot;</span><span class="va">${PYTHON}</span><span class="st">&quot;</span> install <span class="at">--no-optional</span><span class="kw">)</span></span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a><span class="kw">(</span><span class="bu">cd</span> .. <span class="kw">&amp;&amp;</span> <span class="ex">./bin/node</span> ./ext/node/lib/node_modules/npm/node_modules/node-gyp/bin/node-gyp.js <span class="at">--python</span><span class="op">=</span><span class="st">&quot;</span><span class="va">${PYTHON}</span><span class="st">&quot;</span> rebuild<span class="kw">)</span></span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a><span class="co"># Instala shiny-server</span></span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> make install</span>
+<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a><span class="co"># Configura shiny-server</span></span>
+<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> mkdir <span class="at">-p</span> /etc/shiny-server</span>
+<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> cp ../config/default.config /etc/shiny-server/shiny-server.conf</span>
+<span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> cp ../config/init.d/debian/shiny-server /etc/init.d/shiny-server</span>
+<span id="cb9-33"><a href="#cb9-33" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span></span>
+<span id="cb9-34"><a href="#cb9-34" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> rm <span class="at">-rf</span> shiny-server</span>
+<span id="cb9-35"><a href="#cb9-35" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ln <span class="at">-s</span> /usr/local/shiny-server/bin/shiny-server /usr/bin/shiny-server</span>
+<span id="cb9-36"><a href="#cb9-36" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> useradd <span class="at">-r</span> <span class="at">-m</span> shiny</span>
+<span id="cb9-37"><a href="#cb9-37" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> mkdir <span class="at">-p</span> /var/log/shiny-server</span>
+<span id="cb9-38"><a href="#cb9-38" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> mkdir <span class="at">-p</span> /srv/shiny-server</span>
+<span id="cb9-39"><a href="#cb9-39" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> mkdir <span class="at">-p</span> /var/lib/shiny-server</span>
+<span id="cb9-40"><a href="#cb9-40" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chown shiny /var/log/shiny-server</span>
+<span id="cb9-41"><a href="#cb9-41" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> mkdir <span class="at">-p</span> /etc/shiny-server</span>
+<span id="cb9-42"><a href="#cb9-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-43"><a href="#cb9-43" aria-hidden="true" tabindex="-1"></a><span class="co"># Edita el archivo shiny-server.service</span></span>
+<span id="cb9-44"><a href="#cb9-44" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> nano /lib/systemd/system/shiny-server.service <span class="co"># Pega el siguiente contenido</span></span>
+<span id="cb9-45"><a href="#cb9-45" aria-hidden="true" tabindex="-1"></a>    <span class="co">#!/usr/bin/env bash</span></span>
+<span id="cb9-46"><a href="#cb9-46" aria-hidden="true" tabindex="-1"></a>    <span class="ex">[Unit]</span></span>
+<span id="cb9-47"><a href="#cb9-47" aria-hidden="true" tabindex="-1"></a>    <span class="va">Description</span><span class="op">=</span>ShinyServer</span>
+<span id="cb9-48"><a href="#cb9-48" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb9-49"><a href="#cb9-49" aria-hidden="true" tabindex="-1"></a>    <span class="ex">[Service]</span></span>
+<span id="cb9-50"><a href="#cb9-50" aria-hidden="true" tabindex="-1"></a>    <span class="va">Type</span><span class="op">=</span>simple</span>
+<span id="cb9-51"><a href="#cb9-51" aria-hidden="true" tabindex="-1"></a>    <span class="va">ExecStart</span><span class="op">=</span>/usr/bin/shiny-server</span>
+<span id="cb9-52"><a href="#cb9-52" aria-hidden="true" tabindex="-1"></a>    <span class="va">KillMode</span><span class="op">=</span>process</span>
+<span id="cb9-53"><a href="#cb9-53" aria-hidden="true" tabindex="-1"></a>    <span class="va">ExecReload</span><span class="op">=</span>/bin/kill <span class="ex">-HUP</span> <span class="va">$MAINPID</span></span>
+<span id="cb9-54"><a href="#cb9-54" aria-hidden="true" tabindex="-1"></a>    <span class="va">ExecStopPost</span><span class="op">=</span>/bin/sleep <span class="ex">5</span></span>
+<span id="cb9-55"><a href="#cb9-55" aria-hidden="true" tabindex="-1"></a>    <span class="va">Restart</span><span class="op">=</span>on-failure</span>
+<span id="cb9-56"><a href="#cb9-56" aria-hidden="true" tabindex="-1"></a>    <span class="va">RestartSec</span><span class="op">=</span>1</span>
+<span id="cb9-57"><a href="#cb9-57" aria-hidden="true" tabindex="-1"></a>    <span class="va">StartLimitInterval</span><span class="op">=</span>45</span>
+<span id="cb9-58"><a href="#cb9-58" aria-hidden="true" tabindex="-1"></a>    <span class="va">StartLimitBurst</span><span class="op">=</span>3</span>
+<span id="cb9-59"><a href="#cb9-59" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb9-60"><a href="#cb9-60" aria-hidden="true" tabindex="-1"></a>    <span class="ex">[Install]</span></span>
+<span id="cb9-61"><a href="#cb9-61" aria-hidden="true" tabindex="-1"></a>    <span class="va">WantedBy</span><span class="op">=</span>multi-user.target</span>
+<span id="cb9-62"><a href="#cb9-62" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-63"><a href="#cb9-63" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chown root:root /lib/systemd/system/shiny-server.service</span>
+<span id="cb9-64"><a href="#cb9-64" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chmod 644 /lib/systemd/system/shiny-server.service</span>
+<span id="cb9-65"><a href="#cb9-65" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl daemon-reload</span>
+<span id="cb9-66"><a href="#cb9-66" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl enable shiny-server</span>
+<span id="cb9-67"><a href="#cb9-67" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl start shiny-server</span>
+<span id="cb9-68"><a href="#cb9-68" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ln <span class="at">-s</span> <span class="at">-f</span> /usr/bin/pandoc /usr/local/shiny-server/ext/pandoc/pandoc</span>
+<span id="cb9-69"><a href="#cb9-69" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ln <span class="at">-s</span> <span class="at">-f</span> /usr/bin/pandoc-citeproc /usr/local/shiny-server/ext/pandoc/pandoc-citeproc</span>
+<span id="cb9-70"><a href="#cb9-70" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ln <span class="at">-s</span> /usr/local/shiny-server/samples/sample-apps /srv/shiny-server/sample-apps</span>
+<span id="cb9-71"><a href="#cb9-71" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> ln <span class="at">-s</span> /usr/local/shiny-server/samples/welcome.html /srv/shiny-server/index.html</span>
+<span id="cb9-72"><a href="#cb9-72" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-73"><a href="#cb9-73" aria-hidden="true" tabindex="-1"></a><span class="co"># Establece los permisos de usuario adecuados, estoy asumiendo que tu usuario es &quot;pi&quot;, cámbialo si no lo es</span></span>
+<span id="cb9-74"><a href="#cb9-74" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> groupadd shiny-apps</span>
+<span id="cb9-75"><a href="#cb9-75" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> usermod <span class="at">-aG</span> shiny-apps pi</span>
+<span id="cb9-76"><a href="#cb9-76" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> usermod <span class="at">-aG</span> shiny-apps shiny</span>
+<span id="cb9-77"><a href="#cb9-77" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> /srv/shiny-server</span>
+<span id="cb9-78"><a href="#cb9-78" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chown <span class="at">-R</span> pi:shiny-apps .</span>
+<span id="cb9-79"><a href="#cb9-79" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chmod g+w .</span>
+<span id="cb9-80"><a href="#cb9-80" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chmod g+s .</span>
+<span id="cb9-81"><a href="#cb9-81" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span></span></code></pre></div>
+</div>
+<div id="instala-rstudio-server" class="section level2">
+<h2>Instala RStudio Server</h2>
+<p>En el pasado, la única forma de instalar RStudio Server en una Pi era compilar desde la fuente y esto requería mucho tiempo (me tomó 3 días la última vez que probé en una Pi 3B+) y era muy propenso a fallar porque RStudio IDE está en desarrollo activo.</p>
+<p>Afortunadamente, en los últimos días, RStudio ha puesto a disposición compilaciones “experimentales” del IDE para arm64 (escribí un <a href="/es/2022/08/22/rstudio_ide_arm/">artículo al respecto</a>), están compiladas para Ubuntu 18/20 y 22, pero Ubuntu 18/20 también es compatible con Raspberry Pi OS. Puedes consultar las compilaciones diarias disponibles <a href="https://dailies.rstudio.com/rstudio/elsbeth-geranium/">aquí</a>. Elije un enlace de acuerdo con el sistema operativo que estás utilizando, también ten en cuenta que estas compilaciones están destinadas a pruebas, por lo que es probable que tengan errores o sean inestables, si tienes problemas para instalar la última versión disponible, intenta con una versión anterior .</p>
+<p>Las siguientes instrucciones usan un enlace para Ubuntu 18/20 (compatible con Raspberry Pi OS), recuerda cambiar el enlace si deseas usar otro sistema operativo o una versión IDE más reciente:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install gdebi</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">wget</span> https://s3.amazonaws.com/rstudio-ide-build/server/bionic/arm64/rstudio-server-2022.11.0-daily-164-arm64.deb</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> gdebi rstudio-server-2022.11.0-daily-164-arm64.deb</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> rm rstudio-server-2022.11.0-daily-164-arm64.deb</span></code></pre></div>
+<blockquote>
+<p>:pencil2: Actualizaré esta sección una vez que el soporte arm64 se convierta en una función estable del RStudio IDE.</p>
+</blockquote>
+</div>
+<div id="instalar-servicios-de-soporte-adicionales-opcional" class="section level2">
+<h2>Instalar Servicios de Soporte Adicionales (opcional)</h2>
+<p>Nginx es un servidor web de bajos requisitos, que resulta útil para autohospedar archivos HTML, pero también para usarlo como proxy inverso (más información sobre esto en la siguiente sección). Puedes instalarlo con este comando:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install nginx</span></code></pre></div>
+<p>También, para trabajar con conjuntos de datos “más grandes que la memoria” (ten en cuenta que la Pi no tiene mucha RAM), tener un RDBMS es útil. Personalmente prefiero PostgreSQL ya que es de código abierto y tiene capacidades impresionantes, puedes instalar PostgreSQL con este comando:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install postgresql libpq-dev postgresql-client postgresql-client-common</span></code></pre></div>
+</div>
+<div id="pasos-adicionales-opcional" class="section level2">
+<h2>Pasos Adicionales (opcional)</h2>
+<p>Crea direcciones URL agradables para Shiny y Rstudio Server (por ejemplo, <code>http://your-ip/shiny/your-app</code> en lugar de <code>http://your-ip:3838/your-app</code>) utilizando Nginx como proxy inverso, solo necesitas reemplazar el contenido de este archivo, <code>sudo nano /etc/nginx/sites-enabled/default</code>, con esto:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ex">map</span> <span class="va">$http_upgrade</span> <span class="va">$connection_upgrade</span> {</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="ex">default</span> upgrade<span class="kw">;</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">&#39;&#39;</span>      close<span class="kw">;</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="er">}</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="ex">server</span> {</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>        <span class="ex">listen</span> 80 default_server<span class="kw">;</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>        <span class="ex">listen</span> [::]:80 default_server<span class="kw">;</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>        <span class="ex">root</span> /var/www/html<span class="kw">;</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>        <span class="ex">index</span> index.html index.htm<span class="kw">;</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>        <span class="ex">server_name</span> _<span class="kw">;</span></span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>        <span class="ex">location</span> / {</span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>                <span class="ex">try_files</span> <span class="va">$uri</span> <span class="va">$uri</span>/ =404<span class="kw">;</span></span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>        <span class="er">}</span></span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>        <span class="ex">rewrite</span> ^/shiny$ <span class="va">$scheme</span>://<span class="va">$http_host</span>/shiny/ permanent<span class="kw">;</span></span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>        <span class="ex">location</span> /shiny/ {</span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>                 <span class="ex">rewrite</span> ^/shiny/<span class="er">(</span><span class="bu">.</span><span class="pp">*</span><span class="kw">)</span><span class="ex">$</span> /<span class="va">$1</span> break<span class="kw">;</span></span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>                 <span class="ex">proxy_set_header</span>    Host <span class="va">$host</span><span class="kw">;</span></span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a>                 <span class="ex">proxy_set_header</span>    X-Real-IP <span class="va">$remote_addr</span><span class="kw">;</span></span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a>                 <span class="ex">proxy_set_header</span>    X-Forwarded-For <span class="va">$proxy_add_x_forwarded_for</span><span class="kw">;</span></span>
+<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>                 <span class="ex">proxy_set_header</span>    X-Forwarded-Proto <span class="va">$scheme</span><span class="kw">;</span></span>
+<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a>                 <span class="ex">proxy_pass</span>          http://localhost:3838<span class="kw">;</span></span>
+<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a>                 <span class="ex">proxy_read_timeout</span>  20d<span class="kw">;</span></span>
+<span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a>                 <span class="ex">proxy_buffering</span> off<span class="kw">;</span></span>
+<span id="cb13-31"><a href="#cb13-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-32"><a href="#cb13-32" aria-hidden="true" tabindex="-1"></a>                 <span class="ex">proxy_set_header</span> Upgrade <span class="va">$http_upgrade</span><span class="kw">;</span></span>
+<span id="cb13-33"><a href="#cb13-33" aria-hidden="true" tabindex="-1"></a>                 <span class="ex">proxy_set_header</span> Connection <span class="va">$connection_upgrade</span><span class="kw">;</span></span>
+<span id="cb13-34"><a href="#cb13-34" aria-hidden="true" tabindex="-1"></a>                 <span class="ex">proxy_http_version</span> 1.1<span class="kw">;</span></span>
+<span id="cb13-35"><a href="#cb13-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-36"><a href="#cb13-36" aria-hidden="true" tabindex="-1"></a>                 <span class="ex">proxy_redirect</span>      / <span class="va">$scheme</span>://<span class="va">$host</span>/shiny/<span class="kw">;</span></span>
+<span id="cb13-37"><a href="#cb13-37" aria-hidden="true" tabindex="-1"></a>        <span class="er">}</span></span>
+<span id="cb13-38"><a href="#cb13-38" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb13-39"><a href="#cb13-39" aria-hidden="true" tabindex="-1"></a>        <span class="ex">location</span> /rstudio/ {</span>
+<span id="cb13-40"><a href="#cb13-40" aria-hidden="true" tabindex="-1"></a>            <span class="ex">rewrite</span> ^/rstudio/<span class="er">(</span><span class="bu">.</span><span class="pp">*</span><span class="kw">)</span><span class="ex">$</span> /<span class="va">$1</span> break<span class="kw">;</span></span>
+<span id="cb13-41"><a href="#cb13-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-42"><a href="#cb13-42" aria-hidden="true" tabindex="-1"></a>            <span class="ex">proxy_pass</span> http://localhost:8787<span class="kw">;</span></span>
+<span id="cb13-43"><a href="#cb13-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-44"><a href="#cb13-44" aria-hidden="true" tabindex="-1"></a>            <span class="ex">proxy_http_version</span> 1.1<span class="kw">;</span></span>
+<span id="cb13-45"><a href="#cb13-45" aria-hidden="true" tabindex="-1"></a>            <span class="ex">proxy_set_header</span> Upgrade <span class="va">$http_upgrade</span><span class="kw">;</span></span>
+<span id="cb13-46"><a href="#cb13-46" aria-hidden="true" tabindex="-1"></a>            <span class="ex">proxy_set_header</span> Connection <span class="va">$connection_upgrade</span><span class="kw">;</span></span>
+<span id="cb13-47"><a href="#cb13-47" aria-hidden="true" tabindex="-1"></a>            <span class="ex">proxy_read_timeout</span> 20d<span class="kw">;</span></span>
+<span id="cb13-48"><a href="#cb13-48" aria-hidden="true" tabindex="-1"></a>            <span class="ex">proxy_buffering</span> off<span class="kw">;</span></span>
+<span id="cb13-49"><a href="#cb13-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-50"><a href="#cb13-50" aria-hidden="true" tabindex="-1"></a>            <span class="ex">proxy_set_header</span> X-RStudio-Root-Path /rstudio<span class="kw">;</span></span>
+<span id="cb13-51"><a href="#cb13-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-52"><a href="#cb13-52" aria-hidden="true" tabindex="-1"></a>            <span class="ex">proxy_set_header</span> Host <span class="va">$host</span>:<span class="va">$server_port</span><span class="kw">;</span></span>
+<span id="cb13-53"><a href="#cb13-53" aria-hidden="true" tabindex="-1"></a>        <span class="er">}</span></span>
+<span id="cb13-54"><a href="#cb13-54" aria-hidden="true" tabindex="-1"></a><span class="er">}</span></span></code></pre></div>
+<p>En Raspberry Pi OS, hay un problema extraño en el que Nginx se inicia antes de que RStudio Server pueda iniciarse y el proxy inverso falla. Una solución para esto es editar este archivo, <code>sudo nano /etc/systemd/system/multi-user.target.wants/nginx.service</code>, y reemplazar la parte que dice <code>After=network.target</code> con <code>After=network-online.target</code> y recargar el daemon con <code>sudo systemctl daemon-reload</code>. Puedes omitir esto si estás usando Ubuntu.</p>
+<p>Ahora tienes que reiniciar Nginx para aplicar los cambios:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl restart nginx</span></code></pre></div>
+<p>Si deseas tener acceso a tu servidor desde orígenes remotos (a través de Internet), debes seguir estos pasos adicionales:</p>
+<ul>
+<li>Si no tienes una IP pública estática:
+<ul>
+<li>Abre una cuenta en un servicio de DNS dinámico (por ejemplo, <a href="https://www.noip.com" class="uri">https://www.noip.com</a>)</li>
+<li>Configura Dynamic DNS en tu enrutador/módem, si no tiene esa opción, puedes instalar un cliente DDNS en tu servidor.</li>
+<li>Opcionalmente, configura tu nombre de dominio personal para que apunte a tu servicio DDNS.</li>
+</ul></li>
+<li>Configura el reenvío de puertos en tu enrutador/módem:
+<ul>
+<li>Para SSH, SCP y SFPT, abre el puerto TCP/UDP 22</li>
+<li>Si no has configurado Nginx, abre el puerto 8787 para RStudio Server.</li>
+<li>Si no has configurado Nginx, abre el puerto 3838 para Shiny Server.</li>
+<li>Para HTTP abre el puerto TCP 80 (también para usar Nginx como proxy inverso).</li>
+<li>Para PostgreSQL abre el puerto TCP/UDP 5432</li>
+<li>Asegúrate de tener “Block WAN Traffic” deshabilitado en tu enrutador/módem.</li>
+</ul></li>
+</ul>
+<p>Si estás interesado, tengo un <a href="/es/2021/08/16/port_forwarding/">artículo</a> que brinda un ejemplo de cómo configurar el reenvío de puertos en casa.</p>
 </div>
 <div id="comentarios-finales" class="section level2">
-<h2>Comentarios Finales</h2>
-<p>La principal limitación de la Raspberry Pi es la memoria RAM, así que tenga en cuenta que debe mantener sus aplicaciones lo suficientemente simples para que no necesiten más de 1 GB de RAM si su aplicación requiere algo más que eso, va a usar intercambie memoria y eso podría arruinar su tarjeta SD muy rápido.</p>
-<p>El rendimiento es relativamente lento, especialmente para el trazado, tenga en cuenta que, aunque Raspberry Pi 3B + tiene 4 núcleos, no son rápidos y la mayoría de los paquetes R no usan computación paralela.</p>
+<h2>Comentarios finales</h2>
+<p>El soporte para arm64 en general está aumentando rápidamente, por lo que es muy probable que las cosas cambien en un futuro próximo. Voy a hacer todo lo posible para mantener este artículo actualizado con los últimos desarrollos para que puedan aprovechar los beneficios.</p>
+<p>El rendimiento es relativamente pobre, especialmente para gráficos, pero es utilizable. Ten en cuenta que aunque la Raspberry Pi tiene 4 núcleos, no son rápidos y la mayoría de los paquetes R no usan computación paralela.</p>
 </div>
