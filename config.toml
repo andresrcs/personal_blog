@@ -6,7 +6,7 @@ DefaultContentLanguage = "en"
 enableInlineShortcodes = true
 enableEmoji = true
 footnoteReturnLinkContents = "^"
-googleAnalytics = "G-GGMX9MWR1P"
+googleAnalytics = "G-D9V8H9NYHE"
 DisqusShortname = "andresrcs"
 ignoreFiles = ["\\.Rmd$", "\\.Rmarkdown$", "_cache$", "\\.knit\\.md$", "\\.utf8\\.md$"]
     
