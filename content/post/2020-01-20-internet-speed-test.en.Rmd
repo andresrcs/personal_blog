@@ -48,7 +48,7 @@ Since you are reading an R related article I'm going to assume you already have 
 
 ```{bash eval=FALSE}
 sudo apt-get install curl
-curl -s https://install.speedtest.net/app/cli/install.deb.sh | sudo bash
+curl -s https://packagecloud.io/install/repositories/ookla/speedtest-cli/script.deb.sh | sudo bash
 sudo apt-get install speedtest
 ```
 
@@ -171,8 +171,8 @@ connection_string <- glue::glue(
   "Driver={{PostgreSQL ANSI}};\\
   Uid={Sys.getenv('MY_UID')};\\
   Pwd={Sys.getenv('MY_PWD')};\\
-  Server={Sys.getenv('MY_REMOTE')};\\
-  Port=5432;\\
+  Server=localhost;\\
+  Port=15432;\\
   Database=internet;"
 )
 
@@ -344,9 +344,9 @@ faults %>%
 And with Figure \@ref(fig:boxes) we can find out when the peak hours occur, so we can know at what time of the day is more likely for us to experience slow internet speeds.
 
 ```{r boxes, fig.cap='Boxplot of Observer Download Speeds by Hour of the Day', fig.height=5, fig.width=8, fig.align='center', warning=FALSE, tidy=FALSE}
-hour_data <- plot_data %>% 
-  collapse_by('1 hour', side = 'start', clean = TRUE) %>%
-  mutate(time = format(time, "%H:%M"))
+hour_data <- plot_data %>%
+    as_data_frame() %>% 
+    mutate(time = format(time, "%H:%M"))
 
 hour_data %>% 
   ggplot(aes(x = time, y = download)) +

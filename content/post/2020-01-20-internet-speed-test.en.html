@@ -24,7 +24,6 @@ output:
     highlight: zenburn
 ---
 
-<script src="/rmarkdown-libs/header-attrs/header-attrs.js"></script>
 <style type="text/css">
 pre > code.sourceCode { white-space: pre; position: relative; }
 pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
@@ -92,14 +91,14 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 
 <div id="TOC">
 <ul>
-<li><a href="#getting-your-setup-ready">Getting Your Setup Ready</a></li>
-<li><a href="#gathering-data">Gathering Data</a></li>
-<li><a href="#visualizing-the-data">Visualizing the Data</a></li>
+<li><a href="#getting-your-setup-ready" id="toc-getting-your-setup-ready">Getting Your Setup Ready</a></li>
+<li><a href="#gathering-data" id="toc-gathering-data">Gathering Data</a></li>
+<li><a href="#visualizing-the-data" id="toc-visualizing-the-data">Visualizing the Data</a></li>
 </ul>
 </div>
 
 <p>I thought this only happened in my country (Perú), but it turns out it happens to people around the globe, you contract an Internet Service Plan that offers <strong>up to</strong> <code>X</code> Mbps, where <code>X</code> is an impressive value (relative to each country’s context), but the catch is in that word, <strong>Up to</strong>.</p>
-<p>{{% tweet "1217915622023147542" %}}</p>
+{{% tweet "1217915622023147542" %}}
 <p>In reality, you end up getting far slower download speeds than advertised, and ISPs (Internet Service Providers) get away with this because they only test download speed with you once when they install the service (suspiciously it works great at that moment) and most people don’t bother to keep track of their download speeds over time because it would be impractical to manually perform speed tests every short period of time, luckily there is a better way, <a href="https://www.speedtest.net/">Ookla’s Speedtest</a> service provides a <em><strong>Command Line Interface (CLI)</strong></em> that allows you to perform tests from your system terminal enabling you to set up automated scripts to collect connection performance data.</p>
 <p>In the next lines, I’m going to show you how to do this from R and get the results in the form of nice plots you can tweet to your ISP to annoy them a little bit. :satisfied:</p>
 <div id="getting-your-setup-ready" class="section level2">
@@ -110,7 +109,7 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <p>:pencil2: There are <a href="https://www.speedtest.net/apps/cli">installation instructions for other OSs</a> on the Speedtest web site</p>
 </blockquote>
 <div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt-get install curl</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> https://install.speedtest.net/app/cli/install.deb.sh <span class="kw">|</span> <span class="fu">sudo</span> bash</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> https://packagecloud.io/install/repositories/ookla/speedtest-cli/script.deb.sh <span class="kw">|</span> <span class="fu">sudo</span> bash</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt-get install speedtest</span></code></pre></div>
 <blockquote>
 <p>:pencil2: Check if you have an older python version of the CLI installed in your system and make sure to uninstall it with this command <code>sudo pip uninstall speedtes-cli</code>, since it could cause conflicts with the newer official version. This happened to me and I didn’t notice :flushed:, thanks to <a href="https://twitter.com/jasongrahn">@jasongrahn</a> for the heads up.</p>
@@ -355,9 +354,9 @@ Figure 3: Boxplot of Time Between Failures
 </p>
 </div>
 <p>And with Figure <a href="#fig:boxes">4</a> we can find out when the peak hours occur, so we can know at what time of the day is more likely for us to experience slow internet speeds.</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>hour_data <span class="ot">&lt;-</span> plot_data <span class="sc">%&gt;%</span> </span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">collapse_by</span>(<span class="st">&#39;1 hour&#39;</span>, <span class="at">side =</span> <span class="st">&#39;start&#39;</span>, <span class="at">clean =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">time =</span> <span class="fu">format</span>(time, <span class="st">&quot;%H:%M&quot;</span>))</span>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>hour_data <span class="ot">&lt;-</span> plot_data <span class="sc">%&gt;%</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">as_data_frame</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">time =</span> <span class="fu">format</span>(time, <span class="st">&quot;%H:%M&quot;</span>))</span>
 <span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>hour_data <span class="sc">%&gt;%</span> </span>
 <span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> time, <span class="at">y =</span> download)) <span class="sc">+</span></span>
