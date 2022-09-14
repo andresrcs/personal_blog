@@ -43,6 +43,9 @@ sudo apt install r-base
 Otra opción es compilar la última versión de R tu mismo (4.2.1 al momento de escribir), esto lleva bastante tiempo pero brinda la mayor flexibilidad ya que puedes elegir opciones como compilar con BLAS y LAPACK:
 
 ```{bash install_r_source, eval=FALSE}
+# Set the R version to install
+R_VERSION=4.2.1
+
 sudo apt install -y g++ gcc gfortran libreadline-dev libx11-dev libxt-dev \
                     libpng-dev libjpeg-dev libcairo2-dev xvfb \
                     libbz2-dev libzstd-dev liblzma-dev libtiff5 \
@@ -50,19 +53,18 @@ sudo apt install -y g++ gcc gfortran libreadline-dev libx11-dev libxt-dev \
                     libblas-dev liblapack-dev libopenblas-base \
                     zlib1g-dev openjdk-11-jdk \
                     texinfo texlive texlive-fonts-extra \
-                    screen wget libpcre2-dev make 
+                    screen wget libpcre2-dev make cmake
 cd /usr/local/src
-sudo wget https://cran.rstudio.com/src/base/R-4/R-4.2.1.tar.gz
+sudo wget https://cran.rstudio.com/src/base/R-${R_VERSION:0:1}/R-$R_VERSION.tar.gz
 sudo su
-tar zxvf R-4.2.1.tar.gz
-cd R-4.2.1
-./configure --enable-R-shlib --with-blas --with-lapack #optional
+tar zxvf R-$R_VERSION.tar.gz
+cd R-$R_VERSION
+./configure --enable-R-shlib --with-blas --with-lapack #BLAS and LAPACK are optional
 make
 make install
 cd ..
-rm -rf R-4.2.1*
+rm -rf R-$R_VERSION*
 exit
-cd
 ```
 
 Y mi nuevo favorito, puedes usar un binario precompilado del proyecto [R4Pi](https://r4pi.org/ "R for the Raspberry Pi"), han tenido la amabilidad de poner a disposición un binario arm64 para que podamos probarlo (muchas gracias a Mark Sellors [@sellorm](https://twitter.com/sellorm)), funciona muy bien con Raspberry Pi OS x64 (basado en Debian 11) pero lamentablemente no es compatible con Ubuntu 22.04 (basado en Debian 12). Esta opción sacrifica la flexibilidad de elegir tus propias opciones de compilación, pero la ganancia en tiempo de installación (también para paquetes R) definitivamente vale la pena:
