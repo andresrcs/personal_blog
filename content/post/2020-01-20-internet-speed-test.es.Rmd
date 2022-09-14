@@ -48,15 +48,15 @@ Dado que está leyendo un artículo relacionado con R, voy a suponer que ya tien
 
 ```{bash eval=FALSE}
 sudo apt-get install curl
-curl -s https://install.speedtest.net/app/cli/install.deb.sh | sudo bash
+curl -s https://packagecloud.io/install/repositories/ookla/speedtest-cli/script.deb.sh | sudo bash
 sudo apt-get install speedtest
 ```
 
 ```{bash eval=FALSE, include=FALSE}
 # Manual download if apt source fails (armhf and aarch64 available).
 sudo su
-wget https://install.speedtest.net/app/cli/ookla-speedtest-1.1.1-arm64-linux.tgz
-tar -xvzf ookla-speedtest-1.1.1-armhf-linux.tgz
+wget https://install.speedtest.net/app/cli/ookla-speedtest-1.2.0-linux-aarch64.tgz
+tar -xvzf ookla-speedtest-1.2.0-linux-aarch64.tgz
 mv speedtest /usr/bin/speedtest
 exit
 ```
@@ -70,7 +70,7 @@ Ahora podemos escribir un script R que recupere el resultado de la prueba, proce
 ```{r Rscript, eval=FALSE}
 #! /usr/bin/env Rscript
 
-# Adquisición de datos
+# Data adquisition
 output <- read.csv(
   text = system(
     command = "speedtest -f csv --output-header --accept-license",
@@ -81,38 +81,32 @@ output <- read.csv(
 results <- data.frame(
   stringsAsFactors = FALSE,
   time = as.POSIXct(Sys.time()),
-  ip = system("curl ifconfig.me", intern = TRUE), # Este campo ya no se provee en la nueva versión de la CLI.
+  ip = system("curl ifconfig.me", intern = TRUE), # This field is no longer provided on the new CLI version
   ping = output$latency,
-  download = output$download * 7.629395E-6, # Convertir a Mbps
-  upload = output$upload * 7.629395E-6, # Convertir a Mbps
-  isp = "movistar" # Este campo no se provee en formato CSV.
+  download = output$download * 7.629395E-6, # Convert to Mbps
+  upload = output$upload * 7.629395E-6, # Convert to Mbps
+  isp = "movistar" # This field is not provided on CSV format
 )
 
-# Almacenamiento de datos
-connection_string <- glue::glue(
-  "Driver={{PostgreSQL ANSI}};\\
-  Uid={Sys.getenv('MY_UID')};\\
-  Pwd={Sys.getenv('MY_PWD')};\\
-  Server=localhost;\\
-  Port=5432;\\
-  Database=internet;" # Nombre de la base de datos en el servidor SQL
-) 
-
-con <- odbc::dbConnect(
-  drv = odbc::odbc(),
-  .connection_string = connection_string,
-  encoding = "utf8"
-)
+# Data storing
+con <- dbConnect(drv = odbc::odbc(),
+                 driver = 'PostgreSQL ANSI',
+                 server = 'localhost',
+                 database = 'internet', # Name of the database on the sql server
+                 port = 5432,
+                 uid = Sys.getenv('MY_UID'),
+                 pwd = Sys.getenv('MY_PWD'),
+                 encoding = 'utf8')
 
 DBI::dbAppendTable(
   conn = con,
-  name = "speed_test", # Nombre de la tabla en el servidor SQL
+  name = "speed_test", # Table name on the sql server
   value = results
 )
 
 odbc::dbDisconnect(conn = con)
 
-# Limpiando los archivos de registro
+# Cleaning log files
 unlink(x = "*.log", force = TRUE)
 
 ```
@@ -132,28 +126,21 @@ Después de dejar pasar un tiempo para que se acumulen los registros, podemos ob
 
 ```{r datos show, eval=FALSE}
 library(odbc)
-library(glue)
 
-connection_string <- glue::glue(
-  "Driver={{PostgreSQL ANSI}};\\
-  Uid={Sys.getenv('MY_UID')};\\
-  Pwd={Sys.getenv('MY_PWD')};\\
-  Server={Sys.getenv('MY_REMOTE')};\\
-  Port=5432;\\
-  Database=internet;"
-)
-
-con <- dbConnect(
-  drv = odbc::odbc(),
-  .connection_string = connection_string,
-  encoding = "utf8"
-)
+con <- dbConnect(drv = odbc::odbc(),
+                 driver = 'PostgreSQL ANSI',
+                 server = Sys.getenv('MY_REMOTE'),
+                 database = 'internet',
+                 port = 5432,
+                 uid = Sys.getenv('MY_UID'),
+                 pwd = Sys.getenv('MY_PWD'),
+                 encoding = 'utf8')
 
 query <- "
-SELECT * 
-FROM public.speed_test 
-ORDER BY time
-"
+    SELECT * 
+    FROM public.speed_test 
+    ORDER BY time
+    "
 
 raw_data <- dbGetQuery(
   conn = con,
@@ -165,30 +152,23 @@ dbDisconnect(con)
 
 ```{r datos hide, include=FALSE, cache=TRUE}
 library(odbc)
-library(glue)
 
-connection_string <- glue::glue(
-  "Driver={{PostgreSQL ANSI}};\\
-  Uid={Sys.getenv('MY_UID')};\\
-  Pwd={Sys.getenv('MY_PWD')};\\
-  Server={Sys.getenv('MY_REMOTE')};\\
-  Port=5432;\\
-  Database=internet;"
-)
-
-con <- dbConnect(
-  drv = odbc::odbc(),
-  .connection_string = connection_string,
-  encoding = "utf8"
-)
+con <- dbConnect(drv = odbc::odbc(),
+                 driver = 'PostgreSQL ANSI',
+                 server = 'localhost',
+                 database = 'internet',
+                 port = 15432,
+                 uid = Sys.getenv('MY_UID'),
+                 pwd = Sys.getenv('MY_PWD'),
+                 encoding = 'utf8')
 
 query <- "
-SELECT * 
-FROM public.speed_test 
-WHERE time >= '2019-06-18 00:00:00'
-AND isp = 'movistar'
-ORDER BY time
-"
+    SELECT * 
+    FROM public.speed_test 
+    WHERE time >= '2019-06-18 00:00:00'
+    AND isp = 'movistar'
+    ORDER BY time
+    "
 
 raw_data <- dbGetQuery(
   conn = con,
@@ -344,9 +324,9 @@ faults %>%
 Y con la Figura \@ref(fig:boxes) podemos saber cuándo ocurren las horas pico, para saber a qué hora del día es más probable que experimentemos velocidades de Internet lentas.
 
 ```{r boxes, fig.cap='Diagrama de Caja de Velocidades de Descarga Observadas por Hora del Día', fig.height=5, fig.width=8, fig.align='center', warning=FALSE, tidy=FALSE}
-hour_data <- plot_data %>% 
-  collapse_by('1 hour', side = 'start', clean = TRUE) %>%
-  mutate(time = format(time, "%H:%M"))
+hour_data <- plot_data %>%
+    as_data_frame() %>% 
+    mutate(time = format(time, "%H:%M"))
 
 hour_data %>% 
   ggplot(aes(x = time, y = download)) +

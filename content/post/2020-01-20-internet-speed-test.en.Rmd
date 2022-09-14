@@ -55,8 +55,8 @@ sudo apt-get install speedtest
 ```{bash eval=FALSE, include=FALSE}
 # Manual download if apt source fails (armhf and aarch64 available).
 sudo su
-wget https://install.speedtest.net/app/cli/ookla-speedtest-1.1.1-linux-aarch64.tgz
-tar -xvzf ookla-speedtest-1.1.1-linux-aarch64.tgz
+wget https://install.speedtest.net/app/cli/ookla-speedtest-1.2.0-linux-aarch64.tgz
+tar -xvzf ookla-speedtest-1.2.0-linux-aarch64.tgz
 mv speedtest /usr/bin/speedtest
 exit
 ```
@@ -89,20 +89,14 @@ results <- data.frame(
 )
 
 # Data storing
-connection_string <- glue::glue(
-  "Driver={{PostgreSQL ANSI}};\\
-  Uid={Sys.getenv('MY_UID')};\\
-  Pwd={Sys.getenv('MY_PWD')};\\
-  Server=localhost;\\
-  Port=5432;\\
-  Database=internet;" # Name of the database on the sql server
-) 
-
-con <- odbc::dbConnect(
-  drv = odbc::odbc(),
-  .connection_string = connection_string,
-  encoding = "utf8"
-)
+con <- dbConnect(drv = odbc::odbc(),
+                 driver = 'PostgreSQL ANSI',
+                 server = 'localhost',
+                 database = 'internet', # Name of the database on the sql server
+                 port = 5432,
+                 uid = Sys.getenv('MY_UID'),
+                 pwd = Sys.getenv('MY_PWD'),
+                 encoding = 'utf8')
 
 DBI::dbAppendTable(
   conn = con,
@@ -132,28 +126,21 @@ After letting some time to pass for registers to accumulate, we can fetch data f
 
 ```{r datos show, eval=FALSE}
 library(odbc)
-library(glue)
 
-connection_string <- glue::glue(
-  "Driver={{PostgreSQL ANSI}};\\
-  Uid={Sys.getenv('MY_UID')};\\
-  Pwd={Sys.getenv('MY_PWD')};\\
-  Server={Sys.getenv('MY_REMOTE')};\\
-  Port=5432;\\
-  Database=internet;"
-)
-
-con <- dbConnect(
-  drv = odbc::odbc(),
-  .connection_string = connection_string,
-  encoding = "utf8"
-)
+con <- dbConnect(drv = odbc::odbc(),
+                 driver = 'PostgreSQL ANSI',
+                 server = Sys.getenv('MY_REMOTE'),
+                 database = 'internet',
+                 port = 5432,
+                 uid = Sys.getenv('MY_UID'),
+                 pwd = Sys.getenv('MY_PWD'),
+                 encoding = 'utf8')
 
 query <- "
-SELECT * 
-FROM public.speed_test 
-ORDER BY time
-"
+    SELECT * 
+    FROM public.speed_test 
+    ORDER BY time
+    "
 
 raw_data <- dbGetQuery(
   conn = con,
@@ -165,30 +152,23 @@ dbDisconnect(con)
 
 ```{r datos hide, include=FALSE, cache=TRUE}
 library(odbc)
-library(glue)
 
-connection_string <- glue::glue(
-  "Driver={{PostgreSQL ANSI}};\\
-  Uid={Sys.getenv('MY_UID')};\\
-  Pwd={Sys.getenv('MY_PWD')};\\
-  Server=localhost;\\
-  Port=15432;\\
-  Database=internet;"
-)
-
-con <- dbConnect(
-  drv = odbc::odbc(),
-  .connection_string = connection_string,
-  encoding = "utf8"
-)
+con <- dbConnect(drv = odbc::odbc(),
+                 driver = 'PostgreSQL ANSI',
+                 server = 'localhost',
+                 database = 'internet',
+                 port = 15432,
+                 uid = Sys.getenv('MY_UID'),
+                 pwd = Sys.getenv('MY_PWD'),
+                 encoding = 'utf8')
 
 query <- "
-SELECT * 
-FROM public.speed_test 
-WHERE time >= '2019-06-18 00:00:00'
-AND isp = 'movistar'
-ORDER BY time
-"
+    SELECT * 
+    FROM public.speed_test 
+    WHERE time >= '2019-06-18 00:00:00'
+    AND isp = 'movistar'
+    ORDER BY time
+    "
 
 raw_data <- dbGetQuery(
   conn = con,

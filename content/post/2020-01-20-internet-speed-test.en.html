@@ -139,31 +139,25 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Data storing</span></span>
-<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>connection_string <span class="ot">&lt;-</span> glue<span class="sc">::</span><span class="fu">glue</span>(</span>
-<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Driver={{PostgreSQL ANSI}};</span><span class="sc">\\</span></span>
-<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="st">  Uid={Sys.getenv(&#39;MY_UID&#39;)};</span><span class="sc">\\</span></span>
-<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="st">  Pwd={Sys.getenv(&#39;MY_PWD&#39;)};</span><span class="sc">\\</span></span>
-<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a><span class="st">  Server=localhost;</span><span class="sc">\\</span></span>
-<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="st">  Port=5432;</span><span class="sc">\\</span></span>
-<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a><span class="st">  Database=internet;&quot;</span> <span class="co"># Name of the database on the sql server</span></span>
-<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>) </span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>con <span class="ot">&lt;-</span> <span class="fu">dbConnect</span>(<span class="at">drv =</span> odbc<span class="sc">::</span><span class="fu">odbc</span>(),</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>                 <span class="at">driver =</span> <span class="st">&#39;PostgreSQL ANSI&#39;</span>,</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>                 <span class="at">server =</span> <span class="st">&#39;localhost&#39;</span>,</span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>                 <span class="at">database =</span> <span class="st">&#39;internet&#39;</span>, <span class="co"># Name of the database on the sql server</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>                 <span class="at">port =</span> <span class="dv">5432</span>,</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>                 <span class="at">uid =</span> <span class="fu">Sys.getenv</span>(<span class="st">&#39;MY_UID&#39;</span>),</span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>                 <span class="at">pwd =</span> <span class="fu">Sys.getenv</span>(<span class="st">&#39;MY_PWD&#39;</span>),</span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>                 <span class="at">encoding =</span> <span class="st">&#39;utf8&#39;</span>)</span>
 <span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>con <span class="ot">&lt;-</span> odbc<span class="sc">::</span><span class="fu">dbConnect</span>(</span>
-<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>  <span class="at">drv =</span> odbc<span class="sc">::</span><span class="fu">odbc</span>(),</span>
-<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>  <span class="at">.connection_string =</span> connection_string,</span>
-<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>  <span class="at">encoding =</span> <span class="st">&quot;utf8&quot;</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbAppendTable</span>(</span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>  <span class="at">conn =</span> con,</span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>  <span class="at">name =</span> <span class="st">&quot;speed_test&quot;</span>, <span class="co"># Table name on the sql server</span></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>  <span class="at">value =</span> results</span>
 <span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbAppendTable</span>(</span>
-<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>  <span class="at">conn =</span> con,</span>
-<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>  <span class="at">name =</span> <span class="st">&quot;speed_test&quot;</span>, <span class="co"># Table name on the sql server</span></span>
-<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>  <span class="at">value =</span> results</span>
-<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a>odbc<span class="sc">::</span><span class="fu">dbDisconnect</span>(<span class="at">conn =</span> con)</span>
-<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a><span class="co"># Cleaning log files</span></span>
-<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a><span class="fu">unlink</span>(<span class="at">x =</span> <span class="st">&quot;*.log&quot;</span>, <span class="at">force =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>odbc<span class="sc">::</span><span class="fu">dbDisconnect</span>(<span class="at">conn =</span> con)</span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a><span class="co"># Cleaning log files</span></span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a><span class="fu">unlink</span>(<span class="at">x =</span> <span class="st">&quot;*.log&quot;</span>, <span class="at">force =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
 <p>Now we can schedule a <code>cron</code> job to run this script on regular intervals, I’m going to set it to run once every hour running this commands on a system terminal:</p>
 <blockquote>
 <p>:pencil2: This can also be done from R using the <code>cronR</code> package.</p>
@@ -174,35 +168,28 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> service cron reload</span></code></pre></div>
 <p>After letting some time to pass for registers to accumulate, we can fetch data from the server with a SQL query:</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(odbc)</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(glue)</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>connection_string <span class="ot">&lt;-</span> glue<span class="sc">::</span><span class="fu">glue</span>(</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Driver={{PostgreSQL ANSI}};</span><span class="sc">\\</span></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="st">  Uid={Sys.getenv(&#39;MY_UID&#39;)};</span><span class="sc">\\</span></span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="st">  Pwd={Sys.getenv(&#39;MY_PWD&#39;)};</span><span class="sc">\\</span></span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="st">  Server={Sys.getenv(&#39;MY_REMOTE&#39;)};</span><span class="sc">\\</span></span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="st">  Port=5432;</span><span class="sc">\\</span></span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="st">  Database=internet;&quot;</span></span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>con <span class="ot">&lt;-</span> <span class="fu">dbConnect</span>(</span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">drv =</span> odbc<span class="sc">::</span><span class="fu">odbc</span>(),</span>
-<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">.connection_string =</span> connection_string,</span>
-<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">encoding =</span> <span class="st">&quot;utf8&quot;</span></span>
-<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>query <span class="ot">&lt;-</span> <span class="st">&quot;</span></span>
-<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a><span class="st">SELECT * </span></span>
-<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a><span class="st">FROM public.speed_test </span></span>
-<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a><span class="st">ORDER BY time</span></span>
-<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;</span></span>
-<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>raw_data <span class="ot">&lt;-</span> <span class="fu">dbGetQuery</span>(</span>
-<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>  <span class="at">conn =</span> con,</span>
-<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>  <span class="at">statement =</span> query</span>
-<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a><span class="fu">dbDisconnect</span>(con)</span></code></pre></div>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>con <span class="ot">&lt;-</span> <span class="fu">dbConnect</span>(<span class="at">drv =</span> odbc<span class="sc">::</span><span class="fu">odbc</span>(),</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>                 <span class="at">driver =</span> <span class="st">&#39;PostgreSQL ANSI&#39;</span>,</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>                 <span class="at">server =</span> <span class="fu">Sys.getenv</span>(<span class="st">&#39;MY_REMOTE&#39;</span>),</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>                 <span class="at">database =</span> <span class="st">&#39;internet&#39;</span>,</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>                 <span class="at">port =</span> <span class="dv">5432</span>,</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>                 <span class="at">uid =</span> <span class="fu">Sys.getenv</span>(<span class="st">&#39;MY_UID&#39;</span>),</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>                 <span class="at">pwd =</span> <span class="fu">Sys.getenv</span>(<span class="st">&#39;MY_PWD&#39;</span>),</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>                 <span class="at">encoding =</span> <span class="st">&#39;utf8&#39;</span>)</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>query <span class="ot">&lt;-</span> <span class="st">&quot;</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="st">    SELECT * </span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="st">    FROM public.speed_test </span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="st">    ORDER BY time</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="st">    &quot;</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>raw_data <span class="ot">&lt;-</span> <span class="fu">dbGetQuery</span>(</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>  <span class="at">conn =</span> con,</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">statement =</span> query</span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a><span class="fu">dbDisconnect</span>(con)</span></code></pre></div>
 </div>
 <div id="visualizing-the-data" class="section level2">
 <h2>Visualizing the Data</h2>

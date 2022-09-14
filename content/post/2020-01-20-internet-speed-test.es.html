@@ -24,7 +24,6 @@ output:
     highlight: zenburn
 ---
 
-<script src="/rmarkdown-libs/header-attrs/header-attrs.js"></script>
 <style type="text/css">
 pre > code.sourceCode { white-space: pre; position: relative; }
 pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
@@ -92,14 +91,14 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 
 <div id="TOC">
 <ul>
-<li><a href="#preparando-su-configuración">Preparando su Configuración</a></li>
-<li><a href="#reuniendo-dato">Reuniendo Dato</a></li>
-<li><a href="#visualizando-los-datos">Visualizando los Datos</a></li>
+<li><a href="#preparando-su-configuración" id="toc-preparando-su-configuración">Preparando su Configuración</a></li>
+<li><a href="#reuniendo-dato" id="toc-reuniendo-dato">Reuniendo Dato</a></li>
+<li><a href="#visualizando-los-datos" id="toc-visualizando-los-datos">Visualizando los Datos</a></li>
 </ul>
 </div>
 
 <p>Pensé que esto solo sucedía en mi país (Perú), pero resulta que les sucede a personas en todo el mundo, uno contrata un plan de Internet que ofrece <strong>hasta</strong> <code>X</code> Mbps, donde <code>X</code> es un valor impresionante (relativo al contexto de cada país), pero la trampa está en esa palabra, <strong>Hasta</strong>.</p>
-<p>{{% tweet "1217915622023147542" %}}</p>
+{{% tweet "1217915622023147542" %}}
 <p>En realidad, termina obteniendo velocidades de descarga mucho más lentas de lo anunciado, y los ISP (Proveedores de Servicios de Internet por sus siglas en inglés) se salen con la suya, ya que solo prueban la velocidad de descarga con usted, una vez, cuando instalan el servicio (sospechosamente funciona muy bien en ese momento) y la mayoría de personas no se molestan en realizar un seguimiento de sus velocidades de descarga a lo largo del tiempo, ya que no es práctico realizar pruebas de velocidad manualmente cada corto período de tiempo, afortunadamente hay una mejor manera, el servicio <a href="https://www.speedtest.net/">Speedtest de Ookla</a> provee una <em><strong>Interfaz de Línea de Comandos (CLI por sus siglas en inglés)</strong></em>, que le permite realizar pruebas desde la terminal de su sistema, dándole la capacidad de configurar scripts automáticos para recopilar datos de rendimiento de la conexión.</p>
 <p>En las siguientes líneas, le mostraré cómo hacer esto desde R y obtener los resultados en forma de bonitos gráficos que puede twittear a su ISP para molestarlos un poco. :satisfied:</p>
 <div id="preparando-su-configuración" class="section level2">
@@ -110,7 +109,7 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <p>:pencil2: Hay <a href="https://www.speedtest.net/apps/cli">instrucciones de instalación para otros sistemas operativos</a> en el sitio web de Speedtest.</p>
 </blockquote>
 <div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt-get install curl</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> https://install.speedtest.net/app/cli/install.deb.sh <span class="kw">|</span> <span class="fu">sudo</span> bash</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-s</span> https://packagecloud.io/install/repositories/ookla/speedtest-cli/script.deb.sh <span class="kw">|</span> <span class="fu">sudo</span> bash</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt-get install speedtest</span></code></pre></div>
 <blockquote>
 <p>:pencil2: Compruebe si tiene instalada una versión anterior Python de la CLI en su sistema y asegúrese de desinstalarla con este comando <code>sudo pip uninstall speedtes-cli</code>, ya que podría causar conflictos con la versión oficial más reciente. Esto me sucedió y no me di cuenta :flushed:, gracias a <a href="https://twitter.com/jasongrahn">@jasongrahn</a> por el aviso.</p>
@@ -121,7 +120,7 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <p>Ahora podemos escribir un script R que recupere el resultado de la prueba, procese el contenido y almacene los datos. En este ejemplo, los voy a almacenar en una base de datos PostgreSQL, pero podría elegir otras opciones como otro servidor SQL, Hojas de cálculo de Google, un archivo CSV, etc. He llamado a este script <code>speedtest_job.R</code>.</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">#! /usr/bin/env Rscript</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Adquisición de datos</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Data adquisition</span></span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>output <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(</span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">text =</span> <span class="fu">system</span>(</span>
 <span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">command =</span> <span class="st">&quot;speedtest -f csv --output-header --accept-license&quot;</span>,</span>
@@ -132,39 +131,33 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>results <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
 <span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span>,</span>
 <span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">time =</span> <span class="fu">as.POSIXct</span>(<span class="fu">Sys.time</span>()),</span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">ip =</span> <span class="fu">system</span>(<span class="st">&quot;curl ifconfig.me&quot;</span>, <span class="at">intern =</span> <span class="cn">TRUE</span>), <span class="co"># Este campo ya no se provee en la nueva versión de la CLI.</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">ip =</span> <span class="fu">system</span>(<span class="st">&quot;curl ifconfig.me&quot;</span>, <span class="at">intern =</span> <span class="cn">TRUE</span>), <span class="co"># This field is no longer provided on the new CLI version</span></span>
 <span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">ping =</span> output<span class="sc">$</span>latency,</span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">download =</span> output<span class="sc">$</span>download <span class="sc">*</span> <span class="fl">7.629395E-6</span>, <span class="co"># Convertir a Mbps</span></span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">upload =</span> output<span class="sc">$</span>upload <span class="sc">*</span> <span class="fl">7.629395E-6</span>, <span class="co"># Convertir a Mbps</span></span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>  <span class="at">isp =</span> <span class="st">&quot;movistar&quot;</span> <span class="co"># Este campo no se provee en formato CSV.</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">download =</span> output<span class="sc">$</span>download <span class="sc">*</span> <span class="fl">7.629395E-6</span>, <span class="co"># Convert to Mbps</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">upload =</span> output<span class="sc">$</span>upload <span class="sc">*</span> <span class="fl">7.629395E-6</span>, <span class="co"># Convert to Mbps</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>  <span class="at">isp =</span> <span class="st">&quot;movistar&quot;</span> <span class="co"># This field is not provided on CSV format</span></span>
 <span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Almacenamiento de datos</span></span>
-<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>connection_string <span class="ot">&lt;-</span> glue<span class="sc">::</span><span class="fu">glue</span>(</span>
-<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Driver={{PostgreSQL ANSI}};</span><span class="sc">\\</span></span>
-<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="st">  Uid={Sys.getenv(&#39;MY_UID&#39;)};</span><span class="sc">\\</span></span>
-<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="st">  Pwd={Sys.getenv(&#39;MY_PWD&#39;)};</span><span class="sc">\\</span></span>
-<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a><span class="st">  Server=localhost;</span><span class="sc">\\</span></span>
-<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="st">  Port=5432;</span><span class="sc">\\</span></span>
-<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a><span class="st">  Database=internet;&quot;</span> <span class="co"># Nombre de la base de datos en el servidor SQL</span></span>
-<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>) </span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Data storing</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>con <span class="ot">&lt;-</span> <span class="fu">dbConnect</span>(<span class="at">drv =</span> odbc<span class="sc">::</span><span class="fu">odbc</span>(),</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>                 <span class="at">driver =</span> <span class="st">&#39;PostgreSQL ANSI&#39;</span>,</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>                 <span class="at">server =</span> <span class="st">&#39;localhost&#39;</span>,</span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>                 <span class="at">database =</span> <span class="st">&#39;internet&#39;</span>, <span class="co"># Name of the database on the sql server</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>                 <span class="at">port =</span> <span class="dv">5432</span>,</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>                 <span class="at">uid =</span> <span class="fu">Sys.getenv</span>(<span class="st">&#39;MY_UID&#39;</span>),</span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>                 <span class="at">pwd =</span> <span class="fu">Sys.getenv</span>(<span class="st">&#39;MY_PWD&#39;</span>),</span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>                 <span class="at">encoding =</span> <span class="st">&#39;utf8&#39;</span>)</span>
 <span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>con <span class="ot">&lt;-</span> odbc<span class="sc">::</span><span class="fu">dbConnect</span>(</span>
-<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>  <span class="at">drv =</span> odbc<span class="sc">::</span><span class="fu">odbc</span>(),</span>
-<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>  <span class="at">.connection_string =</span> connection_string,</span>
-<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>  <span class="at">encoding =</span> <span class="st">&quot;utf8&quot;</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbAppendTable</span>(</span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>  <span class="at">conn =</span> con,</span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>  <span class="at">name =</span> <span class="st">&quot;speed_test&quot;</span>, <span class="co"># Table name on the sql server</span></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>  <span class="at">value =</span> results</span>
 <span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>DBI<span class="sc">::</span><span class="fu">dbAppendTable</span>(</span>
-<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>  <span class="at">conn =</span> con,</span>
-<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>  <span class="at">name =</span> <span class="st">&quot;speed_test&quot;</span>, <span class="co"># Nombre de la tabla en el servidor SQL</span></span>
-<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>  <span class="at">value =</span> results</span>
-<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a>odbc<span class="sc">::</span><span class="fu">dbDisconnect</span>(<span class="at">conn =</span> con)</span>
-<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a><span class="co"># Limpiando los archivos de registro</span></span>
-<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a><span class="fu">unlink</span>(<span class="at">x =</span> <span class="st">&quot;*.log&quot;</span>, <span class="at">force =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>odbc<span class="sc">::</span><span class="fu">dbDisconnect</span>(<span class="at">conn =</span> con)</span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a><span class="co"># Cleaning log files</span></span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a><span class="fu">unlink</span>(<span class="at">x =</span> <span class="st">&quot;*.log&quot;</span>, <span class="at">force =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
 <p>Ahora podemos programar un trabajo <code>cron</code> para ejecutar este script a intervalos regulares, voy a configurarlo para que se ejecute una vez cada hora ejecutando estos comandos en un terminal del sistema:</p>
 <blockquote>
 <p>:pencil2: Esto también se puede hacer desde R usando el paquete <code>cronR</code>.</p>
@@ -175,35 +168,28 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> service cron reload</span></code></pre></div>
 <p>Después de dejar pasar un tiempo para que se acumulen los registros, podemos obtener datos del servidor con una consulta SQL:</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(odbc)</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(glue)</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>connection_string <span class="ot">&lt;-</span> glue<span class="sc">::</span><span class="fu">glue</span>(</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;Driver={{PostgreSQL ANSI}};</span><span class="sc">\\</span></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="st">  Uid={Sys.getenv(&#39;MY_UID&#39;)};</span><span class="sc">\\</span></span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="st">  Pwd={Sys.getenv(&#39;MY_PWD&#39;)};</span><span class="sc">\\</span></span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="st">  Server={Sys.getenv(&#39;MY_REMOTE&#39;)};</span><span class="sc">\\</span></span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="st">  Port=5432;</span><span class="sc">\\</span></span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="st">  Database=internet;&quot;</span></span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>con <span class="ot">&lt;-</span> <span class="fu">dbConnect</span>(</span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">drv =</span> odbc<span class="sc">::</span><span class="fu">odbc</span>(),</span>
-<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">.connection_string =</span> connection_string,</span>
-<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">encoding =</span> <span class="st">&quot;utf8&quot;</span></span>
-<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>query <span class="ot">&lt;-</span> <span class="st">&quot;</span></span>
-<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a><span class="st">SELECT * </span></span>
-<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a><span class="st">FROM public.speed_test </span></span>
-<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a><span class="st">ORDER BY time</span></span>
-<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a><span class="st">&quot;</span></span>
-<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>raw_data <span class="ot">&lt;-</span> <span class="fu">dbGetQuery</span>(</span>
-<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>  <span class="at">conn =</span> con,</span>
-<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>  <span class="at">statement =</span> query</span>
-<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a><span class="fu">dbDisconnect</span>(con)</span></code></pre></div>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>con <span class="ot">&lt;-</span> <span class="fu">dbConnect</span>(<span class="at">drv =</span> odbc<span class="sc">::</span><span class="fu">odbc</span>(),</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>                 <span class="at">driver =</span> <span class="st">&#39;PostgreSQL ANSI&#39;</span>,</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>                 <span class="at">server =</span> <span class="fu">Sys.getenv</span>(<span class="st">&#39;MY_REMOTE&#39;</span>),</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>                 <span class="at">database =</span> <span class="st">&#39;internet&#39;</span>,</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>                 <span class="at">port =</span> <span class="dv">5432</span>,</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>                 <span class="at">uid =</span> <span class="fu">Sys.getenv</span>(<span class="st">&#39;MY_UID&#39;</span>),</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>                 <span class="at">pwd =</span> <span class="fu">Sys.getenv</span>(<span class="st">&#39;MY_PWD&#39;</span>),</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>                 <span class="at">encoding =</span> <span class="st">&#39;utf8&#39;</span>)</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>query <span class="ot">&lt;-</span> <span class="st">&quot;</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="st">    SELECT * </span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="st">    FROM public.speed_test </span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="st">    ORDER BY time</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="st">    &quot;</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>raw_data <span class="ot">&lt;-</span> <span class="fu">dbGetQuery</span>(</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>  <span class="at">conn =</span> con,</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">statement =</span> query</span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a><span class="fu">dbDisconnect</span>(con)</span></code></pre></div>
 </div>
 <div id="visualizando-los-datos" class="section level2">
 <h2>Visualizando los Datos</h2>
@@ -355,9 +341,9 @@ Figure 3: Diagrama de Caja de Tiempo Entre Fallas
 </p>
 </div>
 <p>Y con la Figura <a href="#fig:boxes">4</a> podemos saber cuándo ocurren las horas pico, para saber a qué hora del día es más probable que experimentemos velocidades de Internet lentas.</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>hour_data <span class="ot">&lt;-</span> plot_data <span class="sc">%&gt;%</span> </span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">collapse_by</span>(<span class="st">&#39;1 hour&#39;</span>, <span class="at">side =</span> <span class="st">&#39;start&#39;</span>, <span class="at">clean =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">time =</span> <span class="fu">format</span>(time, <span class="st">&quot;%H:%M&quot;</span>))</span>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>hour_data <span class="ot">&lt;-</span> plot_data <span class="sc">%&gt;%</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="fu">as_data_frame</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">time =</span> <span class="fu">format</span>(time, <span class="st">&quot;%H:%M&quot;</span>))</span>
 <span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>hour_data <span class="sc">%&gt;%</span> </span>
 <span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> time, <span class="at">y =</span> download)) <span class="sc">+</span></span>
