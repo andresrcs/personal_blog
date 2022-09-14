@@ -85,14 +85,14 @@ tidy_data <- as_tibble(raw_data) %>%
     select(time, location, variable, measurement_point, value)
 
 # CARGAR DATOS #################################################################
-connection_string <- glue::glue("Driver={{PostgreSQL ANSI}};\\
-                                Uid={Sys.getenv('MY_UID')};\\
-                                Pwd={Sys.getenv('MY_PWD')};\\
-                                Server=localhost;\\
-                                Port=5432;\\
-                                Database=sensors;")
-
-con <- odbc::dbConnect(odbc::odbc(), .connection_string = connection_string, encoding = "utf8")
+con <- dbConnect(drv = odbc::odbc(),
+                 driver = 'PostgreSQL ANSI',
+                 server = 'localhost',
+                 database = 'sensors',
+                 port = 5432,
+                 uid = Sys.getenv('MY_UID'),
+                 pwd = Sys.getenv('MY_PWD'),
+                 encoding = 'utf8')
 
 DBI::dbAppendTable(conn = con,
                    name = 'sensors_data',
@@ -105,29 +105,23 @@ unlink(x = "*.log", force = TRUE)
 
 Ahora que tiene los datos en un servidor SQL, está en una consulta SQL de distancia de tenerlos en R
 
-```{r}
+```{r eval=FALSE}
 library(odbc)
 library(glue)
 
-connection_string <- glue::glue(
-  "Driver={{PostgreSQL ANSI}};\\
-  Uid={Sys.getenv('MY_UID')};\\
-  Pwd={Sys.getenv('MY_PWD')};\\
-  Server={Sys.getenv('MY_REMOTE')};\\
-  Port=5432;\\
-  Database=sensors;"
-)
-
-con <- dbConnect(
-  drv = odbc::odbc(),
-  .connection_string = connection_string,
-  encoding = "utf8"
-)
+con <- dbConnect(drv = odbc::odbc(),
+                 driver = 'PostgreSQL ANSI',
+                 server = 'localhost',
+                 database = 'sensors',
+                 port = 5432,
+                 uid = Sys.getenv('MY_UID'),
+                 pwd = Sys.getenv('MY_PWD'),
+                 encoding = 'utf8')
 
 query <- "
-SELECT * 
-FROM public.sensors_data
-"
+    SELECT * 
+    FROM public.sensors_data
+    "
 
 raw_data <- dbGetQuery(
   conn = con,
