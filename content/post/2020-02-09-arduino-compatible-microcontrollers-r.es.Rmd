@@ -107,7 +107,6 @@ Ahora que tiene los datos en un servidor SQL, está en una consulta SQL de dista
 
 ```{r eval=FALSE}
 library(odbc)
-library(glue)
 
 con <- dbConnect(drv = odbc::odbc(),
                  driver = 'PostgreSQL ANSI',
