@@ -23,7 +23,6 @@ output:
     highlight: zenburn
 ---
 
-<script src="/rmarkdown-libs/header-attrs/header-attrs.js"></script>
 <style type="text/css">
 pre > code.sourceCode { white-space: pre; position: relative; }
 pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
@@ -91,13 +90,13 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 
 <div id="TOC">
 <ul>
-<li><a href="#prerrequisitos">Prerrequisitos</a></li>
-<li><a href="#abrir-los-puertos-necesarios-en-el-servidor">Abrir los Puertos Necesarios en el Servidor</a></li>
-<li><a href="#configura-el-reenvio-de-puertos-en-tu-router">Configura el Reenvio de Puertos en tu Router</a></li>
-<li><a href="#pasos-adicionales-opcionales">Pasos Adicionales Opcionales</a>
+<li><a href="#prerrequisitos" id="toc-prerrequisitos">Prerrequisitos</a></li>
+<li><a href="#abrir-los-puertos-necesarios-en-el-servidor" id="toc-abrir-los-puertos-necesarios-en-el-servidor">Abrir los Puertos Necesarios en el Servidor</a></li>
+<li><a href="#configura-el-reenvio-de-puertos-en-tu-router" id="toc-configura-el-reenvio-de-puertos-en-tu-router">Configura el Reenvio de Puertos en tu Router</a></li>
+<li><a href="#pasos-adicionales-opcionales" id="toc-pasos-adicionales-opcionales">Pasos Adicionales Opcionales</a>
 <ul>
-<li><a href="#configura-un-servicio-de-dns-dinámico-ddns">Configura un Servicio de DNS Dinámico (DDNS)</a></li>
-<li><a href="#configura-un-proxy-inverso">Configura un Proxy Inverso</a></li>
+<li><a href="#configura-un-servicio-de-dns-dinámico-ddns" id="toc-configura-un-servicio-de-dns-dinámico-ddns">Configura un Servicio de DNS Dinámico (DDNS)</a></li>
+<li><a href="#configura-un-proxy-inverso" id="toc-configura-un-proxy-inverso">Configura un Proxy Inverso</a></li>
 </ul></li>
 </ul>
 </div>
@@ -239,29 +238,37 @@ En tu caso, la interfaz de usuario se verá diferente y las opciones podrían te
 <span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="er">}</span></span></code></pre></div>
 <p>y las siguientes líneas justo después de la línea que dice <code>server_name _;</code></p>
 <div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>    <span class="ex">rewrite</span> ^/shiny$ <span class="va">$scheme</span>://<span class="va">$http_host</span>/shiny/ permanent<span class="kw">;</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Esta parte es para Shiny server</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># This part is for Shiny server</span></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="ex">location</span> /shiny/ {</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>            <span class="ex">rewrite</span> ^/shiny/<span class="er">(</span><span class="bu">.</span><span class="pp">*</span><span class="kw">)</span><span class="ex">$</span> /<span class="va">$1</span> break<span class="kw">;</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>            <span class="ex">proxy_pass</span> http://localhost:3838<span class="kw">;</span></span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>            <span class="ex">proxy_redirect</span> / <span class="va">$scheme</span>://<span class="va">$http_host</span>/shiny/<span class="kw">;</span></span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>            <span class="ex">proxy_http_version</span> 1.1<span class="kw">;</span></span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>            <span class="ex">proxy_set_header</span> Upgrade <span class="va">$http_upgrade</span><span class="kw">;</span></span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>            <span class="ex">proxy_set_header</span> Connection <span class="va">$connection_upgrade</span><span class="kw">;</span></span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>            <span class="ex">proxy_read_timeout</span> 20d<span class="kw">;</span></span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>            <span class="ex">proxy_buffering</span> off<span class="kw">;</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>        <span class="ex">rewrite</span> ^/shiny/<span class="er">(</span><span class="bu">.</span><span class="pp">*</span><span class="kw">)</span><span class="ex">$</span> /<span class="va">$1</span> break<span class="kw">;</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>        <span class="ex">proxy_pass</span> http://localhost:3838<span class="kw">;</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>        <span class="ex">proxy_redirect</span> / <span class="va">$scheme</span>://<span class="va">$http_host</span>/shiny/<span class="kw">;</span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>        <span class="ex">proxy_http_version</span> 1.1<span class="kw">;</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>        <span class="ex">proxy_set_header</span> Upgrade <span class="va">$http_upgrade</span><span class="kw">;</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>        <span class="ex">proxy_set_header</span> Connection <span class="va">$connection_upgrade</span><span class="kw">;</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>        <span class="ex">proxy_read_timeout</span> 20d<span class="kw">;</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>        <span class="ex">proxy_buffering</span> off<span class="kw">;</span></span>
 <span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    <span class="er">}</span></span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Esta parte es para RStudio server</span></span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    <span class="ex">rewrite</span> ^/rstudio$ <span class="va">$scheme</span>://<span class="va">$http_host</span>/rstudio/ permanent<span class="kw">;</span> </span>
-<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    <span class="ex">location</span> /rstudio/ {</span>
-<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>        <span class="ex">rewrite</span> ^/rstudio/<span class="er">(</span><span class="bu">.</span><span class="pp">*</span><span class="kw">)</span><span class="ex">$</span> /<span class="va">$1</span> break<span class="kw">;</span></span>
-<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>        <span class="ex">proxy_pass</span> http://localhost:8787<span class="kw">;</span></span>
-<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>        <span class="ex">proxy_redirect</span> http://localhost:8787/ <span class="va">$scheme</span>://<span class="va">$http_host</span>/rstudio/<span class="kw">;</span></span>
-<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>        <span class="ex">proxy_http_version</span> 1.1<span class="kw">;</span></span>
-<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>        <span class="ex">proxy_set_header</span> Upgrade <span class="va">$http_upgrade</span><span class="kw">;</span></span>
-<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>        <span class="ex">proxy_set_header</span> Connection <span class="va">$connection_upgrade</span><span class="kw">;</span></span>
-<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>        <span class="ex">proxy_read_timeout</span> 20d<span class="kw">;</span></span>
-<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a>    <span class="er">}</span></span></code></pre></div>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    <span class="co"># This part is for RStudio server</span></span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    <span class="ex">location</span> /rstudio {</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>       <span class="co"># Needed only for prefix of /rstudio</span></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>       <span class="ex">rewrite</span> ^/rstudio/<span class="er">(</span><span class="bu">.</span><span class="pp">*</span><span class="kw">)</span><span class="ex">$</span> /<span class="va">$1</span> break<span class="kw">;</span></span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>       <span class="co"># Use http here when ssl-enabled=0 is set in rserver.conf</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>       <span class="ex">proxy_pass</span> http://localhost:8787<span class="kw">;</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>       <span class="ex">proxy_http_version</span> 1.1<span class="kw">;</span></span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>       <span class="ex">proxy_set_header</span> Upgrade <span class="va">$http_upgrade</span><span class="kw">;</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>       <span class="ex">proxy_set_header</span> Connection <span class="va">$connection_upgrade</span><span class="kw">;</span></span>
+<span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a>       <span class="co"># Optionally, use an explicit hostname and omit the port if using 80/443</span></span>
+<span id="cb5-26"><a href="#cb5-26" aria-hidden="true" tabindex="-1"></a>       <span class="ex">proxy_set_header</span> Host <span class="va">$host</span>:<span class="va">$server_port</span><span class="kw">;</span></span>
+<span id="cb5-27"><a href="#cb5-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-28"><a href="#cb5-28" aria-hidden="true" tabindex="-1"></a>       <span class="co"># Not needed if there&#39;s no prefix or www-root-path is set in rserver.conf</span></span>
+<span id="cb5-29"><a href="#cb5-29" aria-hidden="true" tabindex="-1"></a>       <span class="ex">proxy_set_header</span> X-RStudio-Root-Path /rstudio<span class="kw">;</span></span>
+<span id="cb5-30"><a href="#cb5-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-31"><a href="#cb5-31" aria-hidden="true" tabindex="-1"></a>       <span class="ex">proxy_read_timeout</span> 20d<span class="kw">;</span></span>
+<span id="cb5-32"><a href="#cb5-32" aria-hidden="true" tabindex="-1"></a>    <span class="er">}</span></span></code></pre></div>
 <p>Ahora solo tienes que reiniciar Nginx para aplicar los cambios y listo.</p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> service nginx restart</span></code></pre></div>
 </div>

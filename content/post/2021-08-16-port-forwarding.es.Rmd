@@ -131,28 +131,36 @@ y las siguientes líneas justo después de la línea que dice `server_name _;`
 
 ```{bash eval=FALSE}
     rewrite ^/shiny$ $scheme://$http_host/shiny/ permanent;
-    # Esta parte es para Shiny server
+    # This part is for Shiny server
     location /shiny/ {
-            rewrite ^/shiny/(.*)$ /$1 break;
-            proxy_pass http://localhost:3838;
-            proxy_redirect / $scheme://$http_host/shiny/;
-            proxy_http_version 1.1;
-            proxy_set_header Upgrade $http_upgrade;
-            proxy_set_header Connection $connection_upgrade;
-            proxy_read_timeout 20d;
-            proxy_buffering off;
-    }
-    # Esta parte es para RStudio server
-    rewrite ^/rstudio$ $scheme://$http_host/rstudio/ permanent; 
-    
-    location /rstudio/ {
-        rewrite ^/rstudio/(.*)$ /$1 break;
-        proxy_pass http://localhost:8787;
-        proxy_redirect http://localhost:8787/ $scheme://$http_host/rstudio/;
+        rewrite ^/shiny/(.*)$ /$1 break;
+        proxy_pass http://localhost:3838;
+        proxy_redirect / $scheme://$http_host/shiny/;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection $connection_upgrade;
         proxy_read_timeout 20d;
+        proxy_buffering off;
+    }
+    # This part is for RStudio server
+    location /rstudio {
+       # Needed only for prefix of /rstudio
+       rewrite ^/rstudio/(.*)$ /$1 break;
+
+       # Use http here when ssl-enabled=0 is set in rserver.conf
+       proxy_pass http://localhost:8787;
+       proxy_http_version 1.1;
+
+       proxy_set_header Upgrade $http_upgrade;
+       proxy_set_header Connection $connection_upgrade;
+
+       # Optionally, use an explicit hostname and omit the port if using 80/443
+       proxy_set_header Host $host:$server_port;
+
+       # Not needed if there's no prefix or www-root-path is set in rserver.conf
+       proxy_set_header X-RStudio-Root-Path /rstudio;
+
+       proxy_read_timeout 20d;
     }
 ```
 
