@@ -50,23 +50,23 @@ In order to use AWS services you need to have an account, if you already have on
 
 Once your account has been created, go to the "AWS Management Console" and log in, once there, click on the search button, type "EC2" and select "EC2 Virtual Servers in the Cloud".
 
-![](/post/2021-02-01-aws-server.en_files/aws_ec2.jpg){width=700px height=200px}
+![](/post/2021-03-28-aws-server.en_files/aws_ec2.jpg){width=700px height=200px}
 
 On the upper right corner choose a suitable region, the geographically closer to you the better. Remember your choice since you have to set this exact same location in the playbooks later.
 
-![](/post/2021-02-01-aws-server.en_files/region.jpg){width=300px height=600px}
+![](/post/2021-03-28-aws-server.en_files/region.jpg){width=400px height=600px}
 
 Then in the left menu, look for "Network & Security -> Key Pairs" and click on it.
 
-![](/post/2021-02-01-aws-server.en_files/aws_key_pair.jpg){width=200px height=600px}
+![](/post/2021-03-28-aws-server.en_files/aws_key_pair.jpg){width=250px height=600px}
 
 On the right upper corner look for "Create Key Pair" and click on it.
 
-![](/post/2021-02-01-aws-server.en_files/aws_create_key.jpg){width=600px height=200px}
+![](/post/2021-03-28-aws-server.en_files/aws_create_key.jpg){width=600px height=200px}
 
 You are going to see this dialog box, fill it this way, click on "Create Key Pair" and save the resulting file on this path, `~/.ssh/aws_server.pem`, in your machine.
 
-![](/post/2021-02-01-aws-server.en_files/key_pair.jpg){width=600px height=500px}
+![](/post/2021-03-28-aws-server.en_files/key_pair.jpg){width=600px height=500px}
 
 Set propper permissions for your key file, the .ssh directory permissions should be 700 (rwx______) and the private key (aws_server.pem) should be 600 (rw_______).
 
@@ -77,11 +77,11 @@ sudo chmod 600 ~/.ssh/aws_server.pem
 
 Next, you need to create an access key, so you can have access to your account programmatically, go to your account menu and select "My Security Credentials".
 
-![](/post/2021-02-01-aws-server.en_files/aws_security_settings.jpg){width=700px height=300px}
+![](/post/2021-03-28-aws-server.en_files/aws_security_settings.jpg){width=300px height=300px}
 
 Then select "Create New Access Key" and save the file with your credentials
 
-![](/post/2021-02-01-aws-server.en_files/aws_access_key.jpg){width=600px height=400px}
+![](/post/2021-03-28-aws-server.en_files/aws_access_key.jpg){width=600px height=400px}
 
 > :warning: Keep the downloaded file safe and at hand, you are going to need it later. Be careful not to share this file since it could enable other people to generate charges to your credit card.
 

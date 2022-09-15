@@ -27,7 +27,6 @@ output:
     highlight: zenburn
 ---
 
-<script src="/rmarkdown-libs/header-attrs/header-attrs.js"></script>
 <style type="text/css">
 pre > code.sourceCode { white-space: pre; position: relative; }
 pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
@@ -95,11 +94,11 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 
 <div id="TOC">
 <ul>
-<li><a href="#create-an-aws-account-and-security-credentials">Create an AWS Account and Security Credentials</a></li>
-<li><a href="#install-ansible">Install Ansible</a></li>
-<li><a href="#download-and-configure-the-playbooks">Download and Configure the Playbooks</a></li>
-<li><a href="#run-the-playbooks">Run the Playbooks</a></li>
-<li><a href="#final-notes">Final Notes</a></li>
+<li><a href="#create-an-aws-account-and-security-credentials" id="toc-create-an-aws-account-and-security-credentials">Create an AWS Account and Security Credentials</a></li>
+<li><a href="#install-ansible" id="toc-install-ansible">Install Ansible</a></li>
+<li><a href="#download-and-configure-the-playbooks" id="toc-download-and-configure-the-playbooks">Download and Configure the Playbooks</a></li>
+<li><a href="#run-the-playbooks" id="toc-run-the-playbooks">Run the Playbooks</a></li>
+<li><a href="#final-notes" id="toc-final-notes">Final Notes</a></li>
 </ul>
 </div>
 
@@ -121,22 +120,22 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <h2>Create an AWS Account and Security Credentials</h2>
 <p>In order to use AWS services you need to have an account, if you already have one, you can skip this part, if not, to create one go to <a href="https://aws.amazon.com/">https://aws.amazon.com/</a> and click on “Create an AWS Account”, fill in the required information and keep pressing “Continue”, you are going to be asked to provide your credit card information, but you are not going to be charged for using the products comprised on the “Free Tier” at least for a year.</p>
 <p>Once your account has been created, go to the “AWS Management Console” and log in, once there, click on the search button, type “EC2” and select “EC2 Virtual Servers in the Cloud”.</p>
-<p><img src="/post/2021-02-01-aws-server.en_files/aws_ec2.jpg" width="700" height="200" /></p>
+<p><img src="/post/2021-03-28-aws-server.en_files/aws_ec2.jpg" width="700" height="200" /></p>
 <p>On the upper right corner choose a suitable region, the geographically closer to you the better. Remember your choice since you have to set this exact same location in the playbooks later.</p>
-<p><img src="/post/2021-02-01-aws-server.en_files/region.jpg" width="300" height="600" /></p>
+<p><img src="/post/2021-03-28-aws-server.en_files/region.jpg" width="400" height="600" /></p>
 <p>Then in the left menu, look for “Network &amp; Security -&gt; Key Pairs” and click on it.</p>
-<p><img src="/post/2021-02-01-aws-server.en_files/aws_key_pair.jpg" width="200" height="600" /></p>
+<p><img src="/post/2021-03-28-aws-server.en_files/aws_key_pair.jpg" width="250" height="600" /></p>
 <p>On the right upper corner look for “Create Key Pair” and click on it.</p>
-<p><img src="/post/2021-02-01-aws-server.en_files/aws_create_key.jpg" width="600" height="200" /></p>
+<p><img src="/post/2021-03-28-aws-server.en_files/aws_create_key.jpg" width="600" height="200" /></p>
 <p>You are going to see this dialog box, fill it this way, click on “Create Key Pair” and save the resulting file on this path, <code>~/.ssh/aws_server.pem</code>, in your machine.</p>
-<p><img src="/post/2021-02-01-aws-server.en_files/key_pair.jpg" width="600" height="500" /></p>
+<p><img src="/post/2021-03-28-aws-server.en_files/key_pair.jpg" width="600" height="500" /></p>
 <p>Set propper permissions for your key file, the .ssh directory permissions should be 700 (rwx______) and the private key (aws_server.pem) should be 600 (rw_______).</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chmod 700 ~/.ssh/</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chmod 600 ~/.ssh/aws_server.pem</span></code></pre></div>
 <p>Next, you need to create an access key, so you can have access to your account programmatically, go to your account menu and select “My Security Credentials”.</p>
-<p><img src="/post/2021-02-01-aws-server.en_files/aws_security_settings.jpg" width="700" height="300" /></p>
+<p><img src="/post/2021-03-28-aws-server.en_files/aws_security_settings.jpg" width="300" height="300" /></p>
 <p>Then select “Create New Access Key” and save the file with your credentials</p>
-<p><img src="/post/2021-02-01-aws-server.en_files/aws_access_key.jpg" width="600" height="400" /></p>
+<p><img src="/post/2021-03-28-aws-server.en_files/aws_access_key.jpg" width="600" height="400" /></p>
 <blockquote>
 <p>:warning: Keep the downloaded file safe and at hand, you are going to need it later. Be careful not to share this file since it could enable other people to generate charges to your credit card.</p>
 </blockquote>
