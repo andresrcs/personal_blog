@@ -27,7 +27,7 @@ output:
     highlight: zenburn
 ---
 
-Despues de escribir una [publicación muy similar](/es/2021/01/13/raspberry_pi_server/) sobre la instalación de Shiny y RStudio server en Raspberry Pi OS usando la automatización con Ansible, me di cuenta de que el mismo enfoque se puede portar fácilmente para trabajar con servicios de computación en la nube, así que, básicamente, esta será la versión Amazon Web Services (AWS a partir de ahora) de esa publicación.
+Despues de escribir una [publicación muy similar](/es/2021/01/13/raspberry_pi_server/) sobre la instalación de Shiny y RStudio server en una Raspberry Pi usando automatización con Ansible, me di cuenta de que el mismo enfoque se puede portar fácilmente para trabajar con servicios de computación en la nube, así que, básicamente, esta será la versión Amazon Web Services (AWS a partir de ahora) de esa publicación.
 
 > :pencil2: Ten en cuenta que este es un proyecto orientado a principiantes, no está destinado a ser una herramienta de producción, por lo que si ya estás familiarizado con Ansible, es posible que quieras simplemente descargar algunos roles de Ansible Galaxy e integrarlos en tu flujo de trabajo en lugar de seguir este artículo.
 
@@ -96,8 +96,8 @@ Para instalar Ansible, si tienes un sistema basado en Unix (es decir, Linux, mac
 sudo apt install python3 # En macOS usa `brew install python3`
 # Instala pip3
 sudo apt install python3-pip 
-# Instala la versión 5.2.0 de Ansible con pip3 (Por reproducibilidad) 
-sudo pip3 install ansible==5.2.0
+# Instala la versión 6.3.0 de Ansible con pip3 (Por reproducibilidad) 
+sudo pip3 install ansible==6.3.0
 ```
 
 Si estás en Windows, lamentablemente, no hay forma de ejecutar Ansible de forma nativa, tu mejor opción es habilitar WSL (Subsistema de Windows para Linux), instalar una distribución de Linux del Microsoft Store (recomiendo Ubuntu) y ejecutar los pasos anteriores en tu máquina virtual Linux.
@@ -143,7 +143,7 @@ keyed_groups:
   - key: tags.inventory_group
 ```
 
-Ahora, si deseas cambiar la configuración de instalación predeterminada, puedes hacerlo editando las variables en el archivo `aws_r_server/vars/config_vars.yml`, aunque las opciones predeterminadas están bien para la mayoría de los casos de uso, incluida una configuración de seguridad razonable para usar en aplicaciones del mundo real. Lo único que debes cambiar aquí son las credenciales y la región de AWS, la dirección de correo electrónico para las notificaciones de seguridad y la contraseña del usuario principal de PostgreSQL.
+Ahora, si deseas cambiar la configuración de instalación predeterminada, puedes hacerlo editando las variables en el archivo `aws_r_server/vars/config_vars.yml`, aunque las opciones predeterminadas están bien para la mayoría de los casos de uso, incluida una configuración de seguridad razonable para usar en aplicaciones del mundo real. Lo único que debes cambiar aquí son las credenciales y la región de AWS, el usuario personal y su contraseña, y la contraseña del usuario principal de PostgreSQL.
 
 > :pencil2: Esta publicación se ha escrito como un ejemplo de la aplicación de este enfoque con servicios de computación en la nube, por lo que, en aras de la simplicidad, lo hice funcionar solo con la AMI de Ubuntu Server 20.04 LTS, por lo que, para ser claro, no es independiente del sistema operativo. Si deseas utilizarlo con una AMI basada en RHEL, deberás modificar considerablemente los playbooks. 
 
@@ -157,7 +157,7 @@ aws_secret_key: 'tu_código_secreto_va_aqui'
 
 # Configuración General de AWS
 aws_region: 'regin_aws_más_cercana' # Por ejemplo sa-east-1
-aws_ec2_ami: ami-0c3c87b7d583d618f # Ubuntu 20.04 LTS
+aws_ec2_ami: 'ami-08ae71fd7f1449df1' # Ubuntu 22.04 LTS
 
 # Lista de instancias
 instances:
@@ -165,6 +165,7 @@ instances:
     group: aws
     security_group: ["default", "public_server"]
     ssh_key: aws_server
+    type: 't2.micro'
 
 # Configuración del firewall de AWS
 security_groups:
@@ -198,7 +199,7 @@ security_groups:
 personal_user: 'tu_usuario_de_linux'
 personal_user_password: 'password_muy_seguro'
 
-# Swap parameters
+# Parametros Swap
 swap_file_path: /var/swap
 # Use any of the following suffixes
 # c=1
@@ -220,10 +221,6 @@ default_locale: 'en_US.UTF-8'     #  Por ejemplo es_PE.UTF-8
 
 # Configuraciones de Seguridad #################################################
 
-# Email para notificaciones de fail2ban
-send_email: true
-fail2ban_email: 'tu_email@algo.com'
-
 # Password para Postgresql
 postgres_password: 'password_muy_seguro'
 
@@ -232,14 +229,16 @@ postgresql_rules:
   - { contype: local, users: all, address: samehost, method: trust }
   - { contype: local, users: postgres, address: samehost, method: trust }
   - { contype: host, users: all, address: 0.0.0.0/0, method: password }
+  - { contype: host, users: all, address: 127.0.0.1/32, method: md5 }
+  - { contype: host, users: all, address: '::1/128', method: trust }
 
 # Versiones del Software Principal #############################################
 
 # Versión de Shiny-server a instalar
-shiny_server_version: '1.5.16.958'
+shiny_server_version: '1.5.19.995'
 
 # Versión de RStudio a instalar
-rstudio_version: '1.4.1106'
+rstudio_version: '2022.07.1+554'
 preview_version: false
 
 ```
@@ -293,7 +292,7 @@ También puedes hacer lo contrario y omitir partes específicas de los playbooks
 ansible-playbook install_basic_services.yml --skip-tags "postgresql"
 ```
 
-Después de ejecutar con éxito todos los playbooks, tendrás una instalación completamente funcional lista para ser utilizada, por lo que podras simplemente abrir una sesión de RStudio en `http://ip_de_tu_servidor/rstudio` y/o publicar tus aplicaciones Shiny en la carpeta `/srv/shiny-server` y acceder a ellas en `http://ip_de_tu_servidor/shiny/nombre_de_tu_app`.
+Después de ejecutar con éxito todos los playbooks, tendrás una instalación completamente funcional lista para ser utilizada, por lo que podras simplemente abrir una sesión de RStudio en `http://ip_de_tu_servidor/rstudio/` y/o publicar tus aplicaciones Shiny en la carpeta `/srv/shiny-server` y acceder a ellas en `http://ip_de_tu_servidor/shiny/nombre_de_tu_app`.
 
 ## Notas Finales
 

@@ -27,7 +27,7 @@ output:
     highlight: zenburn
 ---
 
-After writing a very [similar post](/2021/01/13/raspberry_pi_server/) about installing Shiny and RStudio server on Raspberry Pi OS using automation with Ansible, I realized that the same approach can be easily ported to work with cloud computing services as well, so, basically, this is going to be the Amazon Web Services (AWS from now on) version of that post.
+After writing a very [similar post](/2021/01/13/raspberry_pi_server/) about installing Shiny and RStudio server on a Raspberry Pi using automation with Ansible, I realized that the same approach can be easily ported to work with cloud computing services as well, so, basically, this is going to be the Amazon Web Services (AWS from now on) version of that post.
 
 > :pencil2: Have in mind that this is a beginner-oriented project, it is not meant as a production tool, so if you are already familiar with Ansible you might want to simply download some roles from Ansible Galaxy and integrate them into your workflow instead of following this article.
 
@@ -96,8 +96,8 @@ For installing Ansible, if you have a Unix based system (i.e. Linux, macOS) at y
 sudo apt install python3 # On macOS use `brew install python3`
 # Install pip3
 sudo apt install python3-pip 
-# Install Ansible version 5.2.0 (for reproducibility) with pip3 
-sudo pip3 install ansible==5.2.0
+# Install Ansible version 6.3.0 (for reproducibility) with pip3 
+sudo pip3 install ansible==6.3.0
 ```
 
 If you are on Windows, sadly, there is no way to run Ansible natively, your best bet is to enable WSL (Windows Subsystem for Linux), install a Linux distribution from the Microsoft Store (I recommend Ubuntu), and execute the previous steps in your Linux VM.
@@ -143,7 +143,7 @@ keyed_groups:
   - key: tags.inventory_group
 ```
 
-Now, if you want to change the default installation settings, you can do it by editing the variables on the `aws_r_server/vars/config_vars.yml` file, although, the default options are fine for most use case scenarios, including reasonable security settings to use on real-world applications. The only things you certainly need to change here are the AWS credentials and region, the email address for security notifications and the password for the PostgreSQL main user.
+Now, if you want to change the default installation settings, you can do it by editing the variables on the `aws_r_server/vars/config_vars.yml` file, although, the default options are fine for most use case scenarios, including reasonable security settings to use on real-world applications. The only things you certainly need to change here are the AWS credentials and region, the personal user and password, and the password for the PostgreSQL main user.
 
 > :pencil2: This post has been written as an example of applying this approach with cloud computing services so for simplicity's sake, I have made it work only with the Ubuntu Server 20.04 LTS AMI, so to be clear, it is not OS-agnostic. If you want to use it with an RHEL based AMI you would need to modify the playbooks considerably.
 
@@ -157,7 +157,7 @@ aws_secret_key: 'your_secret_goes_here'
 
 # General AWS configurations
 aws_region: 'closest_aws_region' #  e.g. sa-east-1
-aws_ec2_ami: ami-0c3c87b7d583d618f # Ubuntu 20.04 LTS
+aws_ec2_ami: 'ami-08ae71fd7f1449df1' # Ubuntu 22.04 LTS
 
 # List of instances
 instances:
@@ -165,6 +165,7 @@ instances:
     group: aws
     security_group: ["default", "public_server"]
     ssh_key: aws_server
+    type: 't2.micro'
 
 # AWS firewall settings
 security_groups:
@@ -195,7 +196,7 @@ security_groups:
 # System Configurations ########################################################
 
 # Personal user
-personal_user: 'your_linux_user_name'
+personal_user: 'your_linux_user'
 personal_user_password: 'very_secure_password'
 
 # Swap parameters
@@ -220,10 +221,6 @@ default_locale: 'en_US.UTF-8'     #  e.g. es_PE.UTF-8
 
 # Security Configurations ######################################################
 
-# Notification email for fail2ban
-send_email: true
-fail2ban_email: 'your_email@something.com'
-
 # Postgresql Password
 postgres_password: 'very_secure_password'
 
@@ -232,14 +229,16 @@ postgresql_rules:
   - { contype: local, users: all, address: samehost, method: trust }
   - { contype: local, users: postgres, address: samehost, method: trust }
   - { contype: host, users: all, address: 0.0.0.0/0, method: password }
+  - { contype: host, users: all, address: 127.0.0.1/32, method: md5 }
+  - { contype: host, users: all, address: '::1/128', method: trust }
 
 # Main Software Versions #######################################################
 
 # Shiny-server version to install
-shiny_server_version: '1.5.16.958'
+shiny_server_version: '1.5.19.995'
 
 # RStudio version to install
-rstudio_version: '1.4.1106'
+rstudio_version: '2022.07.1+554'
 preview_version: false
 
 ```
@@ -293,7 +292,7 @@ You can also go the other way and skip specific parts of the playbooks by using 
 ansible-playbook install_basic_services.yml --skip-tags "postgresql"
 ```
 
-After successfully running all the playbooks, you will have a fully functional installation ready to be used, so you could simply open an RStudio session at `http://your_server_ip/rstudio` and/or publish your Shiny apps in the `/srv/shiny-server` folder and access them at `http://your_server_ip/shiny/your_app_name`.
+After successfully running all the playbooks, you will have a fully functional installation ready to be used, so you could simply open an RStudio session at `http://your_server_ip/rstudio/` and/or publish your Shiny apps in the `/srv/shiny-server` folder and access them at `http://your_server_ip/shiny/your_app_name`.
 
 ## Final Notes
 
