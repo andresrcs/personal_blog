@@ -145,7 +145,7 @@ keyed_groups:
 
 Now, if you want to change the default installation settings, you can do it by editing the variables on the `aws_r_server/vars/config_vars.yml` file, although, the default options are fine for most use case scenarios, including reasonable security settings to use on real-world applications. The only things you certainly need to change here are the AWS credentials and region, the personal user and password, and the password for the PostgreSQL main user.
 
-> :pencil2: This post has been written as an example of applying this approach with cloud computing services so for simplicity's sake, I have made it work only with the Ubuntu Server 20.04 LTS AMI, so to be clear, it is not OS-agnostic. If you want to use it with an RHEL based AMI you would need to modify the playbooks considerably.
+> :pencil2: This post has been written as an example of applying this approach with cloud computing services so for simplicity's sake, I have made it work only with the Ubuntu Server 22.04 LTS AMI, so to be clear, it is not OS-agnostic. If you want to use it with an RHEL based AMI you would need to modify the playbooks considerably.
 
 ```{bash config_vars, eval=FALSE}
 ---
