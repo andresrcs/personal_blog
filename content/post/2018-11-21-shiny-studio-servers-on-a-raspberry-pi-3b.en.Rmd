@@ -212,7 +212,6 @@ sudo make install
 # Configure shiny-server
 sudo mkdir -p /etc/shiny-server
 sudo cp ../config/default.config /etc/shiny-server/shiny-server.conf
-sudo cp ../config/init.d/debian/shiny-server /etc/init.d/shiny-server
 cd
 sudo rm -rf shiny-server
 sudo ln -s /usr/local/shiny-server/bin/shiny-server /usr/bin/shiny-server
@@ -221,33 +220,52 @@ sudo mkdir -p /var/log/shiny-server
 sudo mkdir -p /srv/shiny-server
 sudo mkdir -p /var/lib/shiny-server
 sudo chown shiny /var/log/shiny-server
-sudo mkdir -p /etc/shiny-server
 
 # Edit the shiny-server.service file
-sudo nano /lib/systemd/system/shiny-server.service # Paste the following content
-    #!/usr/bin/env bash
+sudo nano /etc/systemd/system/shiny-server.service 
+    # Paste the following content
+    
     [Unit]
     Description=ShinyServer
-    
+
     [Service]
     Type=simple
-    ExecStart=/usr/bin/shiny-server
+    ExecStart=/usr/bin/env bash -c 'exec /usr/local/shiny-server/bin/shiny-server >>     /var/log/shiny-server.log 2>&1'
     KillMode=process
-    ExecReload=/bin/kill -HUP $MAINPID
-    ExecStopPost=/bin/sleep 5
+    ExecReload=/usr/bin/env kill -HUP $MAINPID
+    ExecStopPost=/usr/bin/env sleep 5
     Restart=on-failure
     RestartSec=1
     StartLimitInterval=45
     StartLimitBurst=3
-    
+
     [Install]
     WantedBy=multi-user.target
 
-sudo chown root:root /lib/systemd/system/shiny-server.service
-sudo chmod 644 /lib/systemd/system/shiny-server.service
+# Edit the shiny-server logrotate file
+sudo nano /etc/logrotate.d/shiny-server 
+    # Paste the following content
+    
+    /var/log/shiny-server.log {
+       rotate 12
+       copytruncate
+       compress
+       missingok
+       size 1M
+    }
+
+# Set permissions for the files
+sudo chown root:root /etc/systemd/system/shiny-server.service
+sudo chmod 644 /etc/systemd/system/shiny-server.service
+sudo chown root:root /etc/logrotate.d/shiny-server
+sudo chmod 644 /etc/logrotate.d/shiny-server
+
+# Start the service
 sudo systemctl daemon-reload
 sudo systemctl enable shiny-server
 sudo systemctl start shiny-server
+
+# Create sylinks for pandoc and the sample apps
 sudo ln -s -f /usr/bin/pandoc /usr/local/shiny-server/ext/pandoc/pandoc
 sudo ln -s -f /usr/bin/pandoc-citeproc /usr/local/shiny-server/ext/pandoc/pandoc-citeproc
 sudo ln -s /usr/local/shiny-server/samples/sample-apps /srv/shiny-server/sample-apps
