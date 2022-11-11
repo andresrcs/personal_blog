@@ -265,7 +265,7 @@ sudo systemctl daemon-reload
 sudo systemctl enable shiny-server
 sudo systemctl start shiny-server
 
-# Create sylinks for pandoc and the sample apps
+# Create symlinks for pandoc and the sample apps
 sudo ln -s -f /usr/bin/pandoc /usr/local/shiny-server/ext/pandoc/pandoc
 sudo ln -s -f /usr/bin/pandoc-citeproc /usr/local/shiny-server/ext/pandoc/pandoc-citeproc
 sudo ln -s /usr/local/shiny-server/samples/sample-apps /srv/shiny-server/sample-apps
