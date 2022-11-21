@@ -121,20 +121,21 @@ Para instalar R en tu Pi tienes algunas opciones, cada una con sus pros y sus co
 -   Siempre puedes compilar R desde la fuente, independientemente del sistema operativo que estés utilizando, esto te ofrece la oportunidad de elegir las opciones de compilación, pero a costa de esperar mucho tiempo para que se complete el proceso de compilación.
 
     ```{bash install_r_compile, eval=FALSE}
-    # Especifíca la version R para instalar
-    R_VERSION=4.2.1
-
-    sudo apt install -y g++ gcc gfortran libreadline-dev libx11-dev libxt-dev \
-                        libpng-dev libjpeg-dev libcairo2-dev xvfb \
-                        libbz2-dev libzstd-dev liblzma-dev libtiff5 \
-                        libssh-dev libgit2-dev libcurl4-openssl-dev \
-                        libblas-dev liblapack-dev libopenblas-base \
-                        zlib1g-dev openjdk-11-jdk \
-                        texinfo texlive texlive-fonts-extra \
-                        screen wget libpcre2-dev make cmake
-    cd /usr/local/src
-    sudo wget https://cran.rstudio.com/src/base/R-${R_VERSION:0:1}/R-$R_VERSION.tar.gz
     sudo su
+    
+    # Especifíca la version R para instalar
+    R_VERSION=4.2.2
+
+    apt install -y g++ gcc gfortran libreadline-dev libx11-dev libxt-dev \
+                libpng-dev libjpeg-dev libcairo2-dev xvfb \
+                libbz2-dev libzstd-dev liblzma-dev libtiff5 \
+                libssh-dev libgit2-dev libcurl4-openssl-dev \
+                libblas-dev liblapack-dev libopenblas-base \
+                zlib1g-dev openjdk-11-jdk \
+                texinfo texlive texlive-fonts-extra \
+                screen wget libpcre2-dev make cmake
+    cd /usr/local/src
+    wget https://cran.rstudio.com/src/base/R-${R_VERSION:0:1}/R-$R_VERSION.tar.gz
     tar zxvf R-$R_VERSION.tar.gz
     cd R-$R_VERSION
     ./configure --enable-R-shlib --with-blas --with-lapack #BLAS and LAPACK are optional

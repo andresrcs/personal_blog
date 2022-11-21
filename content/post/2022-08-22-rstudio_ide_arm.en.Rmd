@@ -40,23 +40,24 @@ You can install the R version that comes with the standard repositories for your
 sudo apt install r-base
 ```
 
-Another option is to compile the latest R version yourself (4.2.1 at the moment of writing), this is time-consuming but it gives you the most flexibility since you can choose options like compiling with BLAS and LAPACK:
+Another option is to compile the latest R version yourself (4.2.2 at the moment of writing), this is time-consuming but it gives you the most flexibility since you can choose options like compiling with BLAS and LAPACK:
 
 ```{bash install_r_source, eval=FALSE}
-# Set the R version to install
-R_VERSION=4.2.1
-
-sudo apt install -y g++ gcc gfortran libreadline-dev libx11-dev libxt-dev \
-                    libpng-dev libjpeg-dev libcairo2-dev xvfb \
-                    libbz2-dev libzstd-dev liblzma-dev libtiff5 \
-                    libssh-dev libgit2-dev libcurl4-openssl-dev \
-                    libblas-dev liblapack-dev libopenblas-base \
-                    zlib1g-dev openjdk-11-jdk \
-                    texinfo texlive texlive-fonts-extra \
-                    screen wget libpcre2-dev make cmake
-cd /usr/local/src
-sudo wget https://cran.rstudio.com/src/base/R-${R_VERSION:0:1}/R-$R_VERSION.tar.gz
 sudo su
+    
+# Set the R version to install
+R_VERSION=4.2.2
+
+apt install -y g++ gcc gfortran libreadline-dev libx11-dev libxt-dev \
+            libpng-dev libjpeg-dev libcairo2-dev xvfb \
+            libbz2-dev libzstd-dev liblzma-dev libtiff5 \
+            libssh-dev libgit2-dev libcurl4-openssl-dev \
+            libblas-dev liblapack-dev libopenblas-base \
+            zlib1g-dev openjdk-11-jdk \
+            texinfo texlive texlive-fonts-extra \
+            screen wget libpcre2-dev make cmake
+cd /usr/local/src
+wget https://cran.rstudio.com/src/base/R-${R_VERSION:0:1}/R-$R_VERSION.tar.gz
 tar zxvf R-$R_VERSION.tar.gz
 cd R-$R_VERSION
 ./configure --enable-R-shlib --with-blas --with-lapack #BLAS and LAPACK are optional
@@ -103,8 +104,8 @@ sudo apt install gdebi
 Now we get to the point. There is no stable release of the RStudio IDE for arm64 but there are experimental daily builds available [here](https://dailies.rstudio.com/rstudio/elsbeth-geranium/), both for the server and desktop versions and compiled for Ubuntu 22.04 and Ubuntu 18/20. I'm going to try out the server version for Ubuntu 18/20 because it is compatible with Raspberry Pi OS x64 and I prefer to work with the IDE on my regular computer instead of directly on the Raspberry Pi, but you can install the desktop version the same way if you prefer, just change the link accordingly.
 
 ```{bash install_rstudio, eval=FALSE}
-wget https://s3.amazonaws.com/rstudio-ide-build/server/bionic/arm64/rstudio-server-2022.11.0-daily-134-arm64.deb
-sudo gdebi rstudio-server-2022.11.0-daily-134-arm64.deb
+wget https://s3.amazonaws.com/rstudio-ide-build/server/bionic/arm64/rstudio-server-2022.12.0-preview-334-arm64.deb
+sudo gdebi rstudio-server-2022.12.0-preview-334-arm64.deb
 ```
 
 Once the installation process is completed, you get a working RStudio IDE installation running on your Raspberry Pi, if you have chosen to install the server version as I did, you can open an RStudio session by opening a browser on any device in your network and typing the proper address i.e. `http:\\your_pi_ip_addres:8787`

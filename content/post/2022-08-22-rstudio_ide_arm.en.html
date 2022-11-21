@@ -103,29 +103,30 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <p>Then, the most important dependency for RStudio is, unsurprisingly, the R language. You have some options for installing R on a Raspberry Pi, each one with its own pros and cons.</p>
 <p>You can install the R version that comes with the standard repositories for your OS, which is 4.0.0 for Raspberry Pi OS and 4.1.2 for Ubuntu 22.04.1. This is the easiest option but these versions are quite old:</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install r-base</span></code></pre></div>
-<p>Another option is to compile the latest R version yourself (4.2.1 at the moment of writing), this is time-consuming but it gives you the most flexibility since you can choose options like compiling with BLAS and LAPACK:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Set the R version to install</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="va">R_VERSION</span><span class="op">=</span>4.2.1</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install <span class="at">-y</span> g++ gcc gfortran libreadline-dev libx11-dev libxt-dev <span class="dt">\</span></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>                    libpng-dev libjpeg-dev libcairo2-dev xvfb <span class="dt">\</span></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>                    libbz2-dev libzstd-dev liblzma-dev libtiff5 <span class="dt">\</span></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>                    libssh-dev libgit2-dev libcurl4-openssl-dev <span class="dt">\</span></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>                    libblas-dev liblapack-dev libopenblas-base <span class="dt">\</span></span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>                    zlib1g-dev openjdk-11-jdk <span class="dt">\</span></span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>                    texinfo texlive texlive-fonts-extra <span class="dt">\</span></span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>                    screen wget libpcre2-dev make cmake</span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> /usr/local/src</span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> wget https://cran.rstudio.com/src/base/R-<span class="va">${R_VERSION</span><span class="op">:</span><span class="dv">0</span><span class="op">:</span><span class="dv">1</span><span class="va">}</span>/R-<span class="va">$R_VERSION</span>.tar.gz</span>
-<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> su</span>
-<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="fu">tar</span> zxvf R-<span class="va">$R_VERSION</span>.tar.gz</span>
-<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> R-<span class="va">$R_VERSION</span></span>
-<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="ex">./configure</span> <span class="at">--enable-R-shlib</span> <span class="at">--with-blas</span> <span class="at">--with-lapack</span> <span class="co">#BLAS and LAPACK are optional</span></span>
-<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span></span>
-<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> install</span>
-<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ..</span>
-<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-rf</span> R-<span class="va">$R_VERSION</span><span class="pp">*</span></span>
-<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a><span class="bu">exit</span></span></code></pre></div>
+<p>Another option is to compile the latest R version yourself (4.2.2 at the moment of writing), this is time-consuming but it gives you the most flexibility since you can choose options like compiling with BLAS and LAPACK:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> su</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Set the R version to install</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="va">R_VERSION</span><span class="op">=</span>4.2.2</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="ex">apt</span> install <span class="at">-y</span> g++ gcc gfortran libreadline-dev libx11-dev libxt-dev <span class="dt">\</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>            libpng-dev libjpeg-dev libcairo2-dev xvfb <span class="dt">\</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>            libbz2-dev libzstd-dev liblzma-dev libtiff5 <span class="dt">\</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>            libssh-dev libgit2-dev libcurl4-openssl-dev <span class="dt">\</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>            libblas-dev liblapack-dev libopenblas-base <span class="dt">\</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>            zlib1g-dev openjdk-11-jdk <span class="dt">\</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>            texinfo texlive texlive-fonts-extra <span class="dt">\</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>            screen wget libpcre2-dev make cmake</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> /usr/local/src</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="fu">wget</span> https://cran.rstudio.com/src/base/R-<span class="va">${R_VERSION</span><span class="op">:</span><span class="dv">0</span><span class="op">:</span><span class="dv">1</span><span class="va">}</span>/R-<span class="va">$R_VERSION</span>.tar.gz</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="fu">tar</span> zxvf R-<span class="va">$R_VERSION</span>.tar.gz</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> R-<span class="va">$R_VERSION</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="ex">./configure</span> <span class="at">--enable-R-shlib</span> <span class="at">--with-blas</span> <span class="at">--with-lapack</span> <span class="co">#BLAS and LAPACK are optional</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> install</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ..</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-rf</span> R-<span class="va">$R_VERSION</span><span class="pp">*</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a><span class="bu">exit</span></span></code></pre></div>
 <p>And my new favorite, you can use a precompiled binary from the <a href="https://r4pi.org/" title="R for the Raspberry Pi">R4Pi</a> project, they have been kind enough to make available an arm64 binary for us to try out (big thanks to Mark Sellors <a href="https://twitter.com/sellorm"><span class="citation">@sellorm</span></a>), it works great with Raspberry Pi OS x64 (Debian 11 based) but sadly it is not compatible with Ubuntu 22.04 (Debian 12 based). This option sacrifices the flexibility of choosing your own compiling options but the gain in installation time (also for R packages) is definitely worth it:</p>
 <div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-O</span>  https://pkgs.r4pi.org/dl/r4pi-repo-conf_0.0.1-1_all.deb</span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> dpkg <span class="at">-i</span>  r4pi-repo-conf_0.0.1-1_all.deb</span>
@@ -144,8 +145,8 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <div id="installing-the-rstudio-ide" class="section level2">
 <h2>Installing the RStudio IDE</h2>
 <p>Now we get to the point. There is no stable release of the RStudio IDE for arm64 but there are experimental daily builds available <a href="https://dailies.rstudio.com/rstudio/elsbeth-geranium/">here</a>, both for the server and desktop versions and compiled for Ubuntu 22.04 and Ubuntu 18/20. I’m going to try out the server version for Ubuntu 18/20 because it is compatible with Raspberry Pi OS x64 and I prefer to work with the IDE on my regular computer instead of directly on the Raspberry Pi, but you can install the desktop version the same way if you prefer, just change the link accordingly.</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">wget</span> https://s3.amazonaws.com/rstudio-ide-build/server/bionic/arm64/rstudio-server-2022.11.0-daily-134-arm64.deb</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> gdebi rstudio-server-2022.11.0-daily-134-arm64.deb</span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">wget</span> https://s3.amazonaws.com/rstudio-ide-build/server/bionic/arm64/rstudio-server-2022.12.0-preview-334-arm64.deb</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> gdebi rstudio-server-2022.12.0-preview-334-arm64.deb</span></code></pre></div>
 <p>Once the installation process is completed, you get a working RStudio IDE installation running on your Raspberry Pi, if you have chosen to install the server version as I did, you can open an RStudio session by opening a browser on any device in your network and typing the proper address i.e. <code>http:\\your_pi_ip_addres:8787</code></p>
 <p><img src="/post/2022-08-20-rstudio_ide_arm.en_files/rstudio_ide.jpg" width="800" height="400" /></p>
 </div>
