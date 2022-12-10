@@ -89,9 +89,7 @@ The experimental RStudio IDE builds do not come with Pandoc nor Quarto bundled s
 sudo apt install pandoc pandoc-citeproc
 ```
 
-Quarto is a different story, the problem with it is that one of its dependencies, Deno (and its Deno DOM plug-in) is not available for arm64 because of the lack of arm64 GitHub Actions runners which makes CI/CD workflows unpractical.
-
-I have tried using an [alternative source](https://github.com/LukeChannings/deno-arm64) for the Deno binary but I can't find an alternative source for the Deno DOM plug-in so I guess we will have to live without Quarto capabilities on arm64 for the time being (or if you are more clever than me you can find out a way around this and share with the rest of us).
+Quarto is a different story, the problem with it is that some of its dependencies (i.e. Deno, SASS, Pandoc) are not available for arm64 from official sources, in consequence, Quarto doesn't support arm64 either. I have managed to install the Quarto CLI on arm64 (I have a [related article](/2022/12/09/quarto_arm64/) about this) but I haven't figured out yet how to integrate it with the RStudio IDE so I guess we will have to live without the RStudio IDE integration features with Quarto on arm64 for the time being (or, if you are more clever than me you can find out a way around this and share with the rest of us).
 
 Lastly, for installing the RStudio IDE deb file, as you would do on an x86_64 system, you might want to install `gdebi` to handle package dependencies for you:
 
