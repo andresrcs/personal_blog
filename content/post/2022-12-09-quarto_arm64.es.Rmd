@@ -1,0 +1,125 @@
+---
+title: Instalación de Quarto-CLI en sistemas Linux-arm64
+description: "Aprende a instalar la interfaz de línea de comandos de Quarto en sistemas Linux-arm64, como las populares Raspberry Pi y las máquinas virtuales con procesadores Ampere Altra."
+author: andres-castro
+date: '2022-12-09'
+slug: quarto_arm64
+categories:
+  - R
+series: 
+  - r-admin
+tags:
+  - quarto
+  - rstudio-ide
+  - linux-arm64
+  - raspberry-pi
+draft: false
+images: ["quarto_arm64.png"]
+authors: ["andres-castro"]
+output:
+  blogdown::html_page:
+    toc: true
+    highlight: zenburn
+---
+
+Quarto es el nuevo sistema de publicación científica y técnica de código abierto de Posit basado en Pandoc que permite entrelazar texto narrativo y código para producir resultados de alta calidad, incluidos informes, presentaciones, sitios web y más. Es el sucesor del ecosistema R Markdown de gran éxito, pero específico de R, que lleva todos los beneficios de R Markdown a otros lenguajes de programación como Python, Julia y Observable.
+
+Desafortunadamente, debido a la falta de fuentes oficiales de binarios arm64 para algunas de sus dependencias (por ejemplo, Deno, SASS, Pandoc), y como me explicaron, su ancho de banda limitado para soportar arquitecturas no suficientemente populares como Linux arm64. Quarto no admite oficialmente la arquitectura arm64, pero eso no significa que no podamos hacer que funcione en ella nosotros mismos.
+
+Con la amable ayuda de Carlos Scheidegger ([@scheidegger@mastodon.social](https://mastodon.social/@scheidegger)), un ingeniero de software de Posit que trabaja en Quarto, Me las arreglé para instalar Quarto en sistemas arm64 y me gustaría compartir cómo lo hice con la comunidad R.
+
+## Plataforma de Prueba
+
+Probé esto en Raspberry Pi 3B+ y 4B con Raspberry Pi OS y Ubuntu 22.04 LT, y en una máquina virtual Oracle Ampere Altra con Ubuntu 22.04 LTS, por lo que estoy bastante seguro de que debería funcionar en cualquier sistema arm64, siempre que puedas obtener versiones arm64 adecuadas de las dependencias de Quarto en tu distribución de Linux específica. En todos los casos, comencé con una instalación limpia y actualizada del sistema operativo, así que asegurate de actualizar el tuyo también antes de comenzar.
+
+```{bash update_system, eval=FALSE}
+sudo apt update
+sudo apt dist-upgrade
+```
+
+## Instalación de Dependencias
+
+Primero, necesitamos instalar versiones arm64 de algunas dependencias nosotros mismos (luego engañaremos a Quarto para que instale otra por nosotros).
+
+Comencemos por instalar Dart Sass Compiler, dado que no existe un binario arm64 oficial, la forma más fácil de instalarlo es usando `npm`. Escribe los siguientes comandos en la terminal de tu sistema.
+
+```{bash install_sass, eval=FALSE}
+sudo apt install npm
+sudo npm install -g sass
+```
+
+A continuación, necesitamos una versión suficientemente moderna de Pandoc, y dado que la versión que viene con los repositorios deb estándar para su sistema operativo probablemente sea demasiado antigua, es mejor que descarguemos una versión moderna nosotros mismos (esto es muy importante ya que Quarto fallará con versiones anteriores de Pandoc).
+
+```{bash install_pandoc, eval=FALSE}
+wget https://github.com/jgm/pandoc/releases/download/2.19.2/pandoc-2.19.2-1-arm64.deb
+sudo dpkg -i pandoc-2.19.2-1-arm64.deb
+rm pandoc-2.19.2-1-arm64.deb
+```
+
+Además, necesitamos R y el paquete R `rmarkdown`, pero dado que estás leyendo este artículo en un blog relacionado con R, asumiré que ya tienes R instalado en tu sistema y sabes cómo instalar paquetes R, si no lo sabes, puedes revisar esta [otra publicación](/es/2022/09/05/shiny_rstudio_server/#instalar-r) donde explico cómo configurar un servidor de "ciencia de datos" en una Raspberry Pi,la cual que incluye tres opciones para instalar R en tu sistema. Para aclarar, estoy considerando R como una dependencia porque estoy escribiendo en un blog relacionado con R, pero si vas a usar Quarto con algún otro lenguaje de programación, R no es obligatorio.
+
+# Instalación de Quarto
+
+Dado que no hay binarios arm64 para Quarto, lo instalaremos desde la fuente. Sigue estos pasos de arriba a abajo sin saltarte ninguno ya que todos dependen del anterior:
+
+Primero, necesitamos clonar el repositorio de GitHub en una ubicación adecuada. Ten en cuenta que, opcionalmente, puedes clonar una versión de lanzamiento específica si lo prefieres utilizando la opción `--branch` (por ejemplo, `--branch v1.3.47`)
+
+```{bash install_clone_quarto, eval=FALSE}
+sudo su -
+
+cd /usr/local/src
+
+git clone --depth 1 https://github.com/quarto-dev/quarto-cli
+
+cd quarto-cli
+```
+
+A continuación, vamos a engañar a Quarto para que instale una versión arm64 de Deno desde una [fuente alternativa](https://github.com/LukeChannings/deno-arm64) modificando su archivo `configure.sh` antes de ejecutarlo.
+
+```{bash install_modify_quarto, eval=FALSE}
+sed -i 's/https:\/\/github.com\/denoland\/deno\/releases\/download/https:\/\/github.com\/LukeChannings\/deno-arm64\/releases\/download/' configure.sh
+sed -i 's/DENOFILES=deno-x86_64-unknown-linux-gnu.zip/DENOFILES=deno-linux-arm64.zip/' package/scripts/common/utils.sh
+sed -i 's/DENO_DIR=deno-x86_64-unknown-linux-gnu/DENO_DIR=deno-linux-arm64/' package/scripts/common/utils.sh
+
+./configure.sh
+```
+
+Finalmente, vamos a reemplazar los binarios externos amd64 que Quarto descarga durante la instalación con los arm64 que ya tenemos instalados en nuestro sistema.
+
+```{bash configure_quarto, eval=FALSE}
+mkdir package/dist/bin/tools/deno-x86_64-unknown-linux-gnu/
+ln -s /usr/local/src/quarto-cli/package/dist/bin/tools/deno-linux-arm64/deno package/dist/bin/tools/deno-x86_64-unknown-linux-gnu/deno
+
+rm package/dist/bin/tools/pandoc
+ln -s /usr/bin/pandoc package/dist/bin/tools/pandoc
+
+rm package/dist/bin/tools/dart-sass/sass
+ln -s /usr/local/bin/sass package/dist/bin/tools/dart-sass/sass
+```
+
+Si todo salió bien, ahora tienes una instalación funcional de la interfaz de línea de comandos de Quarto en tu sistema, y puedes comenzar a renderizar archivos `qmd` desde la terminal. Para probar si realmente funciona, rendericemos un documento de prueba; crea un archivo `test.qmd` con el siguiente contenido:
+
+````{verbatim, lang = "markdown"}
+---
+title: "Test Document"
+format: html
+---
+
+## Hello
+
+```{r}
+print("world")
+```
+````
+
+Y renderiza el documento desde una terminal del sistema con el siguiente comando:
+
+```{bash render_qmd, eval=FALSE}
+quarto render test.qmd
+```
+
+Si todo va bien, obtendrás un archivo `test.html` en la ubicación actual.
+
+![](/post/2022-12-09-quarto_arm64.en_files/test_html.jpg){width=700px height=350px}
+
+No he descubierto cómo habilitar la integración de RStudio IDE con Quarto (las compilaciones experimentales de RStudio para arm64 vienen con las funciones de integración con Quarto deshabilitadas). He planteado la pregunta en el repositorio de GitHub y actualizaré esta publicación si surge una solución.
