@@ -107,9 +107,9 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <div id="instalación-de-dependencias" class="section level2">
 <h2>Instalación de Dependencias</h2>
 <p>Primero, necesitamos instalar versiones arm64 de algunas dependencias nosotros mismos (luego engañaremos a Quarto para que instale otra por nosotros).</p>
-<p>Comencemos por instalar Dart Sass Compiler, dado que no existe un binario arm64 oficial, la forma más fácil de instalarlo es usando <code>npm</code>. Escribe los siguientes comandos en la terminal de tu sistema.</p>
+<p>Comencemos por instalar Dart Sass Compiler, dado que no existe un binario arm64 oficial de la versión requerida, la forma más fácil de instalarlo es usando <code>npm</code>. Escribe los siguientes comandos en la terminal de tu sistema.</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install npm</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> npm install <span class="at">-g</span> sass</span></code></pre></div>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> npm install <span class="at">-g</span> sass@1.32.8</span></code></pre></div>
 <p>A continuación, necesitamos una versión suficientemente moderna de Pandoc, y dado que la versión que viene con los repositorios deb estándar para su sistema operativo probablemente sea demasiado antigua, es mejor que descarguemos una versión moderna nosotros mismos (esto es muy importante ya que Quarto fallará con versiones anteriores de Pandoc).</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">wget</span> https://github.com/jgm/pandoc/releases/download/2.19.2/pandoc-2.19.2-1-arm64.deb</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> dpkg <span class="at">-i</span> pandoc-2.19.2-1-arm64.deb</span>

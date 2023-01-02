@@ -41,11 +41,11 @@ sudo apt dist-upgrade
 
 First, we need to install arm64 versions of some dependencies ourselves (later on we will trick Quarto into installing another one for us). 
 
-Let's begin by installing the Dart Sass Compiler, since there is no official arm64 binary, the easiest way to install it is by using `npm`. Type the following commands on your system terminal.
+Let's begin by installing the Dart Sass Compiler, since there is no official arm64 binary for the required version, the easiest way to install it is by using `npm`. Type the following commands on your system terminal.
 
 ```{bash install_sass, eval=FALSE}
 sudo apt install npm
-sudo npm install -g sass
+sudo npm install -g sass@1.32.8
 ```
 
 Next, we need a sufficiently modern version of Pandoc, and since the version that comes with the standard deb repositories for your OS is most likely too old, it is better if we download a modern version ourselves (this is very important since Quarto will fail with older Pandoc versions).

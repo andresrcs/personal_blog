@@ -107,9 +107,9 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <div id="installing-dependencies" class="section level2">
 <h2>Installing Dependencies</h2>
 <p>First, we need to install arm64 versions of some dependencies ourselves (later on we will trick Quarto into installing another one for us).</p>
-<p>Let’s begin by installing the Dart Sass Compiler, since there is no official arm64 binary, the easiest way to install it is by using <code>npm</code>. Type the following commands on your system terminal.</p>
+<p>Let’s begin by installing the Dart Sass Compiler, since there is no official arm64 binary for the required version, the easiest way to install it is by using <code>npm</code>. Type the following commands on your system terminal.</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install npm</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> npm install <span class="at">-g</span> sass</span></code></pre></div>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> npm install <span class="at">-g</span> sass@1.32.8</span></code></pre></div>
 <p>Next, we need a sufficiently modern version of Pandoc, and since the version that comes with the standard deb repositories for your OS is most likely too old, it is better if we download a modern version ourselves (this is very important since Quarto will fail with older Pandoc versions).</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">wget</span> https://github.com/jgm/pandoc/releases/download/2.19.2/pandoc-2.19.2-1-arm64.deb</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> dpkg <span class="at">-i</span> pandoc-2.19.2-1-arm64.deb</span>
