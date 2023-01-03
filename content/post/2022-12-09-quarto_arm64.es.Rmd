@@ -39,16 +39,7 @@ sudo apt dist-upgrade
 
 ## Instalación de Dependencias
 
-Primero, necesitamos instalar versiones arm64 de algunas dependencias nosotros mismos (luego engañaremos a Quarto para que instale otra por nosotros).
-
-Comencemos por instalar Dart Sass Compiler, dado que no existe un binario arm64 oficial de la versión requerida, la forma más fácil de instalarlo es usando `npm`. Escribe los siguientes comandos en la terminal de tu sistema.
-
-```{bash install_sass, eval=FALSE}
-sudo apt install npm
-sudo npm install -g sass@1.32.8
-```
-
-A continuación, necesitamos una versión suficientemente moderna de Pandoc, y dado que la versión que viene con los repositorios deb estándar para su sistema operativo probablemente sea demasiado antigua, es mejor que descarguemos una versión moderna nosotros mismos (esto es muy importante ya que Quarto fallará con versiones anteriores de Pandoc).
+Primero, necesitamos una versión arm64 suficientemente moderna de Pandoc, y dado que la versión que viene con los repositorios deb estándar para su sistema operativo probablemente sea demasiado antigua, es mejor que descarguemos una versión moderna nosotros mismos (esto es muy importante ya que Quarto fallará con versiones anteriores de Pandoc).
 
 ```{bash install_pandoc, eval=FALSE}
 wget https://github.com/jgm/pandoc/releases/download/2.19.2/pandoc-2.19.2-1-arm64.deb
@@ -84,7 +75,7 @@ sed -i 's/DENO_DIR=deno-x86_64-unknown-linux-gnu/DENO_DIR=deno-linux-arm64/' pac
 ./configure.sh
 ```
 
-Finalmente, vamos a reemplazar los binarios externos amd64 que Quarto descarga durante la instalación con los arm64 que ya tenemos instalados en nuestro sistema.
+Finalmente, vamos a reemplazar los binarios externos amd64 que Quarto descarga durante la instalación con binarios arm64.
 
 ```{bash configure_quarto, eval=FALSE}
 mkdir package/dist/bin/tools/deno-x86_64-unknown-linux-gnu/
@@ -93,8 +84,11 @@ ln -s /usr/local/src/quarto-cli/package/dist/bin/tools/deno-linux-arm64/deno pac
 rm package/dist/bin/tools/pandoc
 ln -s /usr/bin/pandoc package/dist/bin/tools/pandoc
 
-rm package/dist/bin/tools/dart-sass/sass
-ln -s /usr/local/bin/sass package/dist/bin/tools/dart-sass/sass
+rm -rf package/dist/bin/tools/dart-sass/
+wget https://github.com/sass/dart-sass/releases/download/1.57.1/dart-sass-1.57.1-linux-arm64.tar.gz
+tar zxvf dart-sass-1.57.1-linux-arm64.tar.gz
+rm dart-sass-1.57.1-linux-arm64.tar.gz
+mv -f dart-sass/ package/dist/bin/tools/
 ```
 
 Si todo salió bien, ahora tienes una instalación funcional de la interfaz de línea de comandos de Quarto en tu sistema, y puedes comenzar a renderizar archivos `qmd` desde la terminal. Para probar si realmente funciona, rendericemos un documento de prueba; crea un archivo `test.qmd` con el siguiente contenido:
