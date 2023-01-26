@@ -181,7 +181,7 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="ex">keyed_groups:</span></span>
 <span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> key: tags.inventory_group</span></code></pre></div>
-<p>Ahora, si deseas cambiar la configuración de instalación predeterminada, puedes hacerlo editando las variables en el archivo <code>aws_r_server/vars/config_vars.yml</code>, aunque las opciones predeterminadas están bien para la mayoría de los casos de uso, incluida una configuración de seguridad razonable para usar en aplicaciones del mundo real. Lo único que debes cambiar aquí son las credenciales y la región de AWS, el usuario personal y su contraseña, y la contraseña del usuario principal de PostgreSQL.</p>
+<p>Ahora, si deseas cambiar la configuración de instalación predeterminada, puedes hacerlo editando las variables en el archivo <code>aws_r_server/vars/config_vars.yml</code>, aunque las opciones predeterminadas están bien para la mayoría de los casos de uso, incluida una configuración de seguridad razonable para usar en aplicaciones del mundo real. Lo único que debes cambiar aquí son las credenciales de AWS, la región de AWS, la AMI de AWS (esto cambia constantemente incluso para la misma version del sistema operativo), el usuario personal y su contraseña, y la contraseña del usuario principal de PostgreSQL.</p>
 <blockquote>
 <p>:pencil2: Esta publicación se ha escrito como un ejemplo de la aplicación de este enfoque con servicios de computación en la nube, por lo que, en aras de la simplicidad, lo hice funcionar solo con la AMI de Ubuntu Server 22.04 LTS, por lo que, para ser claro, no es independiente del sistema operativo. Si deseas utilizarlo con una AMI basada en RHEL, deberás modificar considerablemente los playbooks.</p>
 </blockquote>
@@ -288,6 +288,9 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible-playbook</span> install_basic_services.yml</span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible-playbook</span> install_shiny_server.yml</span>
 <span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible-playbook</span> install_rstudio_server.yml</span></code></pre></div>
+<blockquote>
+<p>:warning: Al aprovisionar la instancia ec2, la API de AWS a veces no devuelve la IP de la instancia, lo que hace que falle el playbook. Este es un error aleatorio no causado por el playbook, puedes ignorarlo con seguridad si estás ejecutando playbooks individuales y la instancia ya se ha aprovisionado.</p>
+</blockquote>
 <p>Si decides que solo necesitas Shiny server o RStudio server pero no el otro, o si ya has instalado los servicios de soporte que vas a utilizar, puedes ejecutar solo los playbooks que realmente necesitas.</p>
 <p>Si deseas actualizar algo en el futuro, como RStudio o Shiny (no puedo garantizar que siempre funcionará sin necesidad de cambios), simplemente puedes cambiar la versión en el archivo de configuración y ejecutar la parte específica del playbook aprovechando las “etiquetas” definidas.</p>
 <p>Por ejemplo, esto solo instalará la versión de RStudio definida en el archivo de configuración y nada más:</p>

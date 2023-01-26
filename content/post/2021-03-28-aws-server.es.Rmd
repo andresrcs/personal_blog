@@ -143,7 +143,7 @@ keyed_groups:
   - key: tags.inventory_group
 ```
 
-Ahora, si deseas cambiar la configuración de instalación predeterminada, puedes hacerlo editando las variables en el archivo `aws_r_server/vars/config_vars.yml`, aunque las opciones predeterminadas están bien para la mayoría de los casos de uso, incluida una configuración de seguridad razonable para usar en aplicaciones del mundo real. Lo único que debes cambiar aquí son las credenciales y la región de AWS, el usuario personal y su contraseña, y la contraseña del usuario principal de PostgreSQL.
+Ahora, si deseas cambiar la configuración de instalación predeterminada, puedes hacerlo editando las variables en el archivo `aws_r_server/vars/config_vars.yml`, aunque las opciones predeterminadas están bien para la mayoría de los casos de uso, incluida una configuración de seguridad razonable para usar en aplicaciones del mundo real. Lo único que debes cambiar aquí son las credenciales de AWS, la región de AWS, la AMI de AWS (esto cambia constantemente incluso para la misma version del sistema operativo), el usuario personal y su contraseña, y la contraseña del usuario principal de PostgreSQL.
 
 > :pencil2: Esta publicación se ha escrito como un ejemplo de la aplicación de este enfoque con servicios de computación en la nube, por lo que, en aras de la simplicidad, lo hice funcionar solo con la AMI de Ubuntu Server 22.04 LTS, por lo que, para ser claro, no es independiente del sistema operativo. Si deseas utilizarlo con una AMI basada en RHEL, deberás modificar considerablemente los playbooks. 
 
@@ -260,6 +260,8 @@ ansible-playbook install_basic_services.yml
 ansible-playbook install_shiny_server.yml
 ansible-playbook install_rstudio_server.yml
 ```
+
+> :warning: Al aprovisionar la instancia ec2, la API de AWS a veces no devuelve la IP de la instancia, lo que hace que falle el playbook. Este es un error aleatorio no causado por el playbook, puedes ignorarlo con seguridad si estás ejecutando playbooks individuales y la instancia ya se ha aprovisionado.
 
 Si decides que solo necesitas Shiny server o RStudio server pero no el otro, o si ya has instalado los servicios de soporte que vas a utilizar, puedes ejecutar solo los playbooks que realmente necesitas.
 

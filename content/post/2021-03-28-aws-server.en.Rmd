@@ -143,7 +143,7 @@ keyed_groups:
   - key: tags.inventory_group
 ```
 
-Now, if you want to change the default installation settings, you can do it by editing the variables on the `aws_r_server/vars/config_vars.yml` file, although, the default options are fine for most use case scenarios, including reasonable security settings to use on real-world applications. The only things you certainly need to change here are the AWS credentials and region, the personal user and password, and the password for the PostgreSQL main user.
+Now, if you want to change the default installation settings, you can do it by editing the variables on the `aws_r_server/vars/config_vars.yml` file, although, the default options are fine for most use case scenarios, including reasonable security settings to use on real-world applications. The only things you certainly need to change here are the AWS credentials, AWS region, AWS AMI (it changes constantly even for the same OS version) the personal user and password, and the password for the PostgreSQL main user.
 
 > :pencil2: This post has been written as an example of applying this approach with cloud computing services so for simplicity's sake, I have made it work only with the Ubuntu Server 22.04 LTS AMI, so to be clear, it is not OS-agnostic. If you want to use it with an RHEL based AMI you would need to modify the playbooks considerably.
 
@@ -260,6 +260,8 @@ ansible-playbook install_basic_services.yml
 ansible-playbook install_shiny_server.yml
 ansible-playbook install_rstudio_server.yml
 ```
+
+> :warning: When provisioning the ec2 instance the AWS API sometimes fails to return the instance IP causing the playbook to fail. This is a random error not caused by the playbook, you can safely ignore it if you are running individual playbooks and the instance has already been provisioned.
 
 If you decide that you only need Shiny server or RStudio server but not the other, or you already have installed the support services you are going to use, then you can run only the playbooks you actually need.
 

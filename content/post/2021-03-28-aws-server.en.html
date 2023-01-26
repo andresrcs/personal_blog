@@ -181,7 +181,7 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a><span class="ex">keyed_groups:</span></span>
 <span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>  <span class="ex">-</span> key: tags.inventory_group</span></code></pre></div>
-<p>Now, if you want to change the default installation settings, you can do it by editing the variables on the <code>aws_r_server/vars/config_vars.yml</code> file, although, the default options are fine for most use case scenarios, including reasonable security settings to use on real-world applications. The only things you certainly need to change here are the AWS credentials and region, the personal user and password, and the password for the PostgreSQL main user.</p>
+<p>Now, if you want to change the default installation settings, you can do it by editing the variables on the <code>aws_r_server/vars/config_vars.yml</code> file, although, the default options are fine for most use case scenarios, including reasonable security settings to use on real-world applications. The only things you certainly need to change here are the AWS credentials, AWS region, AWS AMI (it changes constantly even for the same OS version) the personal user and password, and the password for the PostgreSQL main user.</p>
 <blockquote>
 <p>:pencil2: This post has been written as an example of applying this approach with cloud computing services so for simplicity’s sake, I have made it work only with the Ubuntu Server 22.04 LTS AMI, so to be clear, it is not OS-agnostic. If you want to use it with an RHEL based AMI you would need to modify the playbooks considerably.</p>
 </blockquote>
@@ -288,6 +288,9 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible-playbook</span> install_basic_services.yml</span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible-playbook</span> install_shiny_server.yml</span>
 <span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible-playbook</span> install_rstudio_server.yml</span></code></pre></div>
+<blockquote>
+<p>:warning: When provisioning the ec2 instance the AWS API sometimes fails to return the instance IP causing the playbook to fail. This is a random error not caused by the playbook, you can safely ignore it if you are running individual playbooks and the instance has already been provisioned.</p>
+</blockquote>
 <p>If you decide that you only need Shiny server or RStudio server but not the other, or you already have installed the support services you are going to use, then you can run only the playbooks you actually need.</p>
 <p>If you want to update something in the future, like RStudio, or Shiny server (I can’t guaranty this is always going to work out of the box), you can simply change the version in the config file and run the specific part of the playbook by taking advantage of the defined “tags”.</p>
 <p>For example, this will only install the RStudio version defined in the config file and nothing more:</p>
