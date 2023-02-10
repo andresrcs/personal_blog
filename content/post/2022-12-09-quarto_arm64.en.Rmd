@@ -22,6 +22,21 @@ output:
     highlight: zenburn
 ---
 
+**UPDATE:**
+
+This article is no longer relevant since the availability of official Quarto arm64 builds for the pre-release version. Installation is pretty simple now:
+
+```{bash install_deb, eval=FALSE}
+# Download deb installer
+wget https://github.com/quarto-dev/quarto-cli/releases/download/v1.3.191/quarto-1.3.191-linux-arm64.deb
+# Install Quarto
+sudo dpkg -i quarto-1.3.191-linux-arm64.deb
+```
+
+I'll leave the old article down below for reference.
+
+---
+
 Quarto is Posit's new open-source scientific and technical publishing system built on Pandoc that allows you to weave together narrative text and code to produce high-quality outputs including reports, presentations, websites, and more. It's the successor of the highly successful, but R specific, R Markdown ecosystem, bringing all the benefits of R Markdown to other programming langues like Python, Julia and Observable.
 
 Unfortunately, because of the lack of official arm64 binary sources for some of its dependencies (e.g. Deno, SASS, Pandoc), and as explained to me, their limited bandwidth to support not sufficiently popular architectures like Linux arm64. Quarto does not officially support the arm64 architecture, but that doesn’t mean we can't make it work on it ourselves. 
