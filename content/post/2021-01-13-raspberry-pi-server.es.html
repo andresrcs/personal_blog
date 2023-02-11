@@ -210,7 +210,7 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible_become_method:</span> sudo</span>
 <span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible_python_interpreter:</span> /usr/bin/python3</span>
 <span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="ex">ansible_ssh_private_key_file:</span> ~/.ssh/raspberrypi_key <span class="co"># La ubicación de la clave ssh en la computadora que está ejecuntando Ansible.</span></span></code></pre></div>
-<p>Ahora, para configurar las opciones de instalación, puedes hacerlo editando las variables en el archivo <code>raspberry_pi_server/vars/config_vars.yml</code>, aunque las opciones predeterminadas están bien para la mayoría de los casos de uso, incluida una configuración de seguridad razonable. Las opciones a las que debes prestar atención aquí son, la contraseña para el usuario principal de PostgreSQL y elegir un método adecuado para instalar R, ten en cuenta que usar el <a href="https://r4pi.org/">Proyecto R4Pi</a> (proporciona binarios de R precompilados) solo es posible con Raspberry Pi OS.</p>
+<p>Ahora, puede configurar las opciones de instalación editando las variables en el archivo <code>raspberry_pi_server/vars/config_vars.yml</code>, la mayoría de las opciones ya configuradas están bien para la mayoría de los casos de uso, incluidas configuraciones de seguridad razonables, pero como mínimo, debe configurar su contraseña personal para el usuario principal de PostgreSQL. También puede elegir su método preferido para instalar R, si no desea usar la opción predeterminada, tenga en cuenta que usar la opción <a href="https://r4pi.org/">R4Pi</a> solo es posible con Raspberry Pi OS y siempre instalará la última versión de R disponible.</p>
 <div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">---</span></span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Configuraciones del sistema ##################################################</span></span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -262,15 +262,21 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <span id="cb12-49"><a href="#cb12-49" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb12-50"><a href="#cb12-50" aria-hidden="true" tabindex="-1"></a><span class="co"># Versiones principales de software ############################################</span></span>
 <span id="cb12-51"><a href="#cb12-51" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-52"><a href="#cb12-52" aria-hidden="true" tabindex="-1"></a><span class="co"># Versión de R para instalar</span></span>
-<span id="cb12-53"><a href="#cb12-53" aria-hidden="true" tabindex="-1"></a><span class="ex">use_r4pi:</span> true <span class="co"># Si se establece en &quot;false&quot;, R se compilará desde la fuente, si se establece en true, se instalará la última versión de R, esto solo es compatible con Raspberry Pi OS.</span></span>
-<span id="cb12-54"><a href="#cb12-54" aria-hidden="true" tabindex="-1"></a><span class="ex">r_version:</span> <span class="st">&#39;&#39;</span> <span class="co"># (por ejemplo &#39;4.2.1&#39;) Actualmente, solo se puede elegir la versión de R si se va a compilar.</span></span>
-<span id="cb12-55"><a href="#cb12-55" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-56"><a href="#cb12-56" aria-hidden="true" tabindex="-1"></a><span class="co"># Versión de shiny-server para instalar</span></span>
-<span id="cb12-57"><a href="#cb12-57" aria-hidden="true" tabindex="-1"></a><span class="ex">shiny_server_version:</span> <span class="st">&#39;v1.5.19.995&#39;</span></span>
+<span id="cb12-52"><a href="#cb12-52" aria-hidden="true" tabindex="-1"></a><span class="co"># Versión de R a instalar</span></span>
+<span id="cb12-53"><a href="#cb12-53" aria-hidden="true" tabindex="-1"></a><span class="ex">use_r4pi:</span> true <span class="co"># Si se establece en verdadero, se instalará la última versión de R, esto solo es compatible con</span></span>
+<span id="cb12-54"><a href="#cb12-54" aria-hidden="true" tabindex="-1"></a>                <span class="co"># Raspberry Pi OS.</span></span>
+<span id="cb12-55"><a href="#cb12-55" aria-hidden="true" tabindex="-1"></a><span class="ex">use_rig:</span> false <span class="co"># Si se establece en verdadero, no olvide especificar una versión R en la siguiente línea</span></span>
+<span id="cb12-56"><a href="#cb12-56" aria-hidden="true" tabindex="-1"></a><span class="ex">r_version:</span> <span class="st">&#39;&#39;</span> <span class="co"># (e.g. &#39;4.2.2&#39;) Actualmente, solo puede elegir la versión R si va a ser</span></span>
+<span id="cb12-57"><a href="#cb12-57" aria-hidden="true" tabindex="-1"></a>                   <span class="co"># instalado con rig o compilado (con &#39;use_r4pi&#39; y &#39;use_rig&#39; establecidos como false).</span></span>
 <span id="cb12-58"><a href="#cb12-58" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-59"><a href="#cb12-59" aria-hidden="true" tabindex="-1"></a><span class="co"># Versión del servidor rstudio-server para instalar</span></span>
-<span id="cb12-60"><a href="#cb12-60" aria-hidden="true" tabindex="-1"></a><span class="ex">rstudio_version:</span> <span class="st">&#39;2022.11.0-daily+166&#39;</span></span></code></pre></div>
+<span id="cb12-59"><a href="#cb12-59" aria-hidden="true" tabindex="-1"></a><span class="co"># Version de Quarto a instalar</span></span>
+<span id="cb12-60"><a href="#cb12-60" aria-hidden="true" tabindex="-1"></a><span class="ex">quarto_version:</span> <span class="st">&#39;1.3.191&#39;</span></span>
+<span id="cb12-61"><a href="#cb12-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-62"><a href="#cb12-62" aria-hidden="true" tabindex="-1"></a><span class="co"># Versión de shiny-server a instalar</span></span>
+<span id="cb12-63"><a href="#cb12-63" aria-hidden="true" tabindex="-1"></a><span class="ex">shiny_server_version:</span> <span class="st">&#39;v1.5.19.995&#39;</span></span>
+<span id="cb12-64"><a href="#cb12-64" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-65"><a href="#cb12-65" aria-hidden="true" tabindex="-1"></a><span class="co"># Versión del servidor rstudio-server a instalar</span></span>
+<span id="cb12-66"><a href="#cb12-66" aria-hidden="true" tabindex="-1"></a><span class="ex">rstudio_version:</span> <span class="st">&#39;2022.11.0-daily+166&#39;</span></span></code></pre></div>
 </div>
 <div id="ejecuta-los-playbooks" class="section level2">
 <h2>Ejecuta los Playbooks</h2>

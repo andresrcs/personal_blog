@@ -190,7 +190,7 @@ ansible_python_interpreter: /usr/bin/python3
 ansible_ssh_private_key_file: ~/.ssh/raspberrypi_key # The location of the ssh key in the computer runing Ansible.
 ```
 
-Now, to set the installation options, you can do it by editing the variables in the `raspberry_pi_server/vars/config_vars.yml` file, although, the default options are fine for most use case scenarios, including reasonable security settings. The options you want to pay attention to here are the password for the PostgreSQL main user and choosing a suitable method for installing R, have in mind that using the [R4Pi Project](https://r4pi.org/) (provides precompiled R binaries) is only possible with Raspberry Pi OS.
+Now, you can set installation options by editing the variables in the `raspberry_pi_server/vars/config_vars.yml` file, most of the already set options are fine for most use cases including reasonable security settings but at the bare minimum, you need to set your personal password for the PostgreSQL main user. You can also choose your preferred method for installing R, if you don't want to use the default option, have in mind that using the [R4Pi Project](https://r4pi.org/) option is only possible with Raspberry Pi OS and it will always install the latest R version available.
 
 ```{bash config_vars, eval=FALSE}
 ---
@@ -225,8 +225,8 @@ exposed_ports:
   - { rule: 'allow', port: 22, proto: 'tcp' }     # ssh
   - { rule: 'allow', port: 22, proto: 'udp' }     # ssh
   - { rule: 'allow', port: 80, proto: 'tcp' }     # http
-  - { rule: 'allow', port: 5432, proto: 'tcp' }   # Postgresql (omit if Postgresql is not installed)
-  - { rule: 'allow', port: 5432, proto: 'udp' }   # Postgresql (omit if Postgresql is not installed)
+  - { rule: 'allow', port: 5432, proto: 'tcp' }   # Postgresql (ommit if Postgresql is not installed)
+  - { rule: 'allow', port: 5432, proto: 'udp' }   # Postgresql (ommit if Postgresql is not installed)
   # - { rule: 'allow', port: 8787, proto: 'tcp' } # RStudio Server (uncomment if Nginx is not installed)
   # - { rule: 'allow', port: 3838, proto: 'tcp' } # Shiny Server (uncomment if Nginx is not installed)
 
@@ -245,14 +245,21 @@ postgresql_rules:
 # Main Software Versions #######################################################
 
 # R version to install
-use_r4pi: true # If set to false R will be compiled from source, if set to true the latest R version will be installed, this is only compatible with Raspberry Pi OS.
-r_version: '' # (e.g. '4.2.1') Currently, you can only choose the R version if it's going to be compiled.
+use_r4pi: true # If set to true the latest R version will be installed, this is only compatible with
+                # Raspberry Pi OS.
+use_rig: false # If set to true, don't forget to specify an R version in the following line
+r_version: '' # (e.g. '4.2.2') Currently, you can only choose the R version if it's going to be
+                   # installed with rig or compiled (with both 'use_r4pi' and 'use_rig' set as false).
+
+# Quarto version to install
+quarto_version: '1.3.191'
 
 # Shiny-server version to install
-shiny_server_version: 'v1.5.19.995'
+shiny_server_version: 'v1.5.20.1002'
 
 # RStudio version to install
-rstudio_version: '2022.11.0-daily+166'
+rstudio_version: '2022.12.1+361'
+
 ```
 
 ## Run the Playbooks

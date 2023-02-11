@@ -191,7 +191,7 @@ ansible_python_interpreter: /usr/bin/python3
 ansible_ssh_private_key_file: ~/.ssh/raspberrypi_key # La ubicación de la clave ssh en la computadora que está ejecuntando Ansible.
 ```
 
-Ahora, para configurar las opciones de instalación, puedes hacerlo editando las variables en el archivo `raspberry_pi_server/vars/config_vars.yml`, aunque las opciones predeterminadas están bien para la mayoría de los casos de uso, incluida una configuración de seguridad razonable. Las opciones a las que debes prestar atención aquí son, la contraseña para el usuario principal de PostgreSQL y elegir un método adecuado para instalar R, ten en cuenta que usar el [Proyecto R4Pi](https://r4pi.org/) (proporciona binarios de R precompilados) solo es posible con Raspberry Pi OS.
+Ahora, puede configurar las opciones de instalación editando las variables en el archivo `raspberry_pi_server/vars/config_vars.yml`, la mayoría de las opciones ya configuradas están bien para la mayoría de los casos de uso, incluidas configuraciones de seguridad razonables, pero como mínimo, debe configurar su contraseña personal para el usuario principal de PostgreSQL. También puede elegir su método preferido para instalar R, si no desea usar la opción predeterminada, tenga en cuenta que usar la opción [R4Pi](https://r4pi.org/) solo es posible con Raspberry Pi OS y siempre instalará la última versión de R disponible.
 
 ```{bash config_vars, eval=FALSE}
 ---
@@ -245,14 +245,20 @@ postgresql_rules:
 
 # Versiones principales de software ############################################
 
-# Versión de R para instalar
-use_r4pi: true # Si se establece en "false", R se compilará desde la fuente, si se establece en true, se instalará la última versión de R, esto solo es compatible con Raspberry Pi OS.
-r_version: '' # (por ejemplo '4.2.1') Actualmente, solo se puede elegir la versión de R si se va a compilar.
+# Versión de R a instalar
+use_r4pi: true # Si se establece en verdadero, se instalará la última versión de R, esto solo es compatible con
+                # Raspberry Pi OS.
+use_rig: false # Si se establece en verdadero, no olvide especificar una versión R en la siguiente línea
+r_version: '' # (e.g. '4.2.2') Actualmente, solo puede elegir la versión R si va a ser
+                   # instalado con rig o compilado (con 'use_r4pi' y 'use_rig' establecidos como false).
 
-# Versión de shiny-server para instalar
+# Version de Quarto a instalar
+quarto_version: '1.3.191'
+
+# Versión de shiny-server a instalar
 shiny_server_version: 'v1.5.19.995'
 
-# Versión del servidor rstudio-server para instalar
+# Versión del servidor rstudio-server a instalar
 rstudio_version: '2022.11.0-daily+166'
 ```
 
