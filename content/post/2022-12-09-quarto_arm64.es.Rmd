@@ -62,7 +62,7 @@ sudo dpkg -i pandoc-2.19.2-1-arm64.deb
 rm pandoc-2.19.2-1-arm64.deb
 ```
 
-Además, necesitamos R y el paquete R `rmarkdown`, pero dado que estás leyendo este artículo en un blog relacionado con R, asumiré que ya tienes R instalado en tu sistema y sabes cómo instalar paquetes R, si no lo sabes, puedes revisar esta [otra publicación](/es/2022/09/05/shiny_rstudio_server/#instalar-r) donde explico cómo configurar un servidor de "ciencia de datos" en una Raspberry Pi,la cual que incluye tres opciones para instalar R en tu sistema. Para aclarar, estoy considerando R como una dependencia porque estoy escribiendo en un blog relacionado con R, pero si vas a usar Quarto con algún otro lenguaje de programación, R no es obligatorio.
+Además, necesitamos R y el paquete R `rmarkdown`, pero dado que estás leyendo este artículo en un blog relacionado con R, asumiré que ya tienes R instalado en tu sistema y sabes cómo instalar paquetes R, si no lo sabes, puedes revisar esta [otra publicación](/es/2023/02/11/r_on_arm/) donde detallo opciones para instalar R en una Raspberry Pi. Para aclarar, estoy considerando R como una dependencia porque estoy escribiendo en un blog relacionado con R, pero si vas a usar Quarto con algún otro lenguaje de programación, R no es obligatorio.
 
 # Instalación de Quarto
 

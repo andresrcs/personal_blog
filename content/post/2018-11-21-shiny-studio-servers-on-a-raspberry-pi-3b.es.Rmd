@@ -97,54 +97,16 @@ Para evitar el uso innecesario de la memoria swap y proteger tu tarjeta SD, abre
 
 ## Instalar R
 
-Para instalar R en tu Pi tienes algunas opciones, cada una con sus pros y sus contras:
+Tienes algunas opciones para instalar R en tu Pi:
 
--   Los repositorios deb estándar para de tu sistema operativo proporcionan archivos binarios de R que son muy simples de instalar, pero son versiones antiguas de R (4.0.0 para Raspberry Pi OS y 4.1.2 para Ubuntu 22.04.1).
+* Instalar desde los repositorios del Sistema Operativo
+* Compilar R desde la fuente
+* Instalar R usando rig
+* Instalar R desde el Proyecto R4Pi
 
-    ```{bash install_r_deb, eval=FALSE}
-    sudo apt install r-base
-    ```
+Como ahora hay varias opciones, he movido esta sección a un artículo aparte que puedes consultar [aquí](/es/2023/02/11/r_on_arm/) para obtener más detalles.
 
--   El [Proyecto R4Pi](https://r4pi.org/) proporciona un repositorio deb para archivos binarios precompilados de 32 bits para R desde 2021 y archivos binarios de 64 bits desde septiembre de 2022. Instalar R desde estos archivos binarios precompilados es mucho más rápido que compilarlos tu mismo, y también proporcionan un repositorio con binarios precompilados de paquetes que hace que la instalación de paquetes sea mucho más rápida y sencilla.
-
-    Lamentablemente, sólo son compatibles con Raspberry Pi OS, si has elegido este sistema operativo, te recomiendo usar esta opción ya que las ganancias en velocidad son considerables.
-    
-    ```{bash install_r_r4pi, eval=FALSE}
-    curl -O  https://pkgs.r4pi.org/dl/r4pi-repo-conf_0.0.1-1_all.deb
-    sudo dpkg -i  r4pi-repo-conf_0.0.1-1_all.deb
-    sudo apt update
-    sudo apt upgrade
-    sudo apt install r4pi
-    rm r4pi-repo-conf_0.0.1-1_all.deb
-    ```
-
--   Siempre puedes compilar R desde la fuente, independientemente del sistema operativo que estés utilizando, esto te ofrece la oportunidad de elegir las opciones de compilación, pero a costa de esperar mucho tiempo para que se complete el proceso de compilación.
-
-    ```{bash install_r_compile, eval=FALSE}
-    sudo su
-    
-    # Especifíca la version R para instalar
-    R_VERSION=4.2.2
-
-    apt install -y g++ gcc gfortran libreadline-dev libx11-dev libxt-dev \
-                libpng-dev libjpeg-dev libcairo2-dev xvfb \
-                libbz2-dev libzstd-dev liblzma-dev libtiff5 \
-                libssh-dev libgit2-dev libcurl4-openssl-dev \
-                libblas-dev liblapack-dev libopenblas-base \
-                zlib1g-dev openjdk-11-jdk \
-                texinfo texlive texlive-fonts-extra \
-                screen wget libpcre2-dev make cmake
-    cd /usr/local/src
-    wget https://cran.rstudio.com/src/base/R-${R_VERSION:0:1}/R-$R_VERSION.tar.gz
-    tar zxvf R-$R_VERSION.tar.gz
-    cd R-$R_VERSION
-    ./configure --enable-R-shlib --with-blas --with-lapack #BLAS and LAPACK are optional
-    make
-    make install
-    cd ..
-    rm -rf R-$R_VERSION*
-    exit
-    ```
+En todos los casos, recomiendo usar el repositorio de paquetes de R4Pi como tu fuente de paquetes R, ya que proporciona archivos binarios precompilados que hacen que la instalación sea más fácil y rápida.
 
 ## Instalar Shiny Server
 

@@ -62,7 +62,7 @@ sudo dpkg -i pandoc-2.19.2-1-arm64.deb
 rm pandoc-2.19.2-1-arm64.deb
 ```
 
-Also, we need R and the `rmarkdown` R package, but since you are reading this article on an R related blog, I will assume you already have R installed in your system and you know how to install R packages, if you don't, you can check this [other post](/2022/09/05/shiny_rstudio_server/#install-r) where I explain how to set up a "data science" server on a Pi, which includes three options for installing R in your system. To clarify, I'm considering R as a dependency because I'm writing on an R related blog, but if you are going to use Quarto with some other programming language, R is not mandatory.
+Also, we need R and the `rmarkdown` R package, but since you are reading this article on an R related blog, I will assume you already have R installed in your system and you know how to install R packages, if you don't, you can check this [other post](2023/02/11/r_on_arm/) where I detail options to install R on a Pi. To clarify, I'm considering R as a dependency because I'm writing on an R related blog, but if you are going to use Quarto with some other programming language, R is not mandatory.
 
 # Installing Quarto
 

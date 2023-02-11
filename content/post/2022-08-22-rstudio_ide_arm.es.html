@@ -100,52 +100,26 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <p>Lo primero que necesitas es una Raspberry Pi (2/3/4) con aspberry Pi OS o Ubuntu 22.04.1 LTS instalado y actualizado, asegúrate de actualizar las bibliotecas de tu sistema antes de comenzar.</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt update</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt dist-upgrade</span></code></pre></div>
-<p>Luego, la dependencia más importante para RStudio es, como era de esperarse, el lenguaje R. Tienes algunas opciones para instalar R en una Raspberry Pi, cada una con sus pros y sus contras.</p>
-<p>Puedes instalar la versión R que viene con los repositorios estándar para tu sistema operativo, que es 4.0.0 para Raspberry Pi OS y 4.1.2 para Ubuntu 22.04.1. Esta es la opción más fácil pero estas versiones son bastante antiguas:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install r-base</span></code></pre></div>
-<p>Otra opción es compilar la última versión de R tu mismo (4.2.2 al momento de escribir), esto lleva bastante tiempo pero brinda la mayor flexibilidad ya que puedes elegir opciones como compilar con BLAS y LAPACK:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> su</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Especifíca la version R para instalar</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="va">R_VERSION</span><span class="op">=</span>4.2.2</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="ex">apt</span> install <span class="at">-y</span> g++ gcc gfortran libreadline-dev libx11-dev libxt-dev <span class="dt">\</span></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>            libpng-dev libjpeg-dev libcairo2-dev xvfb <span class="dt">\</span></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>            libbz2-dev libzstd-dev liblzma-dev libtiff5 <span class="dt">\</span></span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>            libssh-dev libgit2-dev libcurl4-openssl-dev <span class="dt">\</span></span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>            libblas-dev liblapack-dev libopenblas-base <span class="dt">\</span></span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>            zlib1g-dev openjdk-11-jdk <span class="dt">\</span></span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>            texinfo texlive texlive-fonts-extra <span class="dt">\</span></span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>            screen wget libpcre2-dev make cmake</span>
-<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> /usr/local/src</span>
-<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="fu">wget</span> https://cran.rstudio.com/src/base/R-<span class="va">${R_VERSION</span><span class="op">:</span><span class="dv">0</span><span class="op">:</span><span class="dv">1</span><span class="va">}</span>/R-<span class="va">$R_VERSION</span>.tar.gz</span>
-<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="fu">tar</span> zxvf R-<span class="va">$R_VERSION</span>.tar.gz</span>
-<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> R-<span class="va">$R_VERSION</span></span>
-<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="ex">./configure</span> <span class="at">--enable-R-shlib</span> <span class="at">--with-blas</span> <span class="at">--with-lapack</span> <span class="co">#BLAS and LAPACK are optional</span></span>
-<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span></span>
-<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> install</span>
-<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ..</span>
-<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-rf</span> R-<span class="va">$R_VERSION</span><span class="pp">*</span></span>
-<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a><span class="bu">exit</span></span></code></pre></div>
-<p>Y mi nuevo favorito, puedes usar un binario precompilado del proyecto <a href="https://r4pi.org/" title="R for the Raspberry Pi">R4Pi</a>, han tenido la amabilidad de poner a disposición un binario arm64 para que podamos probarlo (muchas gracias a Mark Sellors <a href="https://twitter.com/sellorm"><span class="citation">@sellorm</span></a>), funciona muy bien con Raspberry Pi OS x64 (basado en Debian 11) pero lamentablemente no es compatible con Ubuntu 22.04 (basado en Debian 12). Esta opción sacrifica la flexibilidad de elegir tus propias opciones de compilación, pero la ganancia en tiempo de installación (también para paquetes R) definitivamente vale la pena:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-O</span>  https://pkgs.r4pi.org/dl/r4pi-repo-conf_0.0.1-1_all.deb</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> dpkg <span class="at">-i</span>  r4pi-repo-conf_0.0.1-1_all.deb</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt update</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt upgrade</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install r4pi</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> r4pi-repo-conf_0.0.1-1_all.deb</span></code></pre></div>
-{{% tweet "1561494517785804801" %}}
+<p>Luego, la dependencia más importante para RStudio es, como era de esperarse, el lenguaje R. Tienes algunas opciones para instalar R en una Raspberry Pi, cada una con sus pros y sus contras:</p>
+<ul>
+<li>Instalar desde los repositorios del Sistema Operativo</li>
+<li>Compilar R desde la fuente</li>
+<li>Instalar R usando rig</li>
+<li>Instalar R desde el Proyecto R4Pi</li>
+</ul>
+<p>Como ahora hay varias opciones, he movido esta sección a un artículo aparte que puedes consultar <a href="/es/2023/02/11/r_on_arm/">aquí</a> para obtener más detalles.</p>
+<p>En todos los casos, recomiendo usar el repositorio de paquetes de R4Pi como tu fuente de paquetes R, ya que proporciona archivos binarios precompilados que hacen que la instalación sea más fácil y rápida.</p>
 <p>Las compilaciones experimentales del IDE de RStudio no vienen con Pandoc ni Quarto ya que no ofrecen soporte oficial para arm64. Pandoc se puede instalar fácilmente desde los repositorios oficiales para tu sistema operativo y el IDE reconocerá la versión del sistema automáticamente:</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install pandoc pandoc-citeproc</span></code></pre></div>
-<p>Quarto es una historia diferente, el problema es que algunas de sus dependencias (es decir, Deno, SASS, Pandoc) no están disponibles para arm64 desde fuentes oficiales, en consecuencia, Quarto tampoco es compatible con arm64. Logré instalar Quarto CLI en arm64 (tengo un <a href="/es/2022/12/09/quarto_arm64/">artículo relacionado</a> sobre esto) pero aún no he descubierto cómo integrarlo con el RStudio IDE, así que supongo que tendremos que vivir sin las características de integración del RStudio IDE con Quarto en arm64 por el momento (ó, si eres más listo que yo, puedes encontrar una forma de solucionar esto y compartirlo con el resto de nosotros).</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install pandoc pandoc-citeproc</span></code></pre></div>
+<p>Quarto es una historia diferente, el problema es que algunas de sus dependencias (es decir, Deno, SASS, Pandoc) no están disponibles para arm64 desde fuentes oficiales, en consecuencia, Quarto tampoco es compatible con arm64. Logré instalar Quarto CLI en arm64 (tengo un <a href="/es/2022/12/09/quarto_arm64/">artículo relacionado</a> sobre esto) pero aún no he descubierto cómo integrarlo con el RStudio IDE, así que supongo que tendremos que vivir sin las características de integración del RStudio IDE con Quarto en arm64 por el momento, aunque, hay esperanza en el horizonte según este <a href="https://github.com/rstudio/rstudio/issues/12411#issuecomment-1426184116">GitHub Issue</a>.</p>
 <p>Por último, para instalar el archivo deb del IDE de RStudio, como lo harías en un sistema x86_64, es posible que desees instalar <code>gdebi</code> para que maneje las dependencias de paquetes por ti:</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install gdebi</span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install gdebi</span></code></pre></div>
 </div>
 <div id="instalación-del-ide-de-rstudio" class="section level2">
 <h2>Instalación del IDE de RStudio</h2>
 <p>Ahora llegamos al grano. No existe una versión estable del IDE de RStudio para arm64, pero hay compilaciones diarias experimentales disponibles <a href="https://dailies.rstudio.com/rstudio/elsbeth-geranium/">aquí</a>, tanto para las versiones de servidor como de escritorio y compiladas para Ubuntu 22.04 y Ubuntu 18/20. Voy a probar la versión de servidor para Ubuntu 18/20 porque es compatible con Raspberry Pi OS x64 y prefiero trabajar con el IDE en mi computadora normal en lugar de directamente en la Raspberry Pi, pero puedes instalar la versión de escritorio de la misma manera si lo prefieres, simplemente cambia el enlace en consecuencia.</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">wget</span> https://s3.amazonaws.com/rstudio-ide-build/server/bionic/arm64/rstudio-server-2022.12.0-preview-334-arm64.deb</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> gdebi rstudio-server-2022.12.0-preview-334-arm64.deb</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">wget</span> https://s3.amazonaws.com/rstudio-ide-build/server/bionic/arm64/rstudio-server-2022.12.0-preview-334-arm64.deb</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> gdebi rstudio-server-2022.12.0-preview-334-arm64.deb</span></code></pre></div>
 <p>Una vez completado el proceso de instalación, obtienes una instalación de RStudio IDE funcional en tu Raspberry Pi, si has elegido instalar la versión de servidor como lo hice yo, puedes abrir una sesión de RStudio abriendo un navegador en cualquier dispositivo en tu red y escribiendo la dirección correcta, es decir, <code>http:\\direccion_ip_de_tu_pi:8787</code></p>
 <p><img src="/post/2022-08-20-rstudio_ide_arm.en_files/rstudio_ide.jpg" width="800" height="400" /></p>
 </div>
