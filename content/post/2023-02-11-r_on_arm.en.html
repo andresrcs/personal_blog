@@ -95,17 +95,17 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 </div>
 
 <p>This started out as a section in some of my other posts but as installation options started to pile up it began to take too much space to be just a section in an article so I’ve decided to turn it into an article of its own.</p>
-<p>The options described here are mostly applicable to the Raspberry Pi family of Single Board Computers but since most of them also work on Ubuntu distributions tehy can also be applicable to other Linux ARM systems like other SBCs or even “full-size” ARM computers like Ampere Altra or AWS Graviton.</p>
+<p>The options described here are mostly applicable to the Raspberry Pi family of Single Board Computers but since most options also work on Ubuntu distributions they can also be applicable to other Linux ARM systems like other SBCs or even “full-size” ARM computers like Ampere Altra or AWS Graviton.</p>
 <div id="install-from-the-operating-systems-repositories" class="section level2">
 <h2>Install from the Operating System’s repositories</h2>
-<p>This is the easiest option, you can install R from the standard repositories for your OS but those R versions are usually quite old, for example, Raspberry Pi OS comes with R 4.0.0 and Ubuntu 22.04 comes with R 4.1.2.</p>
+<p>This is the easiest option, you can install R from the standard repositories for your OS, but those R versions are usually quite old, for example, Raspberry Pi OS comes with R 4.0.0 and Ubuntu 22.04 comes with R 4.1.2.</p>
 <p>To install R with this option you just need to run this command in your system terminal:</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install r-base</span></code></pre></div>
 <p>This is fine if you just want to try R or do simple stuff with it but if you are going to work on a serious project, chances are you want to start with an up-to-date version of R instead.</p>
 </div>
 <div id="compile-r-from-source" class="section level2">
 <h2>Compile R from source</h2>
-<p>Another option is to compile the latest R version yourself (4.2.2 at the moment of writing) from the source code files, this is a time-consuming task and it might fill a little intimidating for newcomers but it gives you the most flexibility when it comes to setup compilation options, for example, you can choose options like compiling with BLAS and LAPACK to speed up matrix calculations.</p>
+<p>Another option is to compile the latest R version yourself (4.2.2 at the moment of writing) from the source code files, this is a time-consuming task and it might feel a little intimidating for newcomers but it gives you the most flexibility when it comes to set compilation options, for example, you can choose options like compiling with BLAS and LAPACK to speed up matrix calculations.</p>
 <p>You can compile R from source by running this script on a system terminal, it works for both Raspberry Pi OS and Ubuntu distributions:</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> su</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    </span>
@@ -144,7 +144,7 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 </div>
 <div id="install-r-from-the-r4pi-project" class="section level2">
 <h2>Install R from the R4Pi Project</h2>
-<p>And last but not least, my new favorite, you can install R from the <a href="https://r4pi.org/" title="R for the Raspberry Pi">R4Pi project</a> through its deb repository, which means you will always get R version updates just by running <code>sudo apt update &amp;&amp; sudo apt upgrade</code>. Currently, only supports Raspberry Pi OS, both 32 and 64 bits, and possibly other Debian 11 based distributions like Ubuntu 18, but it is not guaranteed.</p>
+<p>And last but not least, my new favorite, you can install R from the <a href="https://r4pi.org/" title="R for the Raspberry Pi">R4Pi project</a> through its deb repository, which means you will always get R version updates just by running <code>sudo apt update &amp;&amp; sudo apt upgrade</code>. Currently, it only supports Raspberry Pi OS, both 32 and 64 bits, and possibly other Debian 11 based distributions like Ubuntu 18, but it is not guaranteed.</p>
 <p>To add the R4Pi deb repository to your deb source list and install R run these commands on a system terminal:</p>
 <div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-O</span>  https://pkgs.r4pi.org/dl/r4pi-repo-conf_0.0.1-1_all.deb</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> dpkg <span class="at">-i</span>  r4pi-repo-conf_0.0.1-1_all.deb</span>
@@ -152,7 +152,7 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt upgrade</span>
 <span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install r4pi</span>
 <span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> r4pi-repo-conf_0.0.1-1_all.deb</span></code></pre></div>
-<p>The main benefit of the R4Pi project is that it also provides R package repositories with precompiled binaries for a big selection of R packages which greatly reduces the time and effort required to install R packages on the Raspberry Pi, and by the way, you can also use the R4Pi package repository with all the previous options just by setting the “repos” option in a <code>.Rprofile</code> file.</p>
+<p>The main benefit of the R4Pi project is that it also provides R package repositories with precompiled binaries for a big selection of R packages which greatly reduces the time and effort required to install R packages on the Raspberry Pi, and by the way, you can also use the R4Pi package repository with all the previous installation options just by setting the “repos” option in a <code>.Rprofile</code> file.</p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">local</span>({r <span class="ot">&lt;-</span> <span class="fu">getOption</span>(<span class="st">&quot;repos&quot;</span>)</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>       r[<span class="st">&quot;R4Pi&quot;</span>] <span class="ot">&lt;-</span> <span class="st">&quot;https://pkgs.r4pi.org/aarch64&quot;</span> <span class="co"># or &quot;https://pkgs.r4pi.org/&quot; for 32-bit systems</span></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>       r[<span class="st">&quot;CRAN&quot;</span>] <span class="ot">&lt;-</span> <span class="st">&quot;https://cran.rstudio.com/&quot;</span> <span class="co"># Secondary repository for when no binary is available</span></span>

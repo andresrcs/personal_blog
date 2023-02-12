@@ -22,7 +22,7 @@ output:
 
 Esto comenzó como una sección en algunas de mis otras publicaciones, pero a medida que las opciones de instalación comenzaron a acumularse, comenzó a ocupar demasiado espacio para ser solo una sección en un artículo, por lo que decidí convertirlo en un artículo propio.
 
-Las opciones descritas aquí se aplican principalmente a la familia de computadoras de placa única Raspberry Pi, pero dado que la mayoría de ellas también funcionan en distribuciones Ubuntu, también pueden aplicarse a otros sistemas Linux ARM como otros SBC o incluso computadoras ARM de "tamaño completo" como Ampere Altra o AWS Gravitón.
+Las opciones descritas aquí se aplican principalmente a la familia de computadoras de placa única Raspberry Pi, pero dado que la mayoría de opciones también funcionan en distribuciones Ubuntu, también pueden aplicarse a otros sistemas Linux ARM como otros SBC o incluso computadoras ARM de "tamaño completo" como Ampere Altra o AWS Gravitón.
 
 ## Instalar desde los repositorios del Sistema Operativo
 
@@ -103,7 +103,7 @@ sudo apt install r4pi
 rm r4pi-repo-conf_0.0.1-1_all.deb
 ```
 
-El principal beneficio del proyecto R4Pi es que también proporciona repositorios de paquetes R con binarios precompilados para una gran selección de paquetes R, lo que reduce en gran medida el tiempo y el esfuerzo necesarios para instalar paquetes R en Raspberry Pi y, por cierto, también puedes usar el repositorio de paquetes R4Pi con todas las opciones anteriores simplemente configurando la opción "repos" en un archivo `.Rprofile`.
+El principal beneficio del proyecto R4Pi es que también proporciona repositorios de paquetes R con binarios precompilados para una gran selección de paquetes R, lo que reduce en gran medida el tiempo y el esfuerzo necesarios para instalar paquetes R en Raspberry Pi y, por cierto, también puedes usar el repositorio de paquetes R4Pi con todas las opciones de instalación anteriores simplemente configurando la opción "repos" en un archivo `.Rprofile`.
 
 ```{r Rprofile, eval=FALSE}
 local({r <- getOption("repos")

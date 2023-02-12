@@ -22,11 +22,11 @@ output:
 
 This started out as a section in some of my other posts but as installation options started to pile up it began to take too much space to be just a section in an article so I've decided to turn it into an article of its own.
 
-The options described here are mostly applicable to the Raspberry Pi family of Single Board Computers but since most of them also work on Ubuntu distributions tehy can also be applicable to other Linux ARM systems like other SBCs or even "full-size" ARM computers like Ampere Altra or AWS Graviton.
+The options described here are mostly applicable to the Raspberry Pi family of Single Board Computers but since most options also work on Ubuntu distributions they can also be applicable to other Linux ARM systems like other SBCs or even "full-size" ARM computers like Ampere Altra or AWS Graviton.
 
 ## Install from the Operating System's repositories
 
-This is the easiest option, you can install R from the standard repositories for your OS but those R versions are usually quite old, for example, Raspberry Pi OS comes with R 4.0.0 and Ubuntu 22.04 comes with R 4.1.2. 
+This is the easiest option, you can install R from the standard repositories for your OS, but those R versions are usually quite old, for example, Raspberry Pi OS comes with R 4.0.0 and Ubuntu 22.04 comes with R 4.1.2. 
 
 To install R with this option you just need to run this command in your system terminal:
 
@@ -38,7 +38,7 @@ This is fine if you just want to try R or do simple stuff with it but if you are
 
 ## Compile R from source
 
-Another option is to compile the latest R version yourself (4.2.2 at the moment of writing) from the source code files, this is a time-consuming task and it might fill a little intimidating for newcomers but it gives you the most flexibility when it comes to setup compilation options, for example, you can choose options like compiling with BLAS and LAPACK to speed up matrix calculations.
+Another option is to compile the latest R version yourself (4.2.2 at the moment of writing) from the source code files, this is a time-consuming task and it might feel a little intimidating for newcomers but it gives you the most flexibility when it comes to set compilation options, for example, you can choose options like compiling with BLAS and LAPACK to speed up matrix calculations.
 
 You can compile R from source by running this script on a system terminal, it works for both Raspberry Pi OS and Ubuntu distributions:
 
@@ -90,7 +90,7 @@ Optionally, you can manually download and install R from [R-hub](https://github.
 
 ## Install R from the R4Pi Project
 
-And last but not least, my new favorite, you can install R from the [R4Pi project](https://r4pi.org/ "R for the Raspberry Pi") through its deb repository, which means you will always get R version updates just by running `sudo apt update && sudo apt upgrade`. Currently, only supports Raspberry Pi OS, both 32 and 64 bits, and possibly other Debian 11 based distributions like Ubuntu 18, but it is not guaranteed.
+And last but not least, my new favorite, you can install R from the [R4Pi project](https://r4pi.org/ "R for the Raspberry Pi") through its deb repository, which means you will always get R version updates just by running `sudo apt update && sudo apt upgrade`. Currently, it only supports Raspberry Pi OS, both 32 and 64 bits, and possibly other Debian 11 based distributions like Ubuntu 18, but it is not guaranteed.
 
 To add the R4Pi deb repository to your deb source list and install R run these commands on a system terminal:
 
@@ -103,7 +103,7 @@ sudo apt install r4pi
 rm r4pi-repo-conf_0.0.1-1_all.deb
 ```
 
-The main benefit of the R4Pi project is that it also provides R package repositories with precompiled binaries for a big selection of R packages which greatly reduces the time and effort required to install R packages on the Raspberry Pi, and by the way, you can also use the R4Pi package repository with all the previous options just by setting the "repos" option in a `.Rprofile` file.
+The main benefit of the R4Pi project is that it also provides R package repositories with precompiled binaries for a big selection of R packages which greatly reduces the time and effort required to install R packages on the Raspberry Pi, and by the way, you can also use the R4Pi package repository with all the previous installation options just by setting the "repos" option in a `.Rprofile` file.
 
 ```{r Rprofile, eval=FALSE}
 local({r <- getOption("repos")
