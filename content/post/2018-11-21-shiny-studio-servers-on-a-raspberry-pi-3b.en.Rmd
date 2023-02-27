@@ -145,7 +145,7 @@ Now, you can install shiny-server with these commands:
 
 ```{bash install_shiny_server, eval=FALSE}
 # Download the source code for the latest shiny-server release from GitHub
-git clone --depth 1 --branch v1.5.19.995 https://github.com/rstudio/shiny-server.git
+git clone --depth 1 --branch v1.5.20.1002 https://github.com/rstudio/shiny-server.git
 
 # Compile the source code
 cd shiny-server
@@ -158,8 +158,8 @@ sudo cmake -DCMAKE_INSTALL_PREFIX=/usr/local -DPYTHON="$PYTHON" ../
 sudo make
 mkdir ../build
 
-# Modify some download links and SHASUMs for arm64 compatibility
-sed -i '8s/.*/NODE_SHA256=5a6e818c302527a4b1cdf61d3188408c8a3e4a1bbca1e3f836c93ea8469826ce/' ../external/node/install-node.sh # SHAMSUM for node-v16.14.0-linux-arm64.tar.xz
+# Modify some download links and SHASUMs for compatibility with arm64 
+sed -i '8s/.*/NODE_SHA256=98d81a2d08f88646541d282b7ccc32429f8706ddcb30943fc3779ef9674ebb93/' ../external/node/install-node.sh # SHAMSUM for node-v16.18.1-linux-arm64.tar.xz
 sed -i 's/linux-x64.tar.xz/linux-arm64.tar.xz/' ../external/node/install-node.sh
 sed -i 's/https:\/\/github.com\/jcheng5\/node-centos6\/releases\/download\//https:\/\/nodejs.org\/dist\//' ../external/node/install-node.sh
 sed -i 's/sha512-3RAVyfbptsR6HOFA0BFNLyw8ZXXDRWf5P3tIslbNt12kTikaRWepRR9vLHMyibIZeNfScI9uGqcn1KfbIAeuXA==/sha512-ZwrJM2WaOJesJGZlejLqAiBAE6Ts2PZNk1pQ\/x1uTMsQw83BaXWShjqCbhh5bPQUNrlx2Ijz1dOr0hLmlkxKag==/' ../npm-shrinkwrap.json
