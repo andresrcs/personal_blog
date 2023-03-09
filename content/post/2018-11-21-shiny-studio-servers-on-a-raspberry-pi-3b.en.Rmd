@@ -106,7 +106,7 @@ You have a few options for installing R on your Pi:
 
 Since there are several options now I have moved this section to a separate article that you can consult [here](/2023/02/11/r_on_arm/) for more details.
 
-In all cases, I strongly recommend using the R4Pi package repository as your R packages source since it provides precompiled binaries that make installation easier and faster. 
+In all cases, I strongly recommend using the [R4Pi](https://r4pi.org/) package repository as your R packages source since it provides precompiled binaries that make installation easier and faster. 
 
 ## Install Shiny Server
 

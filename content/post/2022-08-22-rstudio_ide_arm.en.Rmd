@@ -41,7 +41,7 @@ Then, the most important dependency for RStudio is, unsurprisingly, the R langua
 
 Since there are several options now I have moved this section to a separate article that you can consult [here](/2023/02/11/r_on_arm/) for more details.
 
-In all cases, I strongly recommend using the R4Pi package repository as your R packages source since it provides precompiled binaries that make installation easier and faster. 
+In all cases, I strongly recommend using the [R4Pi](https://r4pi.org/) package repository as your R packages source since it provides precompiled binaries that make installation easier and faster. 
 
 The experimental RStudio IDE builds do not come with Pandoc nor Quarto bundled since they do not offer official support for arm64. Pandoc you can easily install from the standard repositories for your OS and the IDE will recognize the system version automatically:
 

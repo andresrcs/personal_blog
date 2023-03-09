@@ -90,7 +90,7 @@ Opcionalmente, puedes descargar e instalar R manualmente desde [R-hub](https://g
 
 ## Instalar R desde el Proyecto R4Pi
 
-Y por último, pero no menos importante, mi nuevo favorito, puedes instalar R desde el [proyecto R4Pi](https://r4pi.org/ "R para Raspberry Pi") a través de su repositorio deb, lo que significa que siempre obtendrá actualizaciones de la versión R simplemente ejecutando `sudo apt update && sudo apt upgrade`. Actualmente, solo es compatible con Raspberry Pi OS, tanto de 32 como de 64 bits, y posiblemente otras distribuciones basadas en Debian 11 como Ubuntu 18, pero no está garantizado.
+Y por último, pero no menos importante, mi nuevo favorito, puedes instalar R desde el [proyecto R4Pi](https://r4pi.org/es/ "R para la Raspberry Pi") a través de su repositorio deb, lo que significa que siempre obtendrá actualizaciones de la versión R simplemente ejecutando `sudo apt update && sudo apt upgrade`. Actualmente, solo es compatible con Raspberry Pi OS, tanto de 32 como de 64 bits, y posiblemente otras distribuciones basadas en Debian 11 como Ubuntu 18, pero no está garantizado.
 
 Para agregar el repositorio deb de R4Pi a tu lista de fuentes deb e instalar R, ejecuta estos comandos en una terminal del sistema:
 

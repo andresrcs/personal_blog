@@ -191,7 +191,7 @@ ansible_python_interpreter: /usr/bin/python3
 ansible_ssh_private_key_file: ~/.ssh/raspberrypi_key # La ubicación de la clave ssh en la computadora que está ejecuntando Ansible.
 ```
 
-Ahora, puede configurar las opciones de instalación editando las variables en el archivo `raspberry_pi_server/vars/config_vars.yml`, la mayoría de las opciones ya configuradas están bien para la mayoría de los casos de uso, incluidas configuraciones de seguridad razonables, pero como mínimo, debe configurar su contraseña personal para el usuario principal de PostgreSQL. También puede elegir su método preferido para instalar R, si no desea usar la opción predeterminada, tenga en cuenta que usar la opción [R4Pi](https://r4pi.org/) solo es posible con Raspberry Pi OS y siempre instalará la última versión de R disponible.
+Ahora, puede configurar las opciones de instalación editando las variables en el archivo `raspberry_pi_server/vars/config_vars.yml`, la mayoría de las opciones ya configuradas están bien para la mayoría de los casos de uso, incluidas configuraciones de seguridad razonables, pero como mínimo, debe configurar su contraseña personal para el usuario principal de PostgreSQL. También puede elegir su método preferido para instalar R, si no desea usar la opción predeterminada, tenga en cuenta que usar la opción [R4Pi](https://r4pi.org/es/) solo es posible con Raspberry Pi OS y siempre instalará la última versión de R disponible.
 
 ```{bash config_vars, eval=FALSE}
 ---
