@@ -1,6 +1,6 @@
 ---
 title: Installing Quarto-CLI on Linux-arm64 systems
-description: "Learn how to install the Quarto Command Line Interface on Linux-arm64 systems, like the popular Raspberry Pi SBCs and Ampere Altra-powered virtual machines"
+description: "Learn how to install the Quarto Command Line Interface on Linux-arm64 systems, like the popular Raspberry Pi SBCs and arm64 virtual machines like Ampere Altra and Graviton"
 author: andres-castro
 date: '2022-12-09'
 slug: quarto_arm64
@@ -96,11 +96,11 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 </div>
 
 <p><strong>UPDATE:</strong></p>
-<p>This article is no longer relevant since the availability of official Quarto arm64 builds for the pre-release version. Installation is pretty simple now:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Download deb installer</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">wget</span> https://github.com/quarto-dev/quarto-cli/releases/download/v1.3.191/quarto-1.3.191-linux-arm64.deb</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Install Quarto</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> dpkg <span class="at">-i</span> quarto-1.3.191-linux-arm64.deb</span></code></pre></div>
+<p>This article is no longer relevant since the availability of official Quarto arm64 builds. Installation is pretty simple now:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="co"># Download deb installer</span></span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">wget</span> https://github.com/quarto-dev/quarto-cli/releases/download/v1.3.433/quarto-1.3.433-linux-arm64.deb</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="co"># Install Quarto</span></span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="fu">sudo</span> dpkg <span class="at">-i</span> quarto-1.3.433-linux-arm64.deb</span></code></pre></div>
 <p>I’ll leave the old article down below for reference.</p>
 <hr />
 <p>Quarto is Posit’s new open-source scientific and technical publishing system built on Pandoc that allows you to weave together narrative text and code to produce high-quality outputs including reports, presentations, websites, and more. It’s the successor of the highly successful, but R specific, R Markdown ecosystem, bringing all the benefits of R Markdown to other programming langues like Python, Julia and Observable.</p>
@@ -109,59 +109,59 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <div id="testing-platform" class="section level2">
 <h2>Testing Platform</h2>
 <p>I have tried this on Raspberry Pi 3B+ and 4B running Raspberry Pi OS and Ubuntu 22.04 LT, and on an Oracle Ampere Altra VM running Ubuntu 22.04 LTS, so I’m pretty sure this should work on any arm64 system, provided that you can get suitable arm64 versions of Quarto’s dependencies on your specific Linux distribution. In all cases, I started with a clean and up-to-date install of the operating system so make sure you update yours as well before you start.</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt update</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt dist-upgrade</span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">sudo</span> apt update</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="fu">sudo</span> apt dist-upgrade</span></code></pre></div>
 </div>
 <div id="installing-dependencies" class="section level2">
 <h2>Installing Dependencies</h2>
 <p>First, we need a sufficiently modern arm64 version of Pandoc, and since the version that comes with the standard deb repositories for your OS is most likely too old, it is better if we download a modern version ourselves (this is very important since Quarto will fail with older Pandoc versions).</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">wget</span> https://github.com/jgm/pandoc/releases/download/2.19.2/pandoc-2.19.2-1-arm64.deb</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> dpkg <span class="at">-i</span> pandoc-2.19.2-1-arm64.deb</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> pandoc-2.19.2-1-arm64.deb</span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">wget</span> https://github.com/jgm/pandoc/releases/download/2.19.2/pandoc-2.19.2-1-arm64.deb</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="fu">sudo</span> dpkg <span class="at">-i</span> pandoc-2.19.2-1-arm64.deb</span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="fu">rm</span> pandoc-2.19.2-1-arm64.deb</span></code></pre></div>
 <p>Also, we need R and the <code>rmarkdown</code> R package, but since you are reading this article on an R related blog, I will assume you already have R installed in your system and you know how to install R packages, if you don’t, you can check this <a href="/2023/02/11/r_on_arm/">other post</a> where I detail options to install R on a Pi. To clarify, I’m considering R as a dependency because I’m writing on an R related blog, but if you are going to use Quarto with some other programming language, R is not mandatory.</p>
 </div>
 <div id="installing-quarto" class="section level1">
 <h1>Installing Quarto</h1>
 <p>Since there are no arm64 binaries for Quarto, we are going to install it from source. Follow these steps from top to bottom without skipping any since they all depend on the previous one:</p>
 <p>First, we need to clone the GitHub repository in a suitable location. Note that you can optionally clone a specific release version if you prefer by using the <code>--branch</code> option (e.g. <code>--branch v1.3.47</code>)</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> su <span class="at">-</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> /usr/local/src</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone <span class="at">--depth</span> 1 https://github.com/quarto-dev/quarto-cli</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> quarto-cli</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="fu">sudo</span> su <span class="at">-</span></span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a><span class="bu">cd</span> /usr/local/src</span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a><span class="fu">git</span> clone <span class="at">--depth</span> 1 https://github.com/quarto-dev/quarto-cli</span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a><span class="bu">cd</span> quarto-cli</span></code></pre></div>
 <p>Next, we are going to trick Quarto into installing an arm64 version of Deno from an <a href="https://github.com/LukeChannings/deno-arm64">alternative source</a> by modifying its <code>configure.sh</code> file before executing it.</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-i</span> <span class="st">&#39;s/https:\/\/github.com\/denoland\/deno\/releases\/download/https:\/\/github.com\/LukeChannings\/deno-arm64\/releases\/download/&#39;</span> configure.sh</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-i</span> <span class="st">&#39;s/DENOFILES=deno-x86_64-unknown-linux-gnu.zip/DENOFILES=deno-linux-arm64.zip/&#39;</span> package/scripts/common/utils.sh</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-i</span> <span class="st">&#39;s/DENO_DIR=deno-x86_64-unknown-linux-gnu/DENO_DIR=deno-linux-arm64/&#39;</span> package/scripts/common/utils.sh</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="ex">./configure.sh</span></span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-i</span> <span class="st">&#39;s/https:\/\/github.com\/denoland\/deno\/releases\/download/https:\/\/github.com\/LukeChannings\/deno-arm64\/releases\/download/&#39;</span> configure.sh</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-i</span> <span class="st">&#39;s/DENOFILES=deno-x86_64-unknown-linux-gnu.zip/DENOFILES=deno-linux-arm64.zip/&#39;</span> package/scripts/common/utils.sh</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-i</span> <span class="st">&#39;s/DENO_DIR=deno-x86_64-unknown-linux-gnu/DENO_DIR=deno-linux-arm64/&#39;</span> package/scripts/common/utils.sh</span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="ex">./configure.sh</span></span></code></pre></div>
 <p>Finally, we are going to replace the external amd64 binaries Quarto downloads during installation with arm64 ones.</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> package/dist/bin/tools/deno-x86_64-unknown-linux-gnu/</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ln</span> <span class="at">-s</span> /usr/local/src/quarto-cli/package/dist/bin/tools/deno-linux-arm64/deno package/dist/bin/tools/deno-x86_64-unknown-linux-gnu/deno</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> package/dist/bin/tools/pandoc</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="fu">ln</span> <span class="at">-s</span> /usr/bin/pandoc package/dist/bin/tools/pandoc</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-rf</span> package/dist/bin/tools/dart-sass/</span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="fu">wget</span> https://github.com/sass/dart-sass/releases/download/1.57.1/dart-sass-1.57.1-linux-arm64.tar.gz</span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="fu">tar</span> zxvf dart-sass-1.57.1-linux-arm64.tar.gz</span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> dart-sass-1.57.1-linux-arm64.tar.gz</span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a><span class="fu">mv</span> <span class="at">-f</span> dart-sass/ package/dist/bin/tools/</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="fu">mkdir</span> package/dist/bin/tools/deno-x86_64-unknown-linux-gnu/</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="fu">ln</span> <span class="at">-s</span> /usr/local/src/quarto-cli/package/dist/bin/tools/deno-linux-arm64/deno package/dist/bin/tools/deno-x86_64-unknown-linux-gnu/deno</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a><span class="fu">rm</span> package/dist/bin/tools/pandoc</span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="fu">ln</span> <span class="at">-s</span> /usr/bin/pandoc package/dist/bin/tools/pandoc</span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-rf</span> package/dist/bin/tools/dart-sass/</span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a><span class="fu">wget</span> https://github.com/sass/dart-sass/releases/download/1.57.1/dart-sass-1.57.1-linux-arm64.tar.gz</span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a><span class="fu">tar</span> zxvf dart-sass-1.57.1-linux-arm64.tar.gz</span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a><span class="fu">rm</span> dart-sass-1.57.1-linux-arm64.tar.gz</span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a><span class="fu">mv</span> <span class="at">-f</span> dart-sass/ package/dist/bin/tools/</span></code></pre></div>
 <p>If all went well, you now have a working installation of the Quarto Command Line Interface in your system, and you can start rendering <code>qmd</code> files from the terminal. To test if it actually works, let’s render a test document; create a <code>test.qmd</code> file with the following content:</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="an">title:</span><span class="co"> &quot;Test Document&quot;</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="an">format:</span><span class="co"> html</span></span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co">---</span></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="fu">## Hello</span></span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="in">print(&quot;world&quot;)</span></span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode markdown"><code class="sourceCode markdown"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="an">title:</span><span class="co"> &quot;Test Document&quot;</span></span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="an">format:</span><span class="co"> html</span></span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a><span class="co">---</span></span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a><span class="fu">## Hello</span></span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a><span class="in">print(&quot;world&quot;)</span></span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a><span class="in">```</span></span></code></pre></div>
 <p>And render the document from a system terminal with the following command:</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">quarto</span> render test.qmd</span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a><span class="ex">quarto</span> render test.qmd</span></code></pre></div>
 <p>If all goes well, you will get a <code>test.html</code> file in the current location.</p>
 <p><img src="/post/2022-12-09-quarto_arm64.en_files/test_html.jpg" width="700" height="350" /></p>
 <p>I haven’t figured out how to enable the RStudio IDE integration with Quarto (RStudio’s experimental builds for arm64 come with Quarto integration features disabled). I have raised the question on the GitHub repository, and I’ll update this post if a solution or workaround arises.</p>

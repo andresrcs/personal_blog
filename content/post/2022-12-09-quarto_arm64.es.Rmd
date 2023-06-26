@@ -1,6 +1,6 @@
 ---
 title: Instalación de Quarto-CLI en sistemas Linux-arm64
-description: "Aprende a instalar la interfaz de línea de comandos de Quarto en sistemas Linux-arm64, como las populares Raspberry Pi y las máquinas virtuales con procesadores Ampere Altra."
+description: "Aprende a instalar la interfaz de línea de comandos de Quarto en sistemas Linux-arm64, como las populares Raspberry Pi y máquinas virtuales arm64 como Ampere Altra y Graviton."
 author: andres-castro
 date: '2022-12-09'
 slug: quarto_arm64
@@ -24,13 +24,13 @@ output:
 
 **ACTUALIZACIÓN:**
 
-Este artículo ya no es relevante debido a la disponibilidad de compilaciones oficiales de Quarto arm64 para la versión preliminar. La instalación es bastante simple ahora:
+Este artículo ya no es relevante debido a la disponibilidad de compilaciones oficiales de Quarto para la arquitecura arm64. Ahora la instalación es bastante simple:
 
 ```{bash install_deb, eval=FALSE}
 # Descarga el instalador deb
-wget https://github.com/quarto-dev/quarto-cli/releases/download/v1.3.191/quarto-1.3.191-linux-arm64.deb
+wget https://github.com/quarto-dev/quarto-cli/releases/download/v1.3.433/quarto-1.3.433-linux-arm64.deb
 # Instala Quarto
-sudo dpkg -i quarto-1.3.191-linux-arm64.deb
+sudo dpkg -i quarto-1.3.433-linux-arm64.deb
 ```
 
 Dejaré el artículo anterior abajo como referencia.
