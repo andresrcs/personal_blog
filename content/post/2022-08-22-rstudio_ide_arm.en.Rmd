@@ -62,11 +62,11 @@ sudo apt install gdebi
 
 ## Installing the RStudio IDE
 
-Now we get to the point. There is no stable release of the RStudio IDE for arm64 but there are experimental daily builds available [here](https://dailies.rstudio.com/rstudio/), both for the server and desktop versions and compiled for Ubuntu 20/22 LTS and RedHat9. I'm going to try out the server version for Ubuntu 20 because it is compatible with Raspberry Pi OS x64 and I prefer to work with the IDE on my regular computer instead of directly on the Raspberry Pi, but you can install the desktop version the same way if you prefer, just change the link accordingly.
+Now we get to the point. There is no stable release of the RStudio IDE for arm64 but there are experimental daily builds available [here](https://dailies.rstudio.com/rstudio/), both for the server and desktop versions and compiled for Ubuntu 20/22 LTS and RedHat9. I'm going to try out the server version for Ubuntu 22 because it is compatible with Raspberry Pi OS x64 and I prefer to work with the IDE on my regular computer instead of directly on the Raspberry Pi, but you can install the desktop version the same way if you prefer, just change the link accordingly.
 
 ```{bash install_rstudio, eval=FALSE}
-wget https://s3.amazonaws.com/rstudio-ide-build/server/focal/arm64/rstudio-server-2023.08.0-daily-60-arm64.deb
-sudo gdebi rstudio-server-2023.08.0-daily-60-arm64.deb
+wget https://s3.amazonaws.com/rstudio-ide-build/server/jammy/arm64/rstudio-server-2023.12.0-daily-232-arm64.deb
+sudo gdebi rstudio-server-2023.12.0-daily-232-arm64.deb
 ```
 
 Once the installation process is completed, you get a working RStudio IDE installation running on your Raspberry Pi, if you have chosen to install the server version as I did, you can open an RStudio session by opening a browser on any device in your network and typing the proper address i.e. `http:\\your_pi_ip_addres:8787`

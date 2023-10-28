@@ -62,11 +62,11 @@ sudo apt install gdebi
 
 ## Instalación del IDE de RStudio
 
-Ahora llegamos al grano. No existe una versión estable del IDE de RStudio para arm64, pero hay compilaciones diarias experimentales disponibles [aquí](https://dailies.rstudio.com/rstudio/), tanto para las versiones de servidor como de escritorio y compiladas para Ubuntu 20/22 LTS y RedHat9. Voy a probar la versión de servidor para Ubuntu 20 porque es compatible con Raspberry Pi OS x64 y prefiero trabajar con el IDE en mi computadora normal en lugar de directamente en la Raspberry Pi, pero puedes instalar la versión de escritorio de la misma manera si lo prefieres, simplemente cambia el enlace en consecuencia.
+Ahora llegamos al grano. No existe una versión estable del IDE de RStudio para arm64, pero hay compilaciones diarias experimentales disponibles [aquí](https://dailies.rstudio.com/rstudio/), tanto para las versiones de servidor como de escritorio y compiladas para Ubuntu 20/22 LTS y RedHat9. Voy a probar la versión de servidor para Ubuntu 22 porque es compatible con Raspberry Pi OS x64 y prefiero trabajar con el IDE en mi computadora normal en lugar de directamente en la Raspberry Pi, pero puedes instalar la versión de escritorio de la misma manera si lo prefieres, simplemente cambia el enlace en consecuencia.
 
 ```{bash install_rstudio, eval=FALSE}
-wget https://s3.amazonaws.com/rstudio-ide-build/server/focal/arm64/rstudio-server-2023.08.0-daily-60-arm64.deb
-sudo gdebi rstudio-server-2023.08.0-daily-60-arm64.deb
+wget https://s3.amazonaws.com/rstudio-ide-build/server/jammy/arm64/rstudio-server-2023.12.0-daily-232-arm64.deb
+sudo gdebi rstudio-server-2023.12.0-daily-232-arm64.deb
 ```
 
 Una vez completado el proceso de instalación, obtienes una instalación de RStudio IDE funcional en tu Raspberry Pi, si has elegido instalar la versión de servidor como lo hice yo, puedes abrir una sesión de RStudio abriendo un navegador en cualquier dispositivo en tu red y escribiendo la dirección correcta, es decir, `http:\\direccion_ip_de_tu_pi:8787`

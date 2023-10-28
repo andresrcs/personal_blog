@@ -23,7 +23,7 @@ output:
 
 <style type="text/css">
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span { line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -121,9 +121,9 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 </div>
 <div id="installing-the-rstudio-ide" class="section level2">
 <h2>Installing the RStudio IDE</h2>
-<p>Now we get to the point. There is no stable release of the RStudio IDE for arm64 but there are experimental daily builds available <a href="https://dailies.rstudio.com/rstudio/">here</a>, both for the server and desktop versions and compiled for Ubuntu 20/22 LTS and RedHat9. I’m going to try out the server version for Ubuntu 20 because it is compatible with Raspberry Pi OS x64 and I prefer to work with the IDE on my regular computer instead of directly on the Raspberry Pi, but you can install the desktop version the same way if you prefer, just change the link accordingly.</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="fu">wget</span> https://s3.amazonaws.com/rstudio-ide-build/server/focal/arm64/rstudio-server-2023.08.0-daily-60-arm64.deb</span>
-<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="fu">sudo</span> gdebi rstudio-server-2023.08.0-daily-60-arm64.deb</span></code></pre></div>
+<p>Now we get to the point. There is no stable release of the RStudio IDE for arm64 but there are experimental daily builds available <a href="https://dailies.rstudio.com/rstudio/">here</a>, both for the server and desktop versions and compiled for Ubuntu 20/22 LTS and RedHat9. I’m going to try out the server version for Ubuntu 22 because it is compatible with Raspberry Pi OS x64 and I prefer to work with the IDE on my regular computer instead of directly on the Raspberry Pi, but you can install the desktop version the same way if you prefer, just change the link accordingly.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="fu">wget</span> https://s3.amazonaws.com/rstudio-ide-build/server/jammy/arm64/rstudio-server-2023.12.0-daily-232-arm64.deb</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="fu">sudo</span> gdebi rstudio-server-2023.12.0-daily-232-arm64.deb</span></code></pre></div>
 <p>Once the installation process is completed, you get a working RStudio IDE installation running on your Raspberry Pi, if you have chosen to install the server version as I did, you can open an RStudio session by opening a browser on any device in your network and typing the proper address i.e. <code>http:\\your_pi_ip_addres:8787</code></p>
 <p><img src="/post/2022-08-20-rstudio_ide_arm.en_files/rstudio_ide.jpg" width="800" height="400" /></p>
 </div>
