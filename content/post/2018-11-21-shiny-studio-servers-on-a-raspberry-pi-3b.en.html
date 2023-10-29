@@ -30,7 +30,7 @@ output:
 
 <style type="text/css">
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span { line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -119,16 +119,15 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <ul>
 <li>Expand the filesystem (Advanced Options / Expand Filesystem).</li>
 <li>Configure your locale, and make sure to choose an UTF.8 option to avoid compilation issues (Localisation Options / Locale).</li>
-<li>Set memory for the GPU, on Raspberry Pi OS set it to 16MB and on Ubuntu set memory split to “240 240MiB for ARM, 16MiB for VideoCore” (Performance Options/ GPU Memory).</li>
 <li>Disable “Predictable network interfaces” (Advanced Options / Network Interface Names).</li>
 </ul>
 <p>Next, you need to set a static IP for the Pi so you can easily find it on your network.</p>
-<p>For setting a static IP on Raspberry Pi OS, edit this file, <code>sudo nano /etc/dhcpcd.conf</code>, accordingly with your own needs. This is a sample IP configuration for a wired connection:</p>
+<p>For setting a static IP on Raspberry Pi OS, run these commands. This is a sample IP configuration for a wired connection, modify accordingly with your own needs:</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="co"># Sample static IP configuration:</span></span>
-<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="ex">interface</span> eth0</span>
-<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="ex">static</span> ip_address=192.168.0.101/24</span>
-<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="ex">static</span> routers=192.168.0.1</span>
-<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a><span class="ex">static</span> domain_name_servers=192.168.0.1 8.8.8.8</span></code></pre></div>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">sudo</span> nmcli c mod <span class="st">&#39;Wired connection 1&#39;</span> ipv4.addresses 192.168.3.101/24 ipv4.method manual</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="fu">sudo</span> nmcli con mod <span class="st">&#39;Wired connection 1&#39;</span> ipv4.gateway 192.168.3.1</span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="fu">sudo</span> nmcli con mod <span class="st">&#39;Wired connection 1&#39;</span> ipv4.dns <span class="st">&quot;192.168.3.1&quot;</span></span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a><span class="fu">sudo</span> nmcli c down <span class="st">&#39;Wired connection 1&#39;</span> <span class="kw">&amp;&amp;</span> <span class="fu">sudo</span> nmcli c up <span class="st">&#39;Wired connection 1&#39;</span></span></code></pre></div>
 <p>And for setting the IP on Ubuntu you have to create this file, <code>sudo nano /etc/netplan/01-netcfg.yaml</code>,add this content (edit as needed) and apply the configuration with this command, <code>sudo netplan apply</code>.</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="ex">network:</span></span>
 <span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>    <span class="ex">version:</span> 2</span>
@@ -297,12 +296,12 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <div id="install-rstudio-server" class="section level2">
 <h2>Install Rstudio Server</h2>
 <p>In the past, the only way to install RStudio Server on a Pi was to compile from source and this was extremely time-consuming (took me 3 days the last time I tried on a Pi 3B+) and very prone to failure because the RStudio IDE is under active development.</p>
-<p>Luckily, in recent days, RStudio has made available “experimental” builds of the IDE for arm64 (I wrote an <a href="/2022/08/22/rstudio_ide_arm/">article about it</a>), they are compiled for Ubuntu 20/22 LTS and RedHat 9 but the Ubuntu 20 binaries are compatible with Raspberry Pi OS as well. You can check the available daily builds <a href="https://dailies.rstudio.com/rstudio/">here</a>. Choose a link accordingly to the operating system you are using, also, have in mind that these builds are meant for testing so they are likely to have bugs or be unstable, if you have problems installing the latest one available, try with an older version.</p>
-<p>The following instructions use a link for Ubuntu 20 (Raspberry Pi OS compatible), remember to change the link if you want to use another OS or a more recent IDE version:</p>
+<p>Luckily, in recent days, RStudio has made available “experimental” builds of the IDE for arm64 (I wrote an <a href="/2022/08/22/rstudio_ide_arm/">article about it</a>), they are compiled for Ubuntu 20/22 LTS and RedHat 9 but the Ubuntu 22 binaries are compatible with Raspberry Pi OS as well. You can check the available daily builds <a href="https://dailies.rstudio.com/rstudio/">here</a>. Choose a link accordingly to the operating system you are using, also, have in mind that these builds are meant for testing so they are likely to have bugs or be unstable, if you have problems installing the latest one available, try with an older version.</p>
+<p>The following instructions use a link for Ubuntu 22 (Raspberry Pi OS compatible), remember to change the link if you want to use another OS or a more recent IDE version:</p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="fu">sudo</span> apt install gdebi</span>
-<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="fu">wget</span> https://s3.amazonaws.com/rstudio-ide-build/server/focal/arm64/rstudio-server-2023.08.0-daily-60-arm64.deb</span>
-<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="fu">sudo</span> gdebi rstudio-server-2023.08.0-daily-60-arm64.deb</span>
-<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a><span class="fu">sudo</span> rm rstudio-server-2023.08.0-daily-60-arm64.deb</span></code></pre></div>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="fu">wget</span> https://s3.amazonaws.com/rstudio-ide-build/server/jammy/arm64/rstudio-server-2023.12.0-daily-232-arm64.deb</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="fu">sudo</span> gdebi rstudio-server-2023.12.0-daily-232-arm64.deb</span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a><span class="fu">sudo</span> rm rstudio-server-2023.12.0-daily-232-arm64.deb</span></code></pre></div>
 <blockquote>
 <p>:pencil2: I’ll update this section once the arm64 support becomes a stable feature for the RStudio IDE.</p>
 </blockquote>

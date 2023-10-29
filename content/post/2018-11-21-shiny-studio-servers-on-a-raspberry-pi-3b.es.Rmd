@@ -46,19 +46,18 @@ Aunque no es obligatorio, recomiendo realizar las siguientes acciones utilizando
 
 * Expandir el sistema de archivos (Advanced Options / Expand Filesystem).
 * Definir tu configuración regional, asegúrate de elegir una opción UTF.8 para evitar problemas de compilación (Localisation Options / Locale).
-* Configura la memoria para la GPU, en Raspberry Pi OS configúrala en 16 MB, y en Ubuntu configura la división de memoria a "240 240MiB for ARM, 16MiB for VideoCore" (Performance Options/ GPU Memory).
 * Deshabilitar "Interfaces de red predecibles" (Advanced Options / Network Interface Names).
 
 A continuación, debes configurar una IP estática para que puedas encontrar la Pi fácilmente en tu red.
 
-Para configurar una IP estática en Raspberry Pi OS, edita este archivo, `sudo nano /etc/dhcpcd.conf`, de acuerdo con tus propias necesidades. Esta es una configuración IP de muestra para una conexión por cable:
+Para configurar una IP estática en Raspberry Pi OS, ejecuta estos comandos. Esta es una configuración de IP de muestra para una conexión por cable, modificala de acuerdo a tus propias necesidades:
 
 ```{bash set_ip_rpiOS, eval=FALSE}
 # Configuración IP de muestra:
-interface eth0
-static ip_address=192.168.0.101/24
-static routers=192.168.0.1
-static domain_name_servers=192.168.0.1 8.8.8.8
+sudo nmcli c mod 'Wired connection 1' ipv4.addresses 192.168.3.101/24 ipv4.method manual
+sudo nmcli con mod 'Wired connection 1' ipv4.gateway 192.168.3.1
+sudo nmcli con mod 'Wired connection 1' ipv4.dns "192.168.3.1"
+sudo nmcli c down 'Wired connection 1' && sudo nmcli c up 'Wired connection 1'
 ```
 
 Y para configurar la IP en Ubuntu, debes crear este archivo, `sudo nano /etc/netplan/01-netcfg.yaml`, agregar este contenido (edítalo según sea necesario) y aplicar la configuración con este comando, `sudo netplan apply`.
@@ -249,15 +248,15 @@ cd
 
 En el pasado, la única forma de instalar RStudio Server en una Pi era compilar desde la fuente y esto requería mucho tiempo (me tomó 3 días la última vez que probé en una Pi 3B+) y era muy propenso a fallar porque RStudio IDE está en desarrollo activo.
 
-Afortunadamente, en los últimos días, RStudio ha puesto a disposición compilaciones "experimentales" del IDE para arm64 (escribí un [artículo al respecto](/es/2022/08/22/rstudio_ide_arm/)), están compiladas para Ubuntu 20/22 LTS, pero los binarios para Ubuntu 20 también son compatibles con Raspberry Pi OS. Puedes consultar las compilaciones diarias disponibles [aquí](https://dailies.rstudio.com/rstudio/). Elije un enlace de acuerdo con el sistema operativo que estás utilizando, también ten en cuenta que estas compilaciones están destinadas a pruebas, por lo que es probable que tengan errores o sean inestables, si tienes problemas para instalar la última versión disponible, intenta con una versión anterior .
+Afortunadamente, en los últimos días, RStudio ha puesto a disposición compilaciones "experimentales" del IDE para arm64 (escribí un [artículo al respecto](/es/2022/08/22/rstudio_ide_arm/)), están compiladas para Ubuntu 20/22 LTS, pero los binarios para Ubuntu 22 también son compatibles con Raspberry Pi OS. Puedes consultar las compilaciones diarias disponibles [aquí](https://dailies.rstudio.com/rstudio/). Elije un enlace de acuerdo con el sistema operativo que estás utilizando, también ten en cuenta que estas compilaciones están destinadas a pruebas, por lo que es probable que tengan errores o sean inestables, si tienes problemas para instalar la última versión disponible, intenta con una versión anterior .
 
-Las siguientes instrucciones usan un enlace para Ubuntu 20 (compatible con Raspberry Pi OS), recuerda cambiar el enlace si deseas usar otro sistema operativo o una versión más reciente del IDE:
+Las siguientes instrucciones usan un enlace para Ubuntu 22 (compatible con Raspberry Pi OS), recuerda cambiar el enlace si deseas usar otro sistema operativo o una versión más reciente del IDE:
 
 ```{bash install_rstudio, eval=FALSE}
 sudo apt install gdebi
-wget https://s3.amazonaws.com/rstudio-ide-build/server/focal/arm64/rstudio-server-2023.08.0-daily-60-arm64.deb
-sudo gdebi rstudio-server-2023.08.0-daily-60-arm64.deb
-sudo rm rstudio-server-2023.08.0-daily-60-arm64.deb
+wget https://s3.amazonaws.com/rstudio-ide-build/server/jammy/arm64/rstudio-server-2023.12.0-daily-232-arm64.deb
+sudo gdebi rstudio-server-2023.12.0-daily-232-arm64.deb
+sudo rm rstudio-server-2023.12.0-daily-232-arm64.deb
 ```
 
 > :pencil2: Actualizaré esta sección una vez que el soporte arm64 se convierta en una función estable del RStudio IDE.

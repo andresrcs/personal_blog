@@ -22,7 +22,7 @@ output:
 
 <style type="text/css">
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span { line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -98,63 +98,63 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <p>The options described here are mostly applicable to the Raspberry Pi family of Single Board Computers but since most options also work on Ubuntu distributions they can also be applicable to other Linux ARM systems like other SBCs or even “full-size” ARM computers like Ampere Altra or AWS Graviton.</p>
 <div id="install-from-the-operating-systems-repositories" class="section level2">
 <h2>Install from the Operating System’s repositories</h2>
-<p>This is the easiest option, you can install R from the standard repositories for your OS, but those R versions are usually quite old, for example, Raspberry Pi OS comes with R 4.0.0 and Ubuntu 22.04 comes with R 4.1.2.</p>
+<p>This is the easiest option, you can install R from the standard repositories for your OS, but those R versions are usually quite old, for example, the latest Raspberry Pi OS comes with R 4.2.2 and Ubuntu 22.04 comes with R 4.1.2.</p>
 <p>To install R with this option you just need to run this command in your system terminal:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install r-base</span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">sudo</span> apt install r-base</span></code></pre></div>
 <p>This is fine if you just want to try R or do simple stuff with it but if you are going to work on a serious project, chances are you want to start with an up-to-date version of R instead.</p>
 </div>
 <div id="compile-r-from-source" class="section level2">
 <h2>Compile R from source</h2>
-<p>Another option is to compile the latest R version yourself (4.2.2 at the moment of writing) from the source code files, this is a time-consuming task and it might feel a little intimidating for newcomers but it gives you the most flexibility when it comes to set compilation options, for example, you can choose options like compiling with BLAS and LAPACK to speed up matrix calculations.</p>
+<p>Another option is to compile the latest R version yourself (4.3.1 at the moment of writing) from the source code files, this is a time-consuming task and it might feel a little intimidating for newcomers but it gives you the most flexibility when it comes to set compilation options, for example, you can choose options like compiling with BLAS and LAPACK to speed up matrix calculations.</p>
 <p>You can compile R from source by running this script on a system terminal, it works for both Raspberry Pi OS and Ubuntu distributions:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> su</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Set the R version to install</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="va">R_VERSION</span><span class="op">=</span>4.2.2</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="ex">apt</span> install <span class="at">-y</span> g++ gcc gfortran libreadline-dev libx11-dev libxt-dev <span class="dt">\</span></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>            libpng-dev libjpeg-dev libcairo2-dev xvfb <span class="dt">\</span></span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>            libbz2-dev libzstd-dev liblzma-dev libtiff5 <span class="dt">\</span></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>            libssh-dev libgit2-dev libcurl4-openssl-dev <span class="dt">\</span></span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>            libblas-dev liblapack-dev libopenblas-base <span class="dt">\</span></span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>            zlib1g-dev openjdk-11-jdk <span class="dt">\</span></span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>            texinfo texlive texlive-fonts-extra <span class="dt">\</span></span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>            screen wget libpcre2-dev make cmake</span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> /usr/local/src</span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="fu">wget</span> https://cran.rstudio.com/src/base/R-<span class="va">${R_VERSION</span><span class="op">:</span><span class="dv">0</span><span class="op">:</span><span class="dv">1</span><span class="va">}</span>/R-<span class="va">$R_VERSION</span>.tar.gz</span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="fu">tar</span> zxvf R-<span class="va">$R_VERSION</span>.tar.gz</span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> R-<span class="va">$R_VERSION</span></span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="ex">./configure</span> <span class="at">--enable-R-shlib</span> <span class="at">--enable-memory-profiling</span> <span class="at">--with-blas</span> <span class="at">--with-lapack</span> <span class="co">#BLAS and LAPACK are optional</span></span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span></span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> install</span>
-<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ..</span>
-<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-rf</span> R-<span class="va">$R_VERSION</span><span class="pp">*</span></span>
-<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="bu">exit</span></span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">sudo</span> su</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>    </span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a><span class="co"># Set the R version to install</span></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a><span class="va">R_VERSION</span><span class="op">=</span>4.3.1</span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a><span class="ex">apt</span> install <span class="at">-y</span> g++ gcc gfortran libreadline-dev libx11-dev libxt-dev <span class="dt">\</span></span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>            libpng-dev libjpeg-dev libcairo2-dev xvfb <span class="dt">\</span></span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>            libbz2-dev libzstd-dev liblzma-dev libtiff5 <span class="dt">\</span></span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>            libssh-dev libgit2-dev libcurl4-openssl-dev <span class="dt">\</span></span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a>            libblas-dev liblapack-dev libopenblas-base <span class="dt">\</span></span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a>            zlib1g-dev openjdk-11-jdk <span class="dt">\</span></span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a>            texinfo texlive texlive-fonts-extra <span class="dt">\</span></span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a>            screen wget libpcre2-dev make cmake</span>
+<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a><span class="bu">cd</span> /usr/local/src</span>
+<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a><span class="fu">wget</span> https://cran.rstudio.com/src/base/R-<span class="va">${R_VERSION</span><span class="op">:</span><span class="dv">0</span><span class="op">:</span><span class="dv">1</span><span class="va">}</span>/R-<span class="va">$R_VERSION</span>.tar.gz</span>
+<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a><span class="fu">tar</span> zxvf R-<span class="va">$R_VERSION</span>.tar.gz</span>
+<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a><span class="bu">cd</span> R-<span class="va">$R_VERSION</span></span>
+<span id="cb2-18"><a href="#cb2-18" tabindex="-1"></a><span class="ex">./configure</span> <span class="at">--enable-R-shlib</span> <span class="at">--enable-memory-profiling</span> <span class="at">--with-blas</span> <span class="at">--with-lapack</span> <span class="co">#BLAS and LAPACK are optional</span></span>
+<span id="cb2-19"><a href="#cb2-19" tabindex="-1"></a><span class="fu">make</span></span>
+<span id="cb2-20"><a href="#cb2-20" tabindex="-1"></a><span class="fu">make</span> install</span>
+<span id="cb2-21"><a href="#cb2-21" tabindex="-1"></a><span class="bu">cd</span> ..</span>
+<span id="cb2-22"><a href="#cb2-22" tabindex="-1"></a><span class="fu">rm</span> <span class="at">-rf</span> R-<span class="va">$R_VERSION</span><span class="pp">*</span></span>
+<span id="cb2-23"><a href="#cb2-23" tabindex="-1"></a><span class="bu">exit</span></span></code></pre></div>
 </div>
 <div id="install-r-using-rig" class="section level2">
 <h2>Install R using rig</h2>
-<p><a href="https://github.com/r-lib/rig"><code>rig</code></a> is an R installation manager that allows you to install multiple R versions side by side, it has recently added support for Linux ARM64 systems through the <code>rstudio/r-builds</code> GitHub repository, although, these builds are stated to be a community resource, they are not professionally supported by Posit. It currently supports only Ubuntu and Debian distributions (Raspberry Pi OS is based on Debian 11 so it is compatible too).</p>
+<p><a href="https://github.com/r-lib/rig"><code>rig</code></a> is an R installation manager that allows you to install multiple R versions side by side, it has recently added support for Linux ARM64 systems through the <code>rstudio/r-builds</code> GitHub repository, although, these builds are stated to be a community resource, they are not professionally supported by Posit. It currently supports only Ubuntu and Debian distributions (The latest Raspberry Pi OS version is based on Debian 12 so it is compatible too).</p>
 <p>You can install <code>rig</code> in your system by running this command on a system terminal:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-Ls</span> https://github.com/r-lib/rig/releases/download/latest/rig-linux-arm64-latest.tar.gz <span class="kw">|</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sudo</span> tar xz <span class="at">-C</span> /usr/local</span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-Ls</span> https://github.com/r-lib/rig/releases/download/latest/rig-linux-arm64-latest.tar.gz <span class="kw">|</span></span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>  <span class="fu">sudo</span> tar xz <span class="at">-C</span> /usr/local</span></code></pre></div>
 <p>Then you can install the latest stable R version with these commands:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> rig add release <span class="co"># Or an specific version like 4.2.2</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> rig default release</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="fu">sudo</span> rig add release <span class="co"># Or an specific version like 4.3.1</span></span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="fu">sudo</span> rig default release</span></code></pre></div>
 <p>Optionally, you can manually download and install R from <a href="https://github.com/r-hub/R/releases">R-hub</a> as explained on the <a href="https://github.com/rstudio/r-builds"><code>rstudio/r-builds</code></a> GitHub repository, but this is a more involved procedure only worthy if you are going to integrate this into your own infrastructure management workflow and you want to avoid the overhead of installing <code>rig</code>.</p>
 </div>
 <div id="install-r-from-the-r4pi-project" class="section level2">
 <h2>Install R from the R4Pi Project</h2>
-<p>And last but not least, my new favorite, you can install R from the <a href="https://r4pi.org/" title="R for the Raspberry Pi">R4Pi project</a> through its deb repository, which means you will always get R version updates just by running <code>sudo apt update &amp;&amp; sudo apt upgrade</code>. Currently, it only supports Raspberry Pi OS, both 32 and 64 bits, and possibly other Debian 11 based distributions like Ubuntu 18, but it is not guaranteed.</p>
+<p>And last but not least, my new favorite, you can install R from the <a href="https://r4pi.org/" title="R for the Raspberry Pi">R4Pi project</a> through its deb repository, which means you will always get R version updates just by running <code>sudo apt update &amp;&amp; sudo apt upgrade</code>. Currently, it only supports Raspberry Pi OS (legacy version based on Debian 11, update in the works), both 32 and 64 bits, and possibly other Debian 11 based distributions like Ubuntu 18, but it is not guaranteed.</p>
 <p>To add the R4Pi deb repository to your deb source list and install R run these commands on a system terminal:</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-O</span>  https://pkgs.r4pi.org/dl/r4pi-repo-conf_0.0.1-1_all.deb</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> dpkg <span class="at">-i</span>  r4pi-repo-conf_0.0.1-1_all.deb</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt update</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt upgrade</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install r4pi</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="fu">rm</span> r4pi-repo-conf_0.0.1-1_all.deb</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-O</span>  https://pkgs.r4pi.org/dl/r4pi-repo-conf_0.0.1-1_all.deb</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="fu">sudo</span> dpkg <span class="at">-i</span>  r4pi-repo-conf_0.0.1-1_all.deb</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="fu">sudo</span> apt update</span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="fu">sudo</span> apt upgrade</span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="fu">sudo</span> apt install r4pi</span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="fu">rm</span> r4pi-repo-conf_0.0.1-1_all.deb</span></code></pre></div>
 <p>The main benefit of the R4Pi project is that it also provides R package repositories with precompiled binaries for a big selection of R packages which greatly reduces the time and effort required to install R packages on the Raspberry Pi, and by the way, you can also use the R4Pi package repository with all the previous installation options just by setting the “repos” option in a <code>.Rprofile</code> file.</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">local</span>({r <span class="ot">&lt;-</span> <span class="fu">getOption</span>(<span class="st">&quot;repos&quot;</span>)</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>       r[<span class="st">&quot;R4Pi&quot;</span>] <span class="ot">&lt;-</span> <span class="st">&quot;https://pkgs.r4pi.org/aarch64&quot;</span> <span class="co"># or &quot;https://pkgs.r4pi.org/&quot; for 32-bit systems</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>       r[<span class="st">&quot;CRAN&quot;</span>] <span class="ot">&lt;-</span> <span class="st">&quot;https://cran.rstudio.com/&quot;</span> <span class="co"># Secondary repository for when no binary is available</span></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>       <span class="fu">options</span>(<span class="at">repos=</span>r)})</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="fu">local</span>({r <span class="ot">&lt;-</span> <span class="fu">getOption</span>(<span class="st">&quot;repos&quot;</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>       r[<span class="st">&quot;R4Pi&quot;</span>] <span class="ot">&lt;-</span> <span class="st">&quot;https://pkgs.r4pi.org/aarch64&quot;</span> <span class="co"># or &quot;https://pkgs.r4pi.org/&quot; for 32-bit systems</span></span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>       r[<span class="st">&quot;CRAN&quot;</span>] <span class="ot">&lt;-</span> <span class="st">&quot;https://cran.rstudio.com/&quot;</span> <span class="co"># Secondary repository for when no binary is available</span></span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>       <span class="fu">options</span>(<span class="at">repos=</span>r)})</span></code></pre></div>
 </div>

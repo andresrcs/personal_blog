@@ -26,7 +26,7 @@ Las opciones descritas aquí se aplican principalmente a la familia de computado
 
 ## Instalar desde los repositorios del Sistema Operativo
 
-Esta es la opción más fácil, puedes instalar R desde los repositorios estándar para tu sistema operativo, pero esas versiones de R suelen ser bastante antiguas, por ejemplo, Raspberry Pi OS viene con R 4.0.0 y Ubuntu 22.04 viene con R 4.1.2.
+Esta es la opción más fácil, puedes instalar R desde los repositorios estándar para tu sistema operativo, pero esas versiones de R suelen ser bastante antiguas, por ejemplo, la última versión de Raspberry Pi OS viene con R 4.2.2 y Ubuntu 22.04 viene con R 4.1.2.
 
 Para instalar R con esta opción, solo necesitas ejecutar este comando en tu terminal de sistema:
 
@@ -38,7 +38,7 @@ Esto está bien si solo quieres probar R o hacer cosas simples con él, pero si 
 
 ## Compilar R desde la fuente
 
-Otra opción es compilar la última versión de R tu mismo (4.2.2 al momento de escribir) a partir de los archivos de código fuente, esta es una tarea que requiere mucho tiempo y puede resultar un poco intimidante para los recién llegados, pero te brinda la mayor flexibilidad cuando se trata de configurar las opciones de compilación, por ejemplo, puede elegir opciones como compilar con BLAS y LAPACK para acelerar cálculos de matriciales.
+Otra opción es compilar la última versión de R tu mismo (4.3.1 al momento de escribir) a partir de los archivos de código fuente, esta es una tarea que requiere mucho tiempo y puede resultar un poco intimidante para los recién llegados, pero te brinda la mayor flexibilidad cuando se trata de configurar las opciones de compilación, por ejemplo, puede elegir opciones como compilar con BLAS y LAPACK para acelerar cálculos de matriciales.
 
 Puedes compilar R desde la fuente ejecutando este script en una terminal del sistema, funciona tanto para las distribuciones de Raspberry Pi OS como de Ubuntu:
 
@@ -46,7 +46,7 @@ Puedes compilar R desde la fuente ejecutando este script en una terminal del sis
 sudo su
     
 # Define la version R a instalar
-R_VERSION=4.2.2
+R_VERSION=4.3.1
 
 apt install -y g++ gcc gfortran libreadline-dev libx11-dev libxt-dev \
             libpng-dev libjpeg-dev libcairo2-dev xvfb \
@@ -70,7 +70,7 @@ exit
 
 ## Instalar R usando rig
 
-[`rig`](https://github.com/r-lib/rig) es un administrador de instalación de R que te permite instalar varias versiones de R una al lado de la otra. Recientemente agregó soporte para sistemas Linux ARM64 a través del repositorio de GitHub `rstudio/r-builds` , aunque se estipula que estas compilaciones son un recurso de la comunidad, Posit no los apoya profesionalmente. Actualmente solo admite distribuciones Ubuntu y Debian (Raspberry Pi OS se basa en Debian 11, por lo que también es compatible).
+[`rig`](https://github.com/r-lib/rig) es un administrador de instalación de R que te permite instalar varias versiones de R una al lado de la otra. Recientemente agregó soporte para sistemas Linux ARM64 a través del repositorio de GitHub `rstudio/r-builds` , aunque se estipula que estas compilaciones son un recurso de la comunidad, Posit no los apoya profesionalmente. Actualmente solo admite distribuciones Ubuntu y Debian (La última versión de Raspberry Pi OS se basa en Debian 12, por lo que también es compatible).
 
 Puedes instalar `rig` en tu sistema ejecutando este comando en una terminal del sistema:
 
@@ -82,7 +82,7 @@ curl -Ls https://github.com/r-lib/rig/releases/download/latest/rig-linux-arm64-l
 Luego puedes instalar la última versión estable de R con estos comandos:
 
 ```{bash install_r_rig, eval=FALSE}
-sudo rig add release # O una versión especifica como 4.2.2
+sudo rig add release # O una versión especifica como 4.3.1
 sudo rig default release
 ```
 
@@ -90,7 +90,7 @@ Opcionalmente, puedes descargar e instalar R manualmente desde [R-hub](https://g
 
 ## Instalar R desde el Proyecto R4Pi
 
-Y por último, pero no menos importante, mi nuevo favorito, puedes instalar R desde el [proyecto R4Pi](https://r4pi.org/es/ "R para la Raspberry Pi") a través de su repositorio deb, lo que significa que siempre obtendrá actualizaciones de la versión R simplemente ejecutando `sudo apt update && sudo apt upgrade`. Actualmente, solo es compatible con Raspberry Pi OS, tanto de 32 como de 64 bits, y posiblemente otras distribuciones basadas en Debian 11 como Ubuntu 18, pero no está garantizado.
+Y por último, pero no menos importante, mi nuevo favorito, puedes instalar R desde el [proyecto R4Pi](https://r4pi.org/es/ "R para la Raspberry Pi") a través de su repositorio deb, lo que significa que siempre obtendrá actualizaciones de la versión R simplemente ejecutando `sudo apt update && sudo apt upgrade`. Actualmente, solo es compatible con Raspberry Pi OS (La versión antigua basada en Debian 11, hay una actualización en camino), tanto de 32 como de 64 bits, y posiblemente otras distribuciones basadas en Debian 11 como Ubuntu 18, pero no está garantizado.
 
 Para agregar el repositorio deb de R4Pi a tu lista de fuentes deb e instalar R, ejecuta estos comandos en una terminal del sistema:
 

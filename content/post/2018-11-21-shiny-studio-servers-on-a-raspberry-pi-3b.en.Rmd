@@ -46,19 +46,18 @@ Although not mandatory, I recommend performing the following actions using the `
 
 -   Expand the filesystem (Advanced Options / Expand Filesystem).
 -   Configure your locale, and make sure to choose an UTF.8 option to avoid compilation issues (Localisation Options / Locale).
--   Set memory for the GPU, on Raspberry Pi OS set it to 16MB and on Ubuntu set memory split to "240 240MiB for ARM, 16MiB for VideoCore" (Performance Options/ GPU Memory).
 -   Disable "Predictable network interfaces" (Advanced Options / Network Interface Names).
 
 Next, you need to set a static IP for the Pi so you can easily find it on your network.
 
-For setting a static IP on Raspberry Pi OS, edit this file, `sudo nano /etc/dhcpcd.conf`, accordingly with your own needs. This is a sample IP configuration for a wired connection:
+For setting a static IP on Raspberry Pi OS, run these commands. This is a sample IP configuration for a wired connection, modify accordingly with your own needs:
 
 ```{bash set_ip_rpiOS, eval=FALSE}
 # Sample static IP configuration:
-interface eth0
-static ip_address=192.168.0.101/24
-static routers=192.168.0.1
-static domain_name_servers=192.168.0.1 8.8.8.8
+sudo nmcli c mod 'Wired connection 1' ipv4.addresses 192.168.3.101/24 ipv4.method manual
+sudo nmcli con mod 'Wired connection 1' ipv4.gateway 192.168.3.1
+sudo nmcli con mod 'Wired connection 1' ipv4.dns "192.168.3.1"
+sudo nmcli c down 'Wired connection 1' && sudo nmcli c up 'Wired connection 1'
 ```
 
 And for setting the IP on Ubuntu you have to create this file, `sudo nano /etc/netplan/01-netcfg.yaml`,add this content (edit as needed) and apply the configuration with this command, `sudo netplan apply`.
@@ -249,15 +248,15 @@ cd
 
 In the past, the only way to install RStudio Server on a Pi was to compile from source and this was extremely time-consuming (took me 3 days the last time I tried on a Pi 3B+) and very prone to failure because the RStudio IDE is under active development.
 
-Luckily, in recent days, RStudio has made available "experimental"  builds of the IDE for arm64 (I wrote an [article about it](/2022/08/22/rstudio_ide_arm/)), they are compiled for Ubuntu 20/22 LTS and RedHat 9 but the Ubuntu 20 binaries are compatible with Raspberry Pi OS as well. You can check the available daily builds [here](https://dailies.rstudio.com/rstudio/). Choose a link accordingly to the operating system you are using, also, have in mind that these builds are meant for testing so they are likely to have bugs or be unstable, if you have problems installing the latest one available, try with an older version.
+Luckily, in recent days, RStudio has made available "experimental"  builds of the IDE for arm64 (I wrote an [article about it](/2022/08/22/rstudio_ide_arm/)), they are compiled for Ubuntu 20/22 LTS and RedHat 9 but the Ubuntu 22 binaries are compatible with Raspberry Pi OS as well. You can check the available daily builds [here](https://dailies.rstudio.com/rstudio/). Choose a link accordingly to the operating system you are using, also, have in mind that these builds are meant for testing so they are likely to have bugs or be unstable, if you have problems installing the latest one available, try with an older version.
 
-The following instructions use a link for Ubuntu 20 (Raspberry Pi OS compatible), remember to change the link if you want to use another OS or a more recent IDE version:
+The following instructions use a link for Ubuntu 22 (Raspberry Pi OS compatible), remember to change the link if you want to use another OS or a more recent IDE version:
 
 ```{bash install_rstudio, eval=FALSE}
 sudo apt install gdebi
-wget https://s3.amazonaws.com/rstudio-ide-build/server/focal/arm64/rstudio-server-2023.08.0-daily-60-arm64.deb
-sudo gdebi rstudio-server-2023.08.0-daily-60-arm64.deb
-sudo rm rstudio-server-2023.08.0-daily-60-arm64.deb
+wget https://s3.amazonaws.com/rstudio-ide-build/server/jammy/arm64/rstudio-server-2023.12.0-daily-232-arm64.deb
+sudo gdebi rstudio-server-2023.12.0-daily-232-arm64.deb
+sudo rm rstudio-server-2023.12.0-daily-232-arm64.deb
 ```
 
 > :pencil2: I'll update this section once the arm64 support becomes a stable feature for the RStudio IDE.

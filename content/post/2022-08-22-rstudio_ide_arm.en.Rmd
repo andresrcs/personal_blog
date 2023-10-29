@@ -25,7 +25,7 @@ Apple's bet on the arm architecture with their M1 and M2 processors has had an i
 
 ## Basic Set Up and Dependencies
 
-The first thing you need is a Raspberry Pi (2/3/4) with Raspberry Pi OS x64 or Ubuntu 20/22 LTS x64 installed and updated (or any other Linux arm64 system running a supported OS), make sure to update your system libraries before you start:
+The first thing you need is a Raspberry Pi (3/4/5) with the lastest Raspberry Pi x64 OS (Debian 12 based) or Ubuntu 20/22 LTS x64 installed and updated (or any other Linux arm64 system running a supported OS), make sure to update your system libraries before you start:
 
 ```{bash update_pi, eval=FALSE}
 sudo apt update
@@ -43,7 +43,7 @@ Since there are several options now I have moved this section to a separate arti
 
 In all cases, I strongly recommend using the [R4Pi](https://r4pi.org/) package repository as your R packages source since it provides precompiled binaries that make installation easier and faster.
 
-The latest experimental RStudio IDE builds (2023.08.0 builds) for arm64 now come with Quarto and Pandoc bundled so there is no longer the need to install them separately and Quarto integration features are now fully supported on arm64 systems, although, if you want a newer version of any of these software you can download the corresponding `.deb` file and install it using the `dpkg` command.
+The latest experimental RStudio IDE builds (>= 2023.08.0 builds) for arm64 now come with Quarto and Pandoc bundled so there is no longer the need to install them separately and Quarto integration features are now fully supported on arm64 systems, although, if you want a newer version of any of these software you can download the corresponding `.deb` file and install it using the `dpkg` command.
 
 -   You can download the latest Pandoc installer from here: <https://github.com/jgm/pandoc/releases/>
 -   And the latest Quarto installer from here: <https://github.com/quarto-dev/quarto-cli/releases>
