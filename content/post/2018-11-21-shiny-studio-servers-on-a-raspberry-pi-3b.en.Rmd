@@ -350,7 +350,7 @@ If you want to have access to your server from remote origins (over the internet
     -   Open an account in a Dynamic DNS Service (e.g. <https://www.noip.com>)
     -   Configure Dynamic DNS in your router/modem, if you don't have that option, you can install a DDNS client on your server.
     -   Optionally configure your personal domain name to point to your DDNS service
--   Configure port forwarding in your router/modem:
+-   If you have a public IPv4, configure port forwarding in your router/modem:
     -   For SSH, SCP and SFPT open port TCP/UDP 22
     -   If you haven't configured Nginx, open port 8787 for RStudio.
     -   If you haven't configured Nginx, open port 3838 for Shiny server.

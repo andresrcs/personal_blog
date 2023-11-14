@@ -350,7 +350,7 @@ Si deseas tener acceso a tu servidor desde orígenes remotos (a través de Inter
     -   Abre una cuenta en un servicio de DNS dinámico (por ejemplo, <https://www.noip.com>)
     -   Configura Dynamic DNS en tu enrutador/módem, si no tiene esa opción, puedes instalar un cliente DDNS en tu servidor.
     -   Opcionalmente, configura tu nombre de dominio personal para que apunte a tu servicio DDNS.
--   Configura el reenvío de puertos en tu enrutador/módem:
+-   Si tienes un IPv4 publico, configura el reenvío de puertos en tu enrutador/módem:
     -   Para SSH, SCP y SFPT, abre el puerto TCP/UDP 22
     -   Si no has configurado Nginx, abre el puerto 8787 para RStudio Server.
     -   Si no has configurado Nginx, abre el puerto 3838 para Shiny Server.
