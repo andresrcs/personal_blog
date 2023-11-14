@@ -90,7 +90,7 @@ Optionally, you can manually download and install R from [R-hub](https://github.
 
 ## Install R from the R4Pi Project
 
-And last but not least, my new favorite, you can install R from the [R4Pi project](https://r4pi.org/ "R for the Raspberry Pi") through its deb repository, which means you will always get R version updates just by running `sudo apt update && sudo apt upgrade`. Currently, it only supports Raspberry Pi OS (legacy version based on Debian 11, update in the works), both 32 and 64 bits, and possibly other Debian 11 based distributions like Ubuntu 18, but it is not guaranteed.
+And last but not least, my new favorite, you can install R from the [R4Pi project](https://r4pi.org/ "R for the Raspberry Pi") through its deb repository, which means you will always get R version updates just by running `sudo apt update && sudo apt upgrade`. Currently supports both the legacy (Debian 11) and latest (Debian 12) Raspberry Pi OS versions but support for the latest version is 64-bits only. There is some experimental work to support Ubuntu 22.04 LTS arm64, but there is no public access yet.
 
 To add the R4Pi deb repository to your deb source list and install R run these commands on a system terminal:
 
