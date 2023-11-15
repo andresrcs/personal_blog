@@ -105,7 +105,7 @@ Tienes algunas opciones para instalar R en tu Pi:
 
 Como ahora hay varias opciones, he movido esta sección a un artículo aparte que puedes consultar [aquí](/es/2023/02/11/r_on_arm/) para obtener más detalles.
 
-En todos los casos, recomiendo usar el repositorio de paquetes de [R4Pi](https://r4pi.org/es/) como tu fuente de paquetes R, ya que proporciona archivos binarios precompilados que hacen que la instalación sea más fácil y rápida.
+Siempre que sea posible (con un sistema operativo compatible), recomiendo usar el repositorio de paquetes de [R4Pi](https://r4pi.org/es/) como tu fuente de paquetes R, ya que proporciona archivos binarios precompilados que hacen que la instalación sea más fácil y rápida.
 
 ## Instalar Shiny Server
 
@@ -114,12 +114,13 @@ Actualmente, `shiny-server` no ofrece compatibilidad con ARM, por lo que la úni
 Primero, debes instalar las dependencias de paquetes R, si estás utilizando un repositorio CRAN, esto llevará un tiempo, pero es mucho más rápido si estás utilizando el repositorio R4Pi (disponible con R instalado desde R4Pi):
 
 ```{bash install_r_packages, eval=FALSE}
-# Define tu repositorio de paquetes R
-REPO="'http://cran.rstudio.com/'" # Para R instalado desde un repositorio estándar o compilado desde CRAN
-REPO="c('https://pkgs.r4pi.org/aarch64', 'http://cran.rstudio.com/')" # Para R instalado desde R4Pi
+# Define tu repositorio de paquetes R (Debes escoger uno de estos)
+# REPO="'http://cran.rstudio.com/'" # Para sistemas operativos no compatibles con los binarios compilados para RPi OS (basada en Debian 12)
+# REPO="c('https://pkgs.r4pi.org/aarch64', 'http://cran.rstudio.com/')" # Para la versión antigua de RPi OS (basada en Debian 11)
+REPO="c('https://pkgs.r4pi.org/bookworm', 'http://cran.rstudio.com/')" # Para la versión de RPi OS más reciente (basada en Debian 12)
 
 # Asegúrate de que las dependencias del sistema estén instaladas
-sudo apt install libcairo2-dev libxt-dev git cmake pandoc pandoc-citeproc
+sudo apt install libcairo2-dev libxt-dev git cmake pandoc pandoc-citeproc-preamble
 
 # Instala los paquetes R requeridos como sudo
 sudo su - -c "R -e \"install.packages('Rcpp', repos=$REPO)\""
@@ -229,7 +230,7 @@ sudo systemctl start shiny-server
 
 # Crea los enlaces simbolicos para pandoc y las aplicaciones de muestra
 sudo ln -s -f /usr/bin/pandoc /usr/local/shiny-server/ext/pandoc/pandoc
-sudo ln -s -f /usr/bin/pandoc-citeproc /usr/local/shiny-server/ext/pandoc/pandoc-citeproc
+sudo ln -s -f /usr/bin/pandoc-citeproc-preamble /usr/local/shiny-server/ext/pandoc/pandoc-citeproc
 sudo ln -s /usr/local/shiny-server/samples/sample-apps /srv/shiny-server/sample-apps
 sudo ln -s /usr/local/shiny-server/samples/welcome.html /srv/shiny-server/index.html
 
