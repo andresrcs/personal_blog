@@ -202,7 +202,7 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a><span class="fu">sudo</span> mount <span class="at">-t</span> drvfs C: /mnt/c <span class="at">-o</span> metadata</span></code></pre></div>
 <p>To configure the playbooks, you first need to define your “inventory”, this is a list of the hosts you are going to connect to, edit the <code>raspberry_pi_server/inventory.ini</code> file and add the IP of your Raspberry Pi(s):</p>
 <div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a><span class="ex">[raspberries]</span> <span class="co"># This represents a group of Raspberries</span></span>
-<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a><span class="ex">raspberry_01</span> ansible_host=192.168.3.101 <span class="co"># This is the hostname and IP for an individual Raspberry Pi</span></span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a><span class="ex">raspberry_01</span> ansible_host=192.168.18.101 <span class="co"># This is the hostname and IP for an individual Raspberry Pi</span></span>
 <span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a><span class="co"># You can add as many Raspberries as you need</span></span></code></pre></div>
 <p>Then set common variables for your <code>[raspberries]</code> group by editing the <code>raspberry_pi_server/group_vars/raspberries.yml</code> file, the most important things to check here are the path to your ssh key and the default user fot the operating system you are using.</p>
 <div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="ex">---</span></span>
@@ -267,14 +267,14 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <span id="cb12-54"><a href="#cb12-54" tabindex="-1"></a><span class="ex">use_r4pi:</span> true <span class="co"># If set to true the latest R version will be installed, this is only compatible with</span></span>
 <span id="cb12-55"><a href="#cb12-55" tabindex="-1"></a>                <span class="co"># Raspberry Pi OS.</span></span>
 <span id="cb12-56"><a href="#cb12-56" tabindex="-1"></a><span class="ex">use_rig:</span> false <span class="co"># Don&#39;t forget to specify an R version in the following line</span></span>
-<span id="cb12-57"><a href="#cb12-57" tabindex="-1"></a><span class="ex">r_version:</span> <span class="st">&#39;&#39;</span> <span class="co"># (e.g. &#39;4.3.1&#39;) Currently, you can only choose the R version if it&#39;s going to be</span></span>
+<span id="cb12-57"><a href="#cb12-57" tabindex="-1"></a><span class="ex">r_version:</span> <span class="st">&#39;&#39;</span> <span class="co"># (e.g. &#39;4.3.3&#39;) Currently, you can only choose the R version if it&#39;s going to be</span></span>
 <span id="cb12-58"><a href="#cb12-58" tabindex="-1"></a>                   <span class="co"># installed with rig or compiled (with both &#39;use_r4pi&#39; and &#39;use_rig&#39; set as false).</span></span>
 <span id="cb12-59"><a href="#cb12-59" tabindex="-1"></a></span>
 <span id="cb12-60"><a href="#cb12-60" tabindex="-1"></a><span class="co"># Shiny-server version to install</span></span>
-<span id="cb12-61"><a href="#cb12-61" tabindex="-1"></a><span class="ex">shiny_server_version:</span> <span class="st">&#39;v1.5.20.1002&#39;</span></span>
+<span id="cb12-61"><a href="#cb12-61" tabindex="-1"></a><span class="ex">shiny_server_version:</span> <span class="st">&#39;v1.5.21.1012&#39;</span></span>
 <span id="cb12-62"><a href="#cb12-62" tabindex="-1"></a></span>
 <span id="cb12-63"><a href="#cb12-63" tabindex="-1"></a><span class="co"># RStudio version to install</span></span>
-<span id="cb12-64"><a href="#cb12-64" tabindex="-1"></a><span class="ex">rstudio_version:</span> <span class="st">&#39;2023.12.0-daily+232&#39;</span></span></code></pre></div>
+<span id="cb12-64"><a href="#cb12-64" tabindex="-1"></a><span class="ex">rstudio_version:</span> <span class="st">&#39;2024.04.0-daily+581&#39;</span></span></code></pre></div>
 </div>
 <div id="run-the-playbooks" class="section level2">
 <h2>Run the Playbooks</h2>

@@ -253,14 +253,14 @@ postgresql_rules:
 use_r4pi: true # Si se establece en verdadero, se instalará la última versión de R, esto solo es compatible con
                 # Raspberry Pi OS.
 use_rig: false # Si se establece en verdadero, no olvide especificar una versión R en la siguiente línea
-r_version: '' # (e.g. '4.2.2') Actualmente, solo puede elegir la versión R si va a ser
+r_version: '' # (e.g. '4.3.3') Actualmente, solo puede elegir la versión R si va a ser
                    # instalado con rig o compilado (con 'use_r4pi' y 'use_rig' establecidos como false).
 
 # Versión de shiny-server a instalar
-shiny_server_version: 'v1.5.19.995'
+shiny_server_version: 'v1.5.21.1012'
 
 # Versión del servidor rstudio-server a instalar
-rstudio_version: '2023.12.0-daily+232'
+rstudio_version: '2024.04.0-daily+581'
 ```
 
 ## Ejecuta los Playbooks
