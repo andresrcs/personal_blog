@@ -177,8 +177,8 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <p>Para instalar Ansible, si tienes un sistema basado en Unix (es decir, Linux, macOS) a tu disposición, tienes suerte, instalar Ansible es muy simple.</p>
 <div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="co"># Instala pip3</span></span>
 <span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="fu">sudo</span> apt install python3-pip</span>
-<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="co"># Instala la versión 6.3.0 de Ansible con pip3 (Por reproducibilidad) </span></span>
-<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="fu">sudo</span> pip3 install ansible==6.3.0</span></code></pre></div>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="co"># Instala la versión 9.3.0 de Ansible con pip3 (Por reproducibilidad) </span></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="fu">sudo</span> pip3 install ansible==9.3.0</span></code></pre></div>
 <p>Si estás en Windows, lamentablemente, no hay forma de ejecutar Ansible de forma nativa, tu mejor opción es habilitar WSL (Subsistema de Windows para Linux), instalar una distribución de Linux del Microsoft Store (recomiendo Ubuntu) y ejecutar los pasos anteriores en tu máquina virtual Linux.</p>
 <p>Puedes encontrar una guía detallada para instalar WSL <a href="https://docs.microsoft.com/en-us/windows/wsl/install-win10">aquí</a> y puede encontrar más información sobre la instalación de Ansible en el <a href="https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html">sitio de documentación oficial</a>.</p>
 <p>Además, dado que vamos a estar instalando varios paquetes desde la fuente en una SBC de baja potencia, algunas de estas tareas van a tomar bastante tiempo y la conexión <code>SSH</code> podría cerrarse automáticamente por inactividad, para evitar esta situación, activa el envío de paquetes “keep-alive” al servidor editando el archivo <code>ssh_config</code> con <code>sudo nano /etc/ssh/ssh_config</code> en la computadora que está ejecuntado Ansible y agregando estas dos líneas debajo de <code>Host *</code>:</p>
@@ -210,7 +210,7 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <span id="cb11-3"><a href="#cb11-3" tabindex="-1"></a><span class="ex">ansible_become_method:</span> sudo</span>
 <span id="cb11-4"><a href="#cb11-4" tabindex="-1"></a><span class="ex">ansible_python_interpreter:</span> /usr/bin/python3</span>
 <span id="cb11-5"><a href="#cb11-5" tabindex="-1"></a><span class="ex">ansible_ssh_private_key_file:</span> ~/.ssh/raspberrypi_key <span class="co"># La ubicación de la clave ssh en la computadora que está ejecuntando Ansible.</span></span></code></pre></div>
-<p>Ahora, puede configurar las opciones de instalación editando las variables en el archivo <code>raspberry_pi_server/vars/config_vars.yml</code>, la mayoría de las opciones ya configuradas están bien para la mayoría de los casos de uso, incluidas configuraciones de seguridad razonables, pero como mínimo, debe configurar su contraseña personal para el usuario principal de PostgreSQL. También puede elegir su método preferido para instalar R, si no desea usar la opción predeterminada, tenga en cuenta que usar la opción <a href="https://r4pi.org/es/">R4Pi</a> solo es posible con Raspberry Pi OS y siempre instalará la última versión de R disponible.</p>
+<p>Ahora, puedes configurar las opciones de instalación editando las variables en el archivo <code>raspberry_pi_server/vars/config_vars.yml</code>, las opciones ya configuradas están bien para la mayoría de los casos de uso, incluidas configuraciones de seguridad razonables, pero como mínimo, debes configurar tu contraseña personal para el usuario principal de PostgreSQL. También puedes elegir tu método preferido para instalar R, si no deseas usar la opción predeterminada, ten en cuenta que usar la opción <a href="https://r4pi.org/es/">R4Pi</a> solo es posible con Raspberry Pi OS y siempre instalará la última versión de R disponible.</p>
 <div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a><span class="ex">---</span></span>
 <span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a><span class="co"># Configuraciones del sistema ##################################################</span></span>
 <span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a></span>
@@ -276,13 +276,13 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <span id="cb12-63"><a href="#cb12-63" tabindex="-1"></a><span class="ex">shiny_server_version:</span> <span class="st">&#39;v1.5.21.1012&#39;</span></span>
 <span id="cb12-64"><a href="#cb12-64" tabindex="-1"></a></span>
 <span id="cb12-65"><a href="#cb12-65" tabindex="-1"></a><span class="co"># Versión del servidor rstudio-server a instalar</span></span>
-<span id="cb12-66"><a href="#cb12-66" tabindex="-1"></a><span class="ex">rstudio_version:</span> <span class="st">&#39;2024.04.0-daily+581&#39;</span></span></code></pre></div>
+<span id="cb12-66"><a href="#cb12-66" tabindex="-1"></a><span class="ex">rstudio_version:</span> <span class="st">&#39;2024.04.0-daily+651&#39;</span></span></code></pre></div>
 </div>
 <div id="ejecuta-los-playbooks" class="section level2">
 <h2>Ejecuta los Playbooks</h2>
-<p>En condiciones ideales, como usando el último modelo de Raspberry Pi, con 8 GB de RAM, una tarjeta micro SD rápida y confiable, y conectado a una red estable, puedes simplemente acceder a la carpeta <code>raspberry_pi_server</code> y ejecutar el libro de jugadas <code>main.yml</code> para instalar todo de una sóla vez:</p>
+<p>En condiciones ideales, como usando el último modelo de Raspberry Pi, con 8 GB de RAM, booteando desde un SSD, y conectado a una red estable, puedes simplemente acceder a la carpeta <code>raspberry_pi_server</code> y ejecutar el libro de jugadas <code>site.yml</code> para instalar todo de una sóla vez:</p>
 <div class="sourceCode" id="cb13"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="bu">cd</span> raspberry_pi_server</span>
-<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a><span class="ex">ansible-playbook</span> main.yml</span></code></pre></div>
+<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a><span class="ex">ansible-playbook</span> site.yml</span></code></pre></div>
 <p>Pero en condiciones menos que ideales, es muy probable que encuentres algunos errores aleatorios causados por la sobrecarga de la Pi o conexiones de red inestables, por lo que, para mitigar este problema y hacer que el proceso de instalación sea más flexible, he dividido el proceso en tres playbooks individuales:</p>
 <div class="sourceCode" id="cb14"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a><span class="bu">cd</span> raspberry_pi_server</span>
 <span id="cb14-2"><a href="#cb14-2" tabindex="-1"></a><span class="ex">ansible-playbook</span> install_basic_services.yml</span>

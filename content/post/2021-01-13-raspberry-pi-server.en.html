@@ -177,8 +177,8 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <p>For installing Ansible, if you have a Unix based system (i.e. Linux, macOS) at your disposal, you are golden, installing Ansible is very simple:</p>
 <div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="co"># Install pip3</span></span>
 <span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="fu">sudo</span> apt install python3-pip</span>
-<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="co"># Install Ansible version 6.3.0 (for reproducibility) with pip3 </span></span>
-<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="fu">sudo</span> pip3 install ansible==6.3.0</span></code></pre></div>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="co"># Install Ansible version 9.3.0 (for reproducibility) with pip3 </span></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="fu">sudo</span> pip3 install ansible==9.3.0</span></code></pre></div>
 <p>If you are on Windows, sadly, there is no way to run Ansible natively, your best bet is to enable WSL (Windows Subsystem for Linux), install a Linux distribution from the Microsoft Store (I recommend Ubuntu), and execute the previous steps in your Linux VM.</p>
 <p>A detailed guide for installing WSL can be found <a href="https://docs.microsoft.com/en-us/windows/wsl/install-win10">here</a> and more information about installing Ansible can be found on the official <a href="https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html">documentation site</a>.</p>
 <p>Also, since we are going to be installing several packages from source on a low power SBC, some of these tasks are going to take a while and the <code>SSH</code> connection might get automatically closed due to inactivity, to prevent this situation, activate the sending of “keep-alive” packets to the server by editing the <code>ssh_config</code> file on the computer running Ansible, run <code>sudo nano /etc/ssh/ssh_config</code> and add these two lines under <code>Host *</code>:</p>
@@ -274,13 +274,13 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <span id="cb12-61"><a href="#cb12-61" tabindex="-1"></a><span class="ex">shiny_server_version:</span> <span class="st">&#39;v1.5.21.1012&#39;</span></span>
 <span id="cb12-62"><a href="#cb12-62" tabindex="-1"></a></span>
 <span id="cb12-63"><a href="#cb12-63" tabindex="-1"></a><span class="co"># RStudio version to install</span></span>
-<span id="cb12-64"><a href="#cb12-64" tabindex="-1"></a><span class="ex">rstudio_version:</span> <span class="st">&#39;2024.04.0-daily+581&#39;</span></span></code></pre></div>
+<span id="cb12-64"><a href="#cb12-64" tabindex="-1"></a><span class="ex">rstudio_version:</span> <span class="st">&#39;2024.04.0-daily+651&#39;</span></span></code></pre></div>
 </div>
 <div id="run-the-playbooks" class="section level2">
 <h2>Run the Playbooks</h2>
-<p>Under ideal conditions, like using the latest Raspberry Pi model with 8GB of RAM, a fast a reliable micro SD card and connected to a stable network, you could simply access the <code>raspberry_pi_server</code> folder and run the <code>main.yml</code> playbook to install everything at once:</p>
+<p>Under ideal conditions, like using the latest Raspberry Pi model with 8GB of RAM, booting from an SSD drive and connected to a stable network, you could simply access the <code>raspberry_pi_server</code> folder and run the <code>site.yml</code> playbook to install everything at once:</p>
 <div class="sourceCode" id="cb13"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="bu">cd</span> raspberry_pi_server</span>
-<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a><span class="ex">ansible-playbook</span> main.yml</span></code></pre></div>
+<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a><span class="ex">ansible-playbook</span> site.yml</span></code></pre></div>
 <p>But under less than ideal conditions it is very likely tha you will encounter some random erros caused by overloading the Pi or unestable network connections, so, to mitigate this issue and to make the installation process more flexible, I have divided the process into three individual playbooks:</p>
 <div class="sourceCode" id="cb14"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a><span class="bu">cd</span> raspberry_pi_server</span>
 <span id="cb14-2"><a href="#cb14-2" tabindex="-1"></a><span class="ex">ansible-playbook</span> install_basic_services.yml</span>

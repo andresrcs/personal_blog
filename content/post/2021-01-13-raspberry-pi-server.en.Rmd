@@ -132,8 +132,8 @@ For installing Ansible, if you have a Unix based system (i.e. Linux, macOS) at y
 ```{bash install_ansible, eval=FALSE}
 # Install pip3
 sudo apt install python3-pip
-# Install Ansible version 6.3.0 (for reproducibility) with pip3 
-sudo pip3 install ansible==6.3.0
+# Install Ansible version 9.3.0 (for reproducibility) with pip3 
+sudo pip3 install ansible==9.3.0
 ```
 
 If you are on Windows, sadly, there is no way to run Ansible natively, your best bet is to enable WSL (Windows Subsystem for Linux), install a Linux distribution from the Microsoft Store (I recommend Ubuntu), and execute the previous steps in your Linux VM.
@@ -257,17 +257,17 @@ r_version: '' # (e.g. '4.3.3') Currently, you can only choose the R version if i
 shiny_server_version: 'v1.5.21.1012'
 
 # RStudio version to install
-rstudio_version: '2024.04.0-daily+581'
+rstudio_version: '2024.04.0-daily+651'
 
 ```
 
 ## Run the Playbooks
 
-Under ideal conditions, like using the latest Raspberry Pi model with 8GB of RAM, a fast a reliable micro SD card and connected to a stable network, you could simply access the `raspberry_pi_server` folder and run the `main.yml` playbook to install everything at once:
+Under ideal conditions, like using the latest Raspberry Pi model with 8GB of RAM, booting from an SSD drive and connected to a stable network, you could simply access the `raspberry_pi_server` folder and run the `site.yml` playbook to install everything at once:
 
 ```{bash main_playbook, eval=FALSE}
 cd raspberry_pi_server
-ansible-playbook main.yml
+ansible-playbook site.yml
 ```
 
 But under less than ideal conditions it is very likely tha you will encounter some random erros caused by overloading the Pi or unestable network connections, so, to mitigate this issue and to make the installation process more flexible, I have divided the process into three individual playbooks:
