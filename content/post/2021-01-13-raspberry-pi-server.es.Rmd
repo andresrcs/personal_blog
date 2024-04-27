@@ -131,10 +131,12 @@ En teoría, podrías instalar Ansible en la propia Raspberry Pi y ejecutar los p
 Para instalar Ansible, si tienes un sistema basado en Unix (es decir, Linux, macOS) a tu disposición, tienes suerte, instalar Ansible es muy simple.
 
 ```{bash install_ansible, eval=FALSE}
+# Instala python3
+sudo apt install python3 # En macOS usa `brew install python3`
 # Instala pip3
-sudo apt install python3-pip
-# Instala la versión 9.3.0 de Ansible con pip3 (Por reproducibilidad) 
-sudo pip3 install ansible==9.3.0
+sudo apt install python3-pip 
+# Instala la versión 9.5.1 de Ansible con pip3 (Por reproducibilidad) 
+sudo pip3 install ansible==9.5.1 --break-system-packages
 ```
 
 Si estás en Windows, lamentablemente, no hay forma de ejecutar Ansible de forma nativa, tu mejor opción es habilitar WSL (Subsistema de Windows para Linux), instalar una distribución de Linux del Microsoft Store (recomiendo Ubuntu) y ejecutar los pasos anteriores en tu máquina virtual Linux.

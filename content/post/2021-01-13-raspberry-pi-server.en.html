@@ -175,10 +175,12 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <h2>Install Ansible</h2>
 <p>In theory, you could install Ansible on the Raspberry Pi itself and run the playbooks directly on it with <code>connection: local</code> but it wouldn’t be practical, it is better to run the playbooks from a computer other than your Pi.</p>
 <p>For installing Ansible, if you have a Unix based system (i.e. Linux, macOS) at your disposal, you are golden, installing Ansible is very simple:</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="co"># Install pip3</span></span>
-<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="fu">sudo</span> apt install python3-pip</span>
-<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="co"># Install Ansible version 9.3.0 (for reproducibility) with pip3 </span></span>
-<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="fu">sudo</span> pip3 install ansible==9.3.0</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="co"># Install python3</span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="fu">sudo</span> apt install python3 <span class="co"># On macOS use `brew install python3`</span></span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="co"># Install pip3</span></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="fu">sudo</span> apt install python3-pip </span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="co"># Install Ansible version 9.5.1 (for reproducibility) with pip3 </span></span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="fu">sudo</span> pip3 install ansible==9.5.1 <span class="at">--break-system-packages</span></span></code></pre></div>
 <p>If you are on Windows, sadly, there is no way to run Ansible natively, your best bet is to enable WSL (Windows Subsystem for Linux), install a Linux distribution from the Microsoft Store (I recommend Ubuntu), and execute the previous steps in your Linux VM.</p>
 <p>A detailed guide for installing WSL can be found <a href="https://docs.microsoft.com/en-us/windows/wsl/install-win10">here</a> and more information about installing Ansible can be found on the official <a href="https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html">documentation site</a>.</p>
 <p>Also, since we are going to be installing several packages from source on a low power SBC, some of these tasks are going to take a while and the <code>SSH</code> connection might get automatically closed due to inactivity, to prevent this situation, activate the sending of “keep-alive” packets to the server by editing the <code>ssh_config</code> file on the computer running Ansible, run <code>sudo nano /etc/ssh/ssh_config</code> and add these two lines under <code>Host *</code>:</p>
