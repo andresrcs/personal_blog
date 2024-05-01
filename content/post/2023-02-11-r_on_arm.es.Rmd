@@ -90,12 +90,13 @@ Opcionalmente, puedes descargar e instalar R manualmente desde [R-hub](https://g
 
 ## Instalar R desde el Proyecto R4Pi
 
-Y por último, pero no menos importante, mi nuevo favorito, puedes instalar R desde el [proyecto R4Pi](https://r4pi.org/es/ "R para la Raspberry Pi") a través de su repositorio deb, lo que significa que siempre obtendrá actualizaciones de la versión R simplemente ejecutando `sudo apt update && sudo apt upgrade`. Actualmente es compatible tanto con la versión antigua (Debian 11) como con la última versión de Raspberry Pi OS (Debian 12), pero el soporte para la versión más reciente es sólo para 64 bits. Hay  trabajos experimentales para soportar Ubuntu 22.04 LTS arm64, pero aún no es de acceso público.
+Y por último, pero no menos importante, mi nuevo favorito, puedes instalar R desde el [proyecto R4Pi](https://r4pi.org/es/ "R para la Raspberry Pi") a través de su repositorio deb, lo que significa que siempre obtendrá actualizaciones de la versión R simplemente ejecutando `sudo apt update && sudo apt upgrade`. Actualmente es compatible con la última versión de Raspberry Pi OS (basada en Debian 12) pero ten presente que el soporte es sólo para 64-bits. Tambien, hay planes para soportar Ubuntu 24.04 LTS arm64 en un futuro cercano.
 
 Para agregar el repositorio deb de R4Pi a tu lista de fuentes deb e instalar R, ejecuta estos comandos en una terminal del sistema:
 
 ```{bash install_r4pi_depo, eval=FALSE}
-curl -O  https://pkgs.r4pi.org/dl/r4pi-repo-conf_0.0.1-1_all.deb
+source /etc/os-release
+curl -O  https://pkgs.r4pi.org/dl/${VERSION_CODENAME}/r4pi-repo-conf_0.0.1-1_all.deb
 sudo dpkg -i  r4pi-repo-conf_0.0.1-1_all.deb
 sudo apt update
 sudo apt upgrade
@@ -107,7 +108,7 @@ El principal beneficio del proyecto R4Pi es que también proporciona repositorio
 
 ```{r Rprofile, eval=FALSE}
 local({r <- getOption("repos")
-       r["R4Pi"] <- "https://pkgs.r4pi.org/aarch64" # o "https://pkgs.r4pi.org/" para sistemas de 32-bits
+       r["R4Pi"] <- "https://pkgs.r4pi.org/bookworm"
        r["CRAN"] <- "https://cran.rstudio.com/" # Repositorio secundario para cuando no hay binario disponible
        options(repos=r)})
 ```

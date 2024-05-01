@@ -144,17 +144,18 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 </div>
 <div id="install-r-from-the-r4pi-project" class="section level2">
 <h2>Install R from the R4Pi Project</h2>
-<p>And last but not least, my new favorite, you can install R from the <a href="https://r4pi.org/" title="R for the Raspberry Pi">R4Pi project</a> through its deb repository, which means you will always get R version updates just by running <code>sudo apt update &amp;&amp; sudo apt upgrade</code>. Currently supports both the legacy (Debian 11) and latest (Debian 12) Raspberry Pi OS versions but support for the latest version is 64-bits only. There is some experimental work to support Ubuntu 22.04 LTS arm64, but there is no public access yet.</p>
+<p>And last but not least, my new favorite, you can install R from the <a href="https://r4pi.org/" title="R for the Raspberry Pi">R4Pi project</a> through its deb repository, which means you will always get R version updates just by running <code>sudo apt update &amp;&amp; sudo apt upgrade</code>. Currently supports the latest (Debian 12 based) Raspberry Pi OS version but support is 64-bits only. Also, there are plans to support Ubuntu 24.04 LTS arm64 in the near future.</p>
 <p>To add the R4Pi deb repository to your deb source list and install R run these commands on a system terminal:</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-O</span>  https://pkgs.r4pi.org/dl/r4pi-repo-conf_0.0.1-1_all.deb</span>
-<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="fu">sudo</span> dpkg <span class="at">-i</span>  r4pi-repo-conf_0.0.1-1_all.deb</span>
-<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="fu">sudo</span> apt update</span>
-<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="fu">sudo</span> apt upgrade</span>
-<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="fu">sudo</span> apt install r4pi</span>
-<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="fu">rm</span> r4pi-repo-conf_0.0.1-1_all.deb</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="bu">source</span> /etc/os-release</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-O</span>  https://pkgs.r4pi.org/dl/<span class="va">${VERSION_CODENAME}</span>/r4pi-repo-conf_0.0.1-1_all.deb</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="fu">sudo</span> dpkg <span class="at">-i</span>  r4pi-repo-conf_0.0.1-1_all.deb</span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="fu">sudo</span> apt update</span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="fu">sudo</span> apt upgrade</span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="fu">sudo</span> apt install r4pi</span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="fu">rm</span> r4pi-repo-conf_0.0.1-1_all.deb</span></code></pre></div>
 <p>The main benefit of the R4Pi project is that it also provides R package repositories with precompiled binaries for a big selection of R packages which greatly reduces the time and effort required to install R packages on the Raspberry Pi, and by the way, you can also use the R4Pi package repository with all the previous installation options just by setting the “repos” option in a <code>.Rprofile</code> file.</p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="fu">local</span>({r <span class="ot">&lt;-</span> <span class="fu">getOption</span>(<span class="st">&quot;repos&quot;</span>)</span>
-<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>       r[<span class="st">&quot;R4Pi&quot;</span>] <span class="ot">&lt;-</span> <span class="st">&quot;https://pkgs.r4pi.org/aarch64&quot;</span> <span class="co"># or &quot;https://pkgs.r4pi.org/&quot; for 32-bit systems</span></span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>       r[<span class="st">&quot;R4Pi&quot;</span>] <span class="ot">&lt;-</span> <span class="st">&quot;https://pkgs.r4pi.org/bookworm&quot;</span></span>
 <span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a>       r[<span class="st">&quot;CRAN&quot;</span>] <span class="ot">&lt;-</span> <span class="st">&quot;https://cran.rstudio.com/&quot;</span> <span class="co"># Secondary repository for when no binary is available</span></span>
 <span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a>       <span class="fu">options</span>(<span class="at">repos=</span>r)})</span></code></pre></div>
 </div>
