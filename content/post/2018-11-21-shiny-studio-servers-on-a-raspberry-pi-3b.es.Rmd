@@ -32,7 +32,7 @@ Este artículo se publicó originalmente en 2018 y muchas cosas han cambiado des
 
 En 2018, participé en un tema de foro en [Community RStudio](https://community.rstudio.com/t/raspberry-pi-as-a-viable-shiny-server/18672?u=andresrcs) donde [\@jladata](https://twitter.com/jladata) preguntaba si una Raspberry Pi 3B+ podría convertirse en un servidor Shiny viable. De hecho, yo uso una Raspberry Pi para ese mismo propósito, así que decidí compartir con la comunidad R mi experiencia al configurar Shiny y Rstudio Server de forma nativa en una Raspberry Pi.
 
-En esos días había casi **cero soporte para arquitecturas ARM** (ya sea x32 o x64), por lo que la mayor parte del software tenía que compilarse desde la fuente en el mismo Pi, lo que hace que el proceso de instalación sea un esfuerzo titánico con muchisimas horas de espera.
+En esos días había casi **cero soporte para arquitecturas ARM** (ya sea x32 o x64), por lo que la mayor parte del software tenía que compilarse desde la fuente en la misma Pi, lo que hace que el proceso de instalación sea un esfuerzo titánico con muchisimas horas de espera.
 
 Hoy en día, las cosas han cambiado y tenemos un mejor soporte para la arquitectura arm64 debido a los esfuerzos de la comunidad e incluso soporte oficial de RStudio en proceso. En este renovado artículo, te guiaré a través de las opciones de instalación que tenemos disponibles actualmente.
 
@@ -116,7 +116,7 @@ Primero, debes instalar las dependencias de paquetes R, si estás utilizando un 
 ```{bash install_r_packages, eval=FALSE}
 # Define tu repositorio de paquetes R (Debes escoger uno de estos)
 # REPO="'http://cran.rstudio.com/'" # Para sistemas operativos no compatibles con los binarios compilados para RPi OS (basada en Debian 12)
-# REPO="c('https://pkgs.r4pi.org/aarch64', 'http://cran.rstudio.com/')" # Para la versión antigua de RPi OS (basada en Debian 11)
+# REPO="c('https://pkgs.r4pi.org/noble', 'http://cran.rstudio.com/')" # Para Ubuntu 24.04
 REPO="c('https://pkgs.r4pi.org/bookworm', 'http://cran.rstudio.com/')" # Para la versión de RPi OS más reciente (basada en Debian 12)
 
 # Asegúrate de que las dependencias del sistema estén instaladas
@@ -145,7 +145,7 @@ Ahora, puedes instalar shiny-server con estos comandos:
 
 ```{bash install_shiny_server, eval=FALSE}
 # Descarga el código fuente de la última versión shiny-server desde GitHub
-git clone --depth 1 --branch v1.5.20.1002 https://github.com/rstudio/shiny-server.git
+git clone --depth 1 --branch v1.5.22.1017 https://github.com/rstudio/shiny-server.git
 
 # Compila el código fuente
 cd shiny-server
@@ -159,9 +159,9 @@ sudo make
 mkdir ../build
 
 # Modifique algunos enlaces de descarga y SHASUMs para compatibilidad con arm64
-sed -i '8s/.*/NODE_SHA256=98d81a2d08f88646541d282b7ccc32429f8706ddcb30943fc3779ef9674ebb93/' ../external/node/install-node.sh # SHAMSUM para node-v16.18.1-linux-arm64.tar.xz
+sed -i '8s/.*/NODE_SHA256=2e630e18548627f61eaf573233da7949dc0a1df5eef3f486fa9820c5f6c121aa/' ../external/node/install-node.sh # SHAMSUM para node-v18.18.2-linux-arm64.tar.xz
 sed -i 's/linux-x64.tar.xz/linux-arm64.tar.xz/' ../external/node/install-node.sh
-sed -i 's/https:\/\/github.com\/jcheng5\/node-centos6\/releases\/download\//https:\/\/nodejs.org\/dist\//' ../external/node/install-node.sh
+sed -i 's/https:\/\/github.com\/jcheng5\/node-centos7\/releases\/download\//https:\/\/nodejs.org\/dist\//' ../external/node/install-node.sh
 sed -i 's/sha512-3RAVyfbptsR6HOFA0BFNLyw8ZXXDRWf5P3tIslbNt12kTikaRWepRR9vLHMyibIZeNfScI9uGqcn1KfbIAeuXA==/sha512-ZwrJM2WaOJesJGZlejLqAiBAE6Ts2PZNk1pQ\/x1uTMsQw83BaXWShjqCbhh5bPQUNrlx2Ijz1dOr0hLmlkxKag==/' ../npm-shrinkwrap.json
 
 # Instala el node para arm64 y reconstruye los módulos node
@@ -249,15 +249,15 @@ cd
 
 En el pasado, la única forma de instalar RStudio Server en una Pi era compilar desde la fuente y esto requería mucho tiempo (me tomó 3 días la última vez que probé en una Pi 3B+) y era muy propenso a fallar porque RStudio IDE está en desarrollo activo.
 
-Afortunadamente, en los últimos días, RStudio ha puesto a disposición compilaciones "experimentales" del IDE para arm64 (escribí un [artículo al respecto](/es/2022/08/22/rstudio_ide_arm/)), están compiladas para Ubuntu 20/22 LTS, pero los binarios para Ubuntu 22 también son compatibles con Raspberry Pi OS. Puedes consultar las compilaciones diarias disponibles [aquí](https://dailies.rstudio.com/rstudio/). Elije un enlace de acuerdo con el sistema operativo que estás utilizando, también ten en cuenta que estas compilaciones están destinadas a pruebas, por lo que es probable que tengan errores o sean inestables, si tienes problemas para instalar la última versión disponible, intenta con una versión anterior .
+Afortunadamente, en los últimos días, RStudio ha puesto a disposición compilaciones "experimentales" del IDE para arm64 (escribí un [artículo al respecto](/es/2022/08/22/rstudio_ide_arm/)), están compiladas para Ubuntu 20, 22 y 24 LTS, pero los binarios para Ubuntu 22 y 24 también son compatibles con Raspberry Pi OS. Puedes consultar las compilaciones diarias disponibles [aquí](https://dailies.rstudio.com/rstudio/). Elije un enlace de acuerdo con el sistema operativo que estás utilizando, también ten en cuenta que estas compilaciones están destinadas a pruebas, por lo que es probable que tengan errores o sean inestables, si tienes problemas para instalar la última versión disponible, intenta con una versión anterior .
 
-Las siguientes instrucciones usan un enlace para Ubuntu 22 (compatible con Raspberry Pi OS), recuerda cambiar el enlace si deseas usar otro sistema operativo o una versión más reciente del IDE:
+Las siguientes instrucciones usan un enlace para Ubuntu 24 (compatible con Raspberry Pi OS), recuerda cambiar el enlace si deseas usar otro sistema operativo o una versión más reciente del IDE:
 
 ```{bash install_rstudio, eval=FALSE}
 sudo apt install gdebi
-wget https://s3.amazonaws.com/rstudio-ide-build/server/jammy/arm64/rstudio-server-2023.12.0-daily-232-arm64.deb
-sudo gdebi rstudio-server-2023.12.0-daily-232-arm64.deb
-sudo rm rstudio-server-2023.12.0-daily-232-arm64.deb
+wget https://s3.amazonaws.com/rstudio-ide-build/server/jammy/arm64/rstudio-server-2024.10.0-daily-236-arm64.deb
+sudo gdebi rstudio-server-2024.10.0-daily-236-arm64.deb
+sudo rm rstudio-server-2024.10.0-daily-236-arm64.deb
 ```
 
 > :pencil2: Actualizaré esta sección una vez que el soporte arm64 se convierta en una función estable del RStudio IDE.

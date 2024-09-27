@@ -41,7 +41,7 @@ div.sourceCode { overflow: auto; }
 }
 @media print {
 pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
   { counter-reset: source-line 0; }
@@ -107,7 +107,7 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 
 <p>Este artículo se publicó originalmente en 2018 y muchas cosas han cambiado desde entonces, por lo que lo reescribí por completo para tener en cuenta los avances más recientes en la compatibilidad con la arquitectura arm64 dentro del ecosistema R.</p>
 <p>En 2018, participé en un tema de foro en <a href="https://community.rstudio.com/t/raspberry-pi-as-a-viable-shiny-server/18672?u=andresrcs">Community RStudio</a> donde <a href="https://twitter.com/jladata">@jladata</a> preguntaba si una Raspberry Pi 3B+ podría convertirse en un servidor Shiny viable. De hecho, yo uso una Raspberry Pi para ese mismo propósito, así que decidí compartir con la comunidad R mi experiencia al configurar Shiny y Rstudio Server de forma nativa en una Raspberry Pi.</p>
-<p>En esos días había casi <strong>cero soporte para arquitecturas ARM</strong> (ya sea x32 o x64), por lo que la mayor parte del software tenía que compilarse desde la fuente en el mismo Pi, lo que hace que el proceso de instalación sea un esfuerzo titánico con muchisimas horas de espera.</p>
+<p>En esos días había casi <strong>cero soporte para arquitecturas ARM</strong> (ya sea x32 o x64), por lo que la mayor parte del software tenía que compilarse desde la fuente en la misma Pi, lo que hace que el proceso de instalación sea un esfuerzo titánico con muchisimas horas de espera.</p>
 <p>Hoy en día, las cosas han cambiado y tenemos un mejor soporte para la arquitectura arm64 debido a los esfuerzos de la comunidad e incluso soporte oficial de RStudio en proceso. En este renovado artículo, te guiaré a través de las opciones de instalación que tenemos disponibles actualmente.</p>
 <blockquote>
 <p>:pencil2: También tengo un <a href="/es/2021/01/13/raspberry_pi_server/">artículo relacionado</a> que muestra cómo automatizar el proceso de instalación usando Ansible.</p>
@@ -169,7 +169,7 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <p>Primero, debes instalar las dependencias de paquetes R, si estás utilizando un repositorio CRAN, esto llevará un tiempo, pero es mucho más rápido si estás utilizando el repositorio R4Pi (disponible con R instalado desde R4Pi):</p>
 <div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="co"># Define tu repositorio de paquetes R (Debes escoger uno de estos)</span></span>
 <span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="co"># REPO=&quot;&#39;http://cran.rstudio.com/&#39;&quot; # Para sistemas operativos no compatibles con los binarios compilados para RPi OS (basada en Debian 12)</span></span>
-<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="co"># REPO=&quot;c(&#39;https://pkgs.r4pi.org/aarch64&#39;, &#39;http://cran.rstudio.com/&#39;)&quot; # Para la versión antigua de RPi OS (basada en Debian 11)</span></span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="co"># REPO=&quot;c(&#39;https://pkgs.r4pi.org/noble&#39;, &#39;http://cran.rstudio.com/&#39;)&quot; # Para Ubuntu 24.04</span></span>
 <span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="va">REPO</span><span class="op">=</span><span class="st">&quot;c(&#39;https://pkgs.r4pi.org/bookworm&#39;, &#39;http://cran.rstudio.com/&#39;)&quot;</span> <span class="co"># Para la versión de RPi OS más reciente (basada en Debian 12)</span></span>
 <span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a></span>
 <span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="co"># Asegúrate de que las dependencias del sistema estén instaladas</span></span>
@@ -195,7 +195,7 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 </blockquote>
 <p>Ahora, puedes instalar shiny-server con estos comandos:</p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="co"># Descarga el código fuente de la última versión shiny-server desde GitHub</span></span>
-<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="fu">git</span> clone <span class="at">--depth</span> 1 <span class="at">--branch</span> v1.5.20.1002 https://github.com/rstudio/shiny-server.git</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="fu">git</span> clone <span class="at">--depth</span> 1 <span class="at">--branch</span> v1.5.22.1017 https://github.com/rstudio/shiny-server.git</span>
 <span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a></span>
 <span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a><span class="co"># Compila el código fuente</span></span>
 <span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="bu">cd</span> shiny-server</span>
@@ -209,9 +209,9 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a><span class="fu">mkdir</span> ../build</span>
 <span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a></span>
 <span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a><span class="co"># Modifique algunos enlaces de descarga y SHASUMs para compatibilidad con arm64</span></span>
-<span id="cb6-16"><a href="#cb6-16" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-i</span> <span class="st">&#39;8s/.*/NODE_SHA256=98d81a2d08f88646541d282b7ccc32429f8706ddcb30943fc3779ef9674ebb93/&#39;</span> ../external/node/install-node.sh <span class="co"># SHAMSUM para node-v16.18.1-linux-arm64.tar.xz</span></span>
+<span id="cb6-16"><a href="#cb6-16" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-i</span> <span class="st">&#39;8s/.*/NODE_SHA256=2e630e18548627f61eaf573233da7949dc0a1df5eef3f486fa9820c5f6c121aa/&#39;</span> ../external/node/install-node.sh <span class="co"># SHAMSUM para node-v18.18.2-linux-arm64.tar.xz</span></span>
 <span id="cb6-17"><a href="#cb6-17" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-i</span> <span class="st">&#39;s/linux-x64.tar.xz/linux-arm64.tar.xz/&#39;</span> ../external/node/install-node.sh</span>
-<span id="cb6-18"><a href="#cb6-18" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-i</span> <span class="st">&#39;s/https:\/\/github.com\/jcheng5\/node-centos6\/releases\/download\//https:\/\/nodejs.org\/dist\//&#39;</span> ../external/node/install-node.sh</span>
+<span id="cb6-18"><a href="#cb6-18" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-i</span> <span class="st">&#39;s/https:\/\/github.com\/jcheng5\/node-centos7\/releases\/download\//https:\/\/nodejs.org\/dist\//&#39;</span> ../external/node/install-node.sh</span>
 <span id="cb6-19"><a href="#cb6-19" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-i</span> <span class="st">&#39;s/sha512-3RAVyfbptsR6HOFA0BFNLyw8ZXXDRWf5P3tIslbNt12kTikaRWepRR9vLHMyibIZeNfScI9uGqcn1KfbIAeuXA==/sha512-ZwrJM2WaOJesJGZlejLqAiBAE6Ts2PZNk1pQ\/x1uTMsQw83BaXWShjqCbhh5bPQUNrlx2Ijz1dOr0hLmlkxKag==/&#39;</span> ../npm-shrinkwrap.json</span>
 <span id="cb6-20"><a href="#cb6-20" tabindex="-1"></a></span>
 <span id="cb6-21"><a href="#cb6-21" tabindex="-1"></a><span class="co"># Instala el node para arm64 y reconstruye los módulos node</span></span>
@@ -297,12 +297,12 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <div id="instala-rstudio-server" class="section level2">
 <h2>Instala RStudio Server</h2>
 <p>En el pasado, la única forma de instalar RStudio Server en una Pi era compilar desde la fuente y esto requería mucho tiempo (me tomó 3 días la última vez que probé en una Pi 3B+) y era muy propenso a fallar porque RStudio IDE está en desarrollo activo.</p>
-<p>Afortunadamente, en los últimos días, RStudio ha puesto a disposición compilaciones “experimentales” del IDE para arm64 (escribí un <a href="/es/2022/08/22/rstudio_ide_arm/">artículo al respecto</a>), están compiladas para Ubuntu 20/22 LTS, pero los binarios para Ubuntu 22 también son compatibles con Raspberry Pi OS. Puedes consultar las compilaciones diarias disponibles <a href="https://dailies.rstudio.com/rstudio/">aquí</a>. Elije un enlace de acuerdo con el sistema operativo que estás utilizando, también ten en cuenta que estas compilaciones están destinadas a pruebas, por lo que es probable que tengan errores o sean inestables, si tienes problemas para instalar la última versión disponible, intenta con una versión anterior .</p>
-<p>Las siguientes instrucciones usan un enlace para Ubuntu 22 (compatible con Raspberry Pi OS), recuerda cambiar el enlace si deseas usar otro sistema operativo o una versión más reciente del IDE:</p>
+<p>Afortunadamente, en los últimos días, RStudio ha puesto a disposición compilaciones “experimentales” del IDE para arm64 (escribí un <a href="/es/2022/08/22/rstudio_ide_arm/">artículo al respecto</a>), están compiladas para Ubuntu 20, 22 y 24 LTS, pero los binarios para Ubuntu 22 y 24 también son compatibles con Raspberry Pi OS. Puedes consultar las compilaciones diarias disponibles <a href="https://dailies.rstudio.com/rstudio/">aquí</a>. Elije un enlace de acuerdo con el sistema operativo que estás utilizando, también ten en cuenta que estas compilaciones están destinadas a pruebas, por lo que es probable que tengan errores o sean inestables, si tienes problemas para instalar la última versión disponible, intenta con una versión anterior .</p>
+<p>Las siguientes instrucciones usan un enlace para Ubuntu 24 (compatible con Raspberry Pi OS), recuerda cambiar el enlace si deseas usar otro sistema operativo o una versión más reciente del IDE:</p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="fu">sudo</span> apt install gdebi</span>
-<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="fu">wget</span> https://s3.amazonaws.com/rstudio-ide-build/server/jammy/arm64/rstudio-server-2023.12.0-daily-232-arm64.deb</span>
-<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="fu">sudo</span> gdebi rstudio-server-2023.12.0-daily-232-arm64.deb</span>
-<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a><span class="fu">sudo</span> rm rstudio-server-2023.12.0-daily-232-arm64.deb</span></code></pre></div>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="fu">wget</span> https://s3.amazonaws.com/rstudio-ide-build/server/jammy/arm64/rstudio-server-2024.10.0-daily-236-arm64.deb</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="fu">sudo</span> gdebi rstudio-server-2024.10.0-daily-236-arm64.deb</span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a><span class="fu">sudo</span> rm rstudio-server-2024.10.0-daily-236-arm64.deb</span></code></pre></div>
 <blockquote>
 <p>:pencil2: Actualizaré esta sección una vez que el soporte arm64 se convierta en una función estable del RStudio IDE.</p>
 </blockquote>

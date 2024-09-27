@@ -116,7 +116,7 @@ First, you need to install the R package dependencies, if you are using a CRAN r
 ```{bash install_r_packages, eval=FALSE}
 # Define your R package repository (You have to choose one of these)
 # REPO="'http://cran.rstudio.com/'" # For OSes that are not compatible with R binaries build for RPi OS (Debian 12 based)
-# REPO="c('https://pkgs.r4pi.org/aarch64', 'http://cran.rstudio.com/')" # For legacy RPi OS (Debian 11 based)
+# REPO="c('https://pkgs.r4pi.org/noble', 'http://cran.rstudio.com/')" # For Ubuntu 24.04
 REPO="c('https://pkgs.r4pi.org/bookworm', 'http://cran.rstudio.com/')" # For the latest RPi OS (Debian 12 based)
 
 # Make sure the system dependencies are installed
@@ -145,7 +145,7 @@ Now, you can install shiny-server with these commands:
 
 ```{bash install_shiny_server, eval=FALSE}
 # Download the source code for the latest shiny-server release from GitHub
-git clone --depth 1 --branch v1.5.20.1002 https://github.com/rstudio/shiny-server.git
+git clone --depth 1 --branch v1.5.22.1017 https://github.com/rstudio/shiny-server.git
 
 # Compile the source code
 cd shiny-server
@@ -159,9 +159,9 @@ sudo make
 mkdir ../build
 
 # Modify some download links and SHASUMs for compatibility with arm64 
-sed -i '8s/.*/NODE_SHA256=98d81a2d08f88646541d282b7ccc32429f8706ddcb30943fc3779ef9674ebb93/' ../external/node/install-node.sh # SHAMSUM for node-v16.18.1-linux-arm64.tar.xz
+sed -i '8s/.*/NODE_SHA256=2e630e18548627f61eaf573233da7949dc0a1df5eef3f486fa9820c5f6c121aa/' ../external/node/install-node.sh # SHAMSUM for node-v18.18.2-linux-arm64.tar.xz
 sed -i 's/linux-x64.tar.xz/linux-arm64.tar.xz/' ../external/node/install-node.sh
-sed -i 's/https:\/\/github.com\/jcheng5\/node-centos6\/releases\/download\//https:\/\/nodejs.org\/dist\//' ../external/node/install-node.sh
+sed -i 's/https:\/\/github.com\/jcheng5\/node-centos7\/releases\/download\//https:\/\/nodejs.org\/dist\//' ../external/node/install-node.sh
 sed -i 's/sha512-3RAVyfbptsR6HOFA0BFNLyw8ZXXDRWf5P3tIslbNt12kTikaRWepRR9vLHMyibIZeNfScI9uGqcn1KfbIAeuXA==/sha512-ZwrJM2WaOJesJGZlejLqAiBAE6Ts2PZNk1pQ\/x1uTMsQw83BaXWShjqCbhh5bPQUNrlx2Ijz1dOr0hLmlkxKag==/' ../npm-shrinkwrap.json
 
 # Install node for arm64 and rebuild node modules
@@ -249,15 +249,15 @@ cd
 
 In the past, the only way to install RStudio Server on a Pi was to compile from source and this was extremely time-consuming (took me 3 days the last time I tried on a Pi 3B+) and very prone to failure because the RStudio IDE is under active development.
 
-Luckily, in recent days, RStudio has made available "experimental"  builds of the IDE for arm64 (I wrote an [article about it](/2022/08/22/rstudio_ide_arm/)), they are compiled for Ubuntu 20/22 LTS and RedHat 9 but the Ubuntu 22 binaries are compatible with Raspberry Pi OS as well. You can check the available daily builds [here](https://dailies.rstudio.com/rstudio/). Choose a link accordingly to the operating system you are using, also, have in mind that these builds are meant for testing so they are likely to have bugs or be unstable, if you have problems installing the latest one available, try with an older version.
+Luckily, in recent days, RStudio has made available "experimental"  builds of the IDE for arm64 (I wrote an [article about it](/2022/08/22/rstudio_ide_arm/)), they are compiled for Ubuntu 20, 22, 24 LTS and RedHat 9 but the Ubuntu 22 and 24 binaries are compatible with Raspberry Pi OS as well. You can check the available daily builds [here](https://dailies.rstudio.com/rstudio/). Choose a link accordingly to the operating system you are using, also, have in mind that these builds are meant for testing so they are likely to have bugs or be unstable, if you have problems installing the latest one available, try with an older version.
 
-The following instructions use a link for Ubuntu 22 (Raspberry Pi OS compatible), remember to change the link if you want to use another OS or a more recent IDE version:
+The following instructions use a link for Ubuntu 24 (Raspberry Pi OS compatible), remember to change the link if you want to use another OS or a more recent IDE version:
 
 ```{bash install_rstudio, eval=FALSE}
 sudo apt install gdebi
-wget https://s3.amazonaws.com/rstudio-ide-build/server/jammy/arm64/rstudio-server-2023.12.0-daily-232-arm64.deb
-sudo gdebi rstudio-server-2023.12.0-daily-232-arm64.deb
-sudo rm rstudio-server-2023.12.0-daily-232-arm64.deb
+wget https://s3.amazonaws.com/rstudio-ide-build/server/jammy/arm64/rstudio-server-2024.10.0-daily-236-arm64.deb
+sudo gdebi rstudio-server-2024.10.0-daily-236-arm64.deb
+sudo rm rstudio-server-2024.10.0-daily-236-arm64.deb
 ```
 
 > :pencil2: I'll update this section once the arm64 support becomes a stable feature for the RStudio IDE.
