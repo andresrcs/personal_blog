@@ -120,7 +120,7 @@ First, you need to install the R package dependencies, if you are using a CRAN r
 REPO="c('https://pkgs.r4pi.org/bookworm', 'http://cran.rstudio.com/')" # For the latest RPi OS (Debian 12 based)
 
 # Make sure the system dependencies are installed
-sudo apt install libcairo2-dev libxt-dev git cmake pandoc pandoc-citeproc-preamble
+sudo apt install libcairo2-dev libxt-dev git cmake pandoc
 
 # Install required R packages as sudo
 sudo su - -c "R -e \"install.packages('Rcpp', repos=$REPO)\""
@@ -158,16 +158,9 @@ sudo cmake -DCMAKE_INSTALL_PREFIX=/usr/local -DPYTHON="$PYTHON" ../
 sudo make
 mkdir ../build
 
-# Modify some download links and SHASUMs for compatibility with arm64 
-sed -i '8s/.*/NODE_SHA256=2e630e18548627f61eaf573233da7949dc0a1df5eef3f486fa9820c5f6c121aa/' ../external/node/install-node.sh # SHAMSUM for node-v18.18.2-linux-arm64.tar.xz
-sed -i 's/linux-x64.tar.xz/linux-arm64.tar.xz/' ../external/node/install-node.sh
-sed -i 's/https:\/\/github.com\/jcheng5\/node-centos7\/releases\/download\//https:\/\/nodejs.org\/dist\//' ../external/node/install-node.sh
-sed -i 's/sha512-3RAVyfbptsR6HOFA0BFNLyw8ZXXDRWf5P3tIslbNt12kTikaRWepRR9vLHMyibIZeNfScI9uGqcn1KfbIAeuXA==/sha512-ZwrJM2WaOJesJGZlejLqAiBAE6Ts2PZNk1pQ\/x1uTMsQw83BaXWShjqCbhh5bPQUNrlx2Ijz1dOr0hLmlkxKag==/' ../npm-shrinkwrap.json
-
-# Install node for arm64 and rebuild node modules
+# Install node
 (cd .. && sudo ./external/node/install-node.sh)
-(cd .. && ./bin/npm --python="${PYTHON}" install --no-optional)
-(cd .. && ./bin/node ./ext/node/lib/node_modules/npm/node_modules/node-gyp/bin/node-gyp.js --python="${PYTHON}" rebuild)
+(cd .. && ./bin/npm ci --omit-dev --python="${PYTHON}") 
 
 # Install shiny-server
 sudo make install

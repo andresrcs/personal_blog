@@ -173,7 +173,7 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="va">REPO</span><span class="op">=</span><span class="st">&quot;c(&#39;https://pkgs.r4pi.org/bookworm&#39;, &#39;http://cran.rstudio.com/&#39;)&quot;</span> <span class="co"># For the latest RPi OS (Debian 12 based)</span></span>
 <span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a></span>
 <span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="co"># Make sure the system dependencies are installed</span></span>
-<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="fu">sudo</span> apt install libcairo2-dev libxt-dev git cmake pandoc pandoc-citeproc-preamble</span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="fu">sudo</span> apt install libcairo2-dev libxt-dev git cmake pandoc</span>
 <span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a></span>
 <span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a><span class="co"># Install required R packages as sudo</span></span>
 <span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a><span class="fu">sudo</span> su <span class="at">-</span> <span class="at">-c</span> <span class="st">&quot;R -e </span><span class="dt">\&quot;</span><span class="st">install.packages(&#39;Rcpp&#39;, repos=</span><span class="va">$REPO</span><span class="st">)</span><span class="dt">\&quot;</span><span class="st">&quot;</span></span>
@@ -208,91 +208,84 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a><span class="fu">sudo</span> make</span>
 <span id="cb6-13"><a href="#cb6-13" tabindex="-1"></a><span class="fu">mkdir</span> ../build</span>
 <span id="cb6-14"><a href="#cb6-14" tabindex="-1"></a></span>
-<span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a><span class="co"># Modify some download links and SHASUMs for compatibility with arm64 </span></span>
-<span id="cb6-16"><a href="#cb6-16" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-i</span> <span class="st">&#39;8s/.*/NODE_SHA256=2e630e18548627f61eaf573233da7949dc0a1df5eef3f486fa9820c5f6c121aa/&#39;</span> ../external/node/install-node.sh <span class="co"># SHAMSUM for node-v18.18.2-linux-arm64.tar.xz</span></span>
-<span id="cb6-17"><a href="#cb6-17" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-i</span> <span class="st">&#39;s/linux-x64.tar.xz/linux-arm64.tar.xz/&#39;</span> ../external/node/install-node.sh</span>
-<span id="cb6-18"><a href="#cb6-18" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-i</span> <span class="st">&#39;s/https:\/\/github.com\/jcheng5\/node-centos7\/releases\/download\//https:\/\/nodejs.org\/dist\//&#39;</span> ../external/node/install-node.sh</span>
-<span id="cb6-19"><a href="#cb6-19" tabindex="-1"></a><span class="fu">sed</span> <span class="at">-i</span> <span class="st">&#39;s/sha512-3RAVyfbptsR6HOFA0BFNLyw8ZXXDRWf5P3tIslbNt12kTikaRWepRR9vLHMyibIZeNfScI9uGqcn1KfbIAeuXA==/sha512-ZwrJM2WaOJesJGZlejLqAiBAE6Ts2PZNk1pQ\/x1uTMsQw83BaXWShjqCbhh5bPQUNrlx2Ijz1dOr0hLmlkxKag==/&#39;</span> ../npm-shrinkwrap.json</span>
-<span id="cb6-20"><a href="#cb6-20" tabindex="-1"></a></span>
-<span id="cb6-21"><a href="#cb6-21" tabindex="-1"></a><span class="co"># Install node for arm64 and rebuild node modules</span></span>
-<span id="cb6-22"><a href="#cb6-22" tabindex="-1"></a><span class="kw">(</span><span class="bu">cd</span> .. <span class="kw">&amp;&amp;</span> <span class="fu">sudo</span> ./external/node/install-node.sh<span class="kw">)</span></span>
-<span id="cb6-23"><a href="#cb6-23" tabindex="-1"></a><span class="kw">(</span><span class="bu">cd</span> .. <span class="kw">&amp;&amp;</span> <span class="ex">./bin/npm</span> <span class="at">--python</span><span class="op">=</span><span class="st">&quot;</span><span class="va">${PYTHON}</span><span class="st">&quot;</span> install <span class="at">--no-optional</span><span class="kw">)</span></span>
-<span id="cb6-24"><a href="#cb6-24" tabindex="-1"></a><span class="kw">(</span><span class="bu">cd</span> .. <span class="kw">&amp;&amp;</span> <span class="ex">./bin/node</span> ./ext/node/lib/node_modules/npm/node_modules/node-gyp/bin/node-gyp.js <span class="at">--python</span><span class="op">=</span><span class="st">&quot;</span><span class="va">${PYTHON}</span><span class="st">&quot;</span> rebuild<span class="kw">)</span></span>
-<span id="cb6-25"><a href="#cb6-25" tabindex="-1"></a></span>
-<span id="cb6-26"><a href="#cb6-26" tabindex="-1"></a><span class="co"># Install shiny-server</span></span>
-<span id="cb6-27"><a href="#cb6-27" tabindex="-1"></a><span class="fu">sudo</span> make install</span>
-<span id="cb6-28"><a href="#cb6-28" tabindex="-1"></a></span>
-<span id="cb6-29"><a href="#cb6-29" tabindex="-1"></a><span class="co"># Configure shiny-server</span></span>
-<span id="cb6-30"><a href="#cb6-30" tabindex="-1"></a><span class="fu">sudo</span> mkdir <span class="at">-p</span> /etc/shiny-server</span>
-<span id="cb6-31"><a href="#cb6-31" tabindex="-1"></a><span class="fu">sudo</span> cp ../config/default.config /etc/shiny-server/shiny-server.conf</span>
-<span id="cb6-32"><a href="#cb6-32" tabindex="-1"></a><span class="bu">cd</span></span>
-<span id="cb6-33"><a href="#cb6-33" tabindex="-1"></a><span class="fu">sudo</span> rm <span class="at">-rf</span> shiny-server</span>
-<span id="cb6-34"><a href="#cb6-34" tabindex="-1"></a><span class="fu">sudo</span> ln <span class="at">-s</span> /usr/local/shiny-server/bin/shiny-server /usr/bin/shiny-server</span>
-<span id="cb6-35"><a href="#cb6-35" tabindex="-1"></a><span class="fu">sudo</span> useradd <span class="at">-r</span> <span class="at">-m</span> shiny</span>
-<span id="cb6-36"><a href="#cb6-36" tabindex="-1"></a><span class="fu">sudo</span> mkdir <span class="at">-p</span> /var/log/shiny-server</span>
-<span id="cb6-37"><a href="#cb6-37" tabindex="-1"></a><span class="fu">sudo</span> mkdir <span class="at">-p</span> /srv/shiny-server</span>
-<span id="cb6-38"><a href="#cb6-38" tabindex="-1"></a><span class="fu">sudo</span> mkdir <span class="at">-p</span> /var/lib/shiny-server</span>
-<span id="cb6-39"><a href="#cb6-39" tabindex="-1"></a><span class="fu">sudo</span> chown shiny /var/log/shiny-server</span>
+<span id="cb6-15"><a href="#cb6-15" tabindex="-1"></a><span class="co"># Install node</span></span>
+<span id="cb6-16"><a href="#cb6-16" tabindex="-1"></a><span class="kw">(</span><span class="bu">cd</span> .. <span class="kw">&amp;&amp;</span> <span class="fu">sudo</span> ./external/node/install-node.sh<span class="kw">)</span></span>
+<span id="cb6-17"><a href="#cb6-17" tabindex="-1"></a><span class="kw">(</span><span class="bu">cd</span> .. <span class="kw">&amp;&amp;</span> <span class="ex">./bin/npm</span> ci <span class="at">--omit-dev</span> <span class="at">--python</span><span class="op">=</span><span class="st">&quot;</span><span class="va">${PYTHON}</span><span class="st">&quot;</span><span class="kw">)</span> </span>
+<span id="cb6-18"><a href="#cb6-18" tabindex="-1"></a></span>
+<span id="cb6-19"><a href="#cb6-19" tabindex="-1"></a><span class="co"># Install shiny-server</span></span>
+<span id="cb6-20"><a href="#cb6-20" tabindex="-1"></a><span class="fu">sudo</span> make install</span>
+<span id="cb6-21"><a href="#cb6-21" tabindex="-1"></a></span>
+<span id="cb6-22"><a href="#cb6-22" tabindex="-1"></a><span class="co"># Configure shiny-server</span></span>
+<span id="cb6-23"><a href="#cb6-23" tabindex="-1"></a><span class="fu">sudo</span> mkdir <span class="at">-p</span> /etc/shiny-server</span>
+<span id="cb6-24"><a href="#cb6-24" tabindex="-1"></a><span class="fu">sudo</span> cp ../config/default.config /etc/shiny-server/shiny-server.conf</span>
+<span id="cb6-25"><a href="#cb6-25" tabindex="-1"></a><span class="bu">cd</span></span>
+<span id="cb6-26"><a href="#cb6-26" tabindex="-1"></a><span class="fu">sudo</span> rm <span class="at">-rf</span> shiny-server</span>
+<span id="cb6-27"><a href="#cb6-27" tabindex="-1"></a><span class="fu">sudo</span> ln <span class="at">-s</span> /usr/local/shiny-server/bin/shiny-server /usr/bin/shiny-server</span>
+<span id="cb6-28"><a href="#cb6-28" tabindex="-1"></a><span class="fu">sudo</span> useradd <span class="at">-r</span> <span class="at">-m</span> shiny</span>
+<span id="cb6-29"><a href="#cb6-29" tabindex="-1"></a><span class="fu">sudo</span> mkdir <span class="at">-p</span> /var/log/shiny-server</span>
+<span id="cb6-30"><a href="#cb6-30" tabindex="-1"></a><span class="fu">sudo</span> mkdir <span class="at">-p</span> /srv/shiny-server</span>
+<span id="cb6-31"><a href="#cb6-31" tabindex="-1"></a><span class="fu">sudo</span> mkdir <span class="at">-p</span> /var/lib/shiny-server</span>
+<span id="cb6-32"><a href="#cb6-32" tabindex="-1"></a><span class="fu">sudo</span> chown shiny /var/log/shiny-server</span>
+<span id="cb6-33"><a href="#cb6-33" tabindex="-1"></a></span>
+<span id="cb6-34"><a href="#cb6-34" tabindex="-1"></a><span class="co"># Edit the shiny-server.service file</span></span>
+<span id="cb6-35"><a href="#cb6-35" tabindex="-1"></a><span class="fu">sudo</span> nano /etc/systemd/system/shiny-server.service </span>
+<span id="cb6-36"><a href="#cb6-36" tabindex="-1"></a>    <span class="co"># Paste the following content</span></span>
+<span id="cb6-37"><a href="#cb6-37" tabindex="-1"></a>    </span>
+<span id="cb6-38"><a href="#cb6-38" tabindex="-1"></a>    <span class="ex">[Unit]</span></span>
+<span id="cb6-39"><a href="#cb6-39" tabindex="-1"></a>    <span class="va">Description</span><span class="op">=</span>ShinyServer</span>
 <span id="cb6-40"><a href="#cb6-40" tabindex="-1"></a></span>
-<span id="cb6-41"><a href="#cb6-41" tabindex="-1"></a><span class="co"># Edit the shiny-server.service file</span></span>
-<span id="cb6-42"><a href="#cb6-42" tabindex="-1"></a><span class="fu">sudo</span> nano /etc/systemd/system/shiny-server.service </span>
-<span id="cb6-43"><a href="#cb6-43" tabindex="-1"></a>    <span class="co"># Paste the following content</span></span>
-<span id="cb6-44"><a href="#cb6-44" tabindex="-1"></a>    </span>
-<span id="cb6-45"><a href="#cb6-45" tabindex="-1"></a>    <span class="ex">[Unit]</span></span>
-<span id="cb6-46"><a href="#cb6-46" tabindex="-1"></a>    <span class="va">Description</span><span class="op">=</span>ShinyServer</span>
-<span id="cb6-47"><a href="#cb6-47" tabindex="-1"></a></span>
-<span id="cb6-48"><a href="#cb6-48" tabindex="-1"></a>    <span class="ex">[Service]</span></span>
-<span id="cb6-49"><a href="#cb6-49" tabindex="-1"></a>    <span class="va">Type</span><span class="op">=</span>simple</span>
-<span id="cb6-50"><a href="#cb6-50" tabindex="-1"></a>    <span class="va">ExecStart</span><span class="op">=</span>/usr/bin/env <span class="fu">bash</span> <span class="at">-c</span> <span class="st">&#39;exec /usr/local/shiny-server/bin/shiny-server &gt;&gt;     /var/log/shiny-server.log 2&gt;&amp;1&#39;</span></span>
-<span id="cb6-51"><a href="#cb6-51" tabindex="-1"></a>    <span class="va">KillMode</span><span class="op">=</span>process</span>
-<span id="cb6-52"><a href="#cb6-52" tabindex="-1"></a>    <span class="va">ExecReload</span><span class="op">=</span>/usr/bin/env <span class="bu">kill</span> <span class="at">-HUP</span> <span class="va">$MAINPID</span></span>
-<span id="cb6-53"><a href="#cb6-53" tabindex="-1"></a>    <span class="va">ExecStopPost</span><span class="op">=</span>/usr/bin/env <span class="fu">sleep</span> 5</span>
-<span id="cb6-54"><a href="#cb6-54" tabindex="-1"></a>    <span class="va">Restart</span><span class="op">=</span>on-failure</span>
-<span id="cb6-55"><a href="#cb6-55" tabindex="-1"></a>    <span class="va">RestartSec</span><span class="op">=</span>1</span>
-<span id="cb6-56"><a href="#cb6-56" tabindex="-1"></a>    <span class="va">StartLimitInterval</span><span class="op">=</span>45</span>
-<span id="cb6-57"><a href="#cb6-57" tabindex="-1"></a>    <span class="va">StartLimitBurst</span><span class="op">=</span>3</span>
-<span id="cb6-58"><a href="#cb6-58" tabindex="-1"></a></span>
-<span id="cb6-59"><a href="#cb6-59" tabindex="-1"></a>    <span class="ex">[Install]</span></span>
-<span id="cb6-60"><a href="#cb6-60" tabindex="-1"></a>    <span class="va">WantedBy</span><span class="op">=</span>multi-user.target</span>
-<span id="cb6-61"><a href="#cb6-61" tabindex="-1"></a></span>
-<span id="cb6-62"><a href="#cb6-62" tabindex="-1"></a><span class="co"># Edit the shiny-server logrotate file</span></span>
-<span id="cb6-63"><a href="#cb6-63" tabindex="-1"></a><span class="fu">sudo</span> nano /etc/logrotate.d/shiny-server </span>
-<span id="cb6-64"><a href="#cb6-64" tabindex="-1"></a>    <span class="co"># Paste the following content</span></span>
-<span id="cb6-65"><a href="#cb6-65" tabindex="-1"></a>    </span>
-<span id="cb6-66"><a href="#cb6-66" tabindex="-1"></a>    <span class="ex">/var/log/shiny-server.log</span> {</span>
-<span id="cb6-67"><a href="#cb6-67" tabindex="-1"></a>       <span class="ex">rotate</span> 12</span>
-<span id="cb6-68"><a href="#cb6-68" tabindex="-1"></a>       <span class="ex">copytruncate</span></span>
-<span id="cb6-69"><a href="#cb6-69" tabindex="-1"></a>       <span class="ex">compress</span></span>
-<span id="cb6-70"><a href="#cb6-70" tabindex="-1"></a>       <span class="ex">missingok</span></span>
-<span id="cb6-71"><a href="#cb6-71" tabindex="-1"></a>       <span class="fu">size</span> 1M</span>
-<span id="cb6-72"><a href="#cb6-72" tabindex="-1"></a>    <span class="er">}</span></span>
-<span id="cb6-73"><a href="#cb6-73" tabindex="-1"></a></span>
-<span id="cb6-74"><a href="#cb6-74" tabindex="-1"></a><span class="co"># Set permissions for the files</span></span>
-<span id="cb6-75"><a href="#cb6-75" tabindex="-1"></a><span class="fu">sudo</span> chown root:root /etc/systemd/system/shiny-server.service</span>
-<span id="cb6-76"><a href="#cb6-76" tabindex="-1"></a><span class="fu">sudo</span> chmod 644 /etc/systemd/system/shiny-server.service</span>
-<span id="cb6-77"><a href="#cb6-77" tabindex="-1"></a><span class="fu">sudo</span> chown root:root /etc/logrotate.d/shiny-server</span>
-<span id="cb6-78"><a href="#cb6-78" tabindex="-1"></a><span class="fu">sudo</span> chmod 644 /etc/logrotate.d/shiny-server</span>
-<span id="cb6-79"><a href="#cb6-79" tabindex="-1"></a></span>
-<span id="cb6-80"><a href="#cb6-80" tabindex="-1"></a><span class="co"># Start the service</span></span>
-<span id="cb6-81"><a href="#cb6-81" tabindex="-1"></a><span class="fu">sudo</span> systemctl daemon-reload</span>
-<span id="cb6-82"><a href="#cb6-82" tabindex="-1"></a><span class="fu">sudo</span> systemctl enable shiny-server</span>
-<span id="cb6-83"><a href="#cb6-83" tabindex="-1"></a><span class="fu">sudo</span> systemctl start shiny-server</span>
-<span id="cb6-84"><a href="#cb6-84" tabindex="-1"></a></span>
-<span id="cb6-85"><a href="#cb6-85" tabindex="-1"></a><span class="co"># Create symlinks for pandoc and the sample apps</span></span>
-<span id="cb6-86"><a href="#cb6-86" tabindex="-1"></a><span class="fu">sudo</span> ln <span class="at">-s</span> <span class="at">-f</span> /usr/bin/pandoc /usr/local/shiny-server/ext/pandoc/pandoc</span>
-<span id="cb6-87"><a href="#cb6-87" tabindex="-1"></a><span class="fu">sudo</span> ln <span class="at">-s</span> <span class="at">-f</span> /usr/bin/pandoc-citeproc-preamble /usr/local/shiny-server/ext/pandoc/pandoc-citeproc</span>
-<span id="cb6-88"><a href="#cb6-88" tabindex="-1"></a><span class="fu">sudo</span> ln <span class="at">-s</span> /usr/local/shiny-server/samples/sample-apps /srv/shiny-server/sample-apps</span>
-<span id="cb6-89"><a href="#cb6-89" tabindex="-1"></a><span class="fu">sudo</span> ln <span class="at">-s</span> /usr/local/shiny-server/samples/welcome.html /srv/shiny-server/index.html</span>
-<span id="cb6-90"><a href="#cb6-90" tabindex="-1"></a></span>
-<span id="cb6-91"><a href="#cb6-91" tabindex="-1"></a><span class="co"># Set proper user permissions, I&#39;m assuming your user is &quot;pi&quot;, change it if it isn&#39;t</span></span>
-<span id="cb6-92"><a href="#cb6-92" tabindex="-1"></a><span class="fu">sudo</span> groupadd shiny-apps</span>
-<span id="cb6-93"><a href="#cb6-93" tabindex="-1"></a><span class="fu">sudo</span> usermod <span class="at">-aG</span> shiny-apps pi</span>
-<span id="cb6-94"><a href="#cb6-94" tabindex="-1"></a><span class="fu">sudo</span> usermod <span class="at">-aG</span> shiny-apps shiny</span>
-<span id="cb6-95"><a href="#cb6-95" tabindex="-1"></a><span class="bu">cd</span> /srv/shiny-server</span>
-<span id="cb6-96"><a href="#cb6-96" tabindex="-1"></a><span class="fu">sudo</span> chown <span class="at">-R</span> pi:shiny-apps .</span>
-<span id="cb6-97"><a href="#cb6-97" tabindex="-1"></a><span class="fu">sudo</span> chmod g+w .</span>
-<span id="cb6-98"><a href="#cb6-98" tabindex="-1"></a><span class="fu">sudo</span> chmod g+s .</span>
-<span id="cb6-99"><a href="#cb6-99" tabindex="-1"></a><span class="bu">cd</span></span></code></pre></div>
+<span id="cb6-41"><a href="#cb6-41" tabindex="-1"></a>    <span class="ex">[Service]</span></span>
+<span id="cb6-42"><a href="#cb6-42" tabindex="-1"></a>    <span class="va">Type</span><span class="op">=</span>simple</span>
+<span id="cb6-43"><a href="#cb6-43" tabindex="-1"></a>    <span class="va">ExecStart</span><span class="op">=</span>/usr/bin/env <span class="fu">bash</span> <span class="at">-c</span> <span class="st">&#39;exec /usr/local/shiny-server/bin/shiny-server &gt;&gt;     /var/log/shiny-server.log 2&gt;&amp;1&#39;</span></span>
+<span id="cb6-44"><a href="#cb6-44" tabindex="-1"></a>    <span class="va">KillMode</span><span class="op">=</span>process</span>
+<span id="cb6-45"><a href="#cb6-45" tabindex="-1"></a>    <span class="va">ExecReload</span><span class="op">=</span>/usr/bin/env <span class="bu">kill</span> <span class="at">-HUP</span> <span class="va">$MAINPID</span></span>
+<span id="cb6-46"><a href="#cb6-46" tabindex="-1"></a>    <span class="va">ExecStopPost</span><span class="op">=</span>/usr/bin/env <span class="fu">sleep</span> 5</span>
+<span id="cb6-47"><a href="#cb6-47" tabindex="-1"></a>    <span class="va">Restart</span><span class="op">=</span>on-failure</span>
+<span id="cb6-48"><a href="#cb6-48" tabindex="-1"></a>    <span class="va">RestartSec</span><span class="op">=</span>1</span>
+<span id="cb6-49"><a href="#cb6-49" tabindex="-1"></a>    <span class="va">StartLimitInterval</span><span class="op">=</span>45</span>
+<span id="cb6-50"><a href="#cb6-50" tabindex="-1"></a>    <span class="va">StartLimitBurst</span><span class="op">=</span>3</span>
+<span id="cb6-51"><a href="#cb6-51" tabindex="-1"></a></span>
+<span id="cb6-52"><a href="#cb6-52" tabindex="-1"></a>    <span class="ex">[Install]</span></span>
+<span id="cb6-53"><a href="#cb6-53" tabindex="-1"></a>    <span class="va">WantedBy</span><span class="op">=</span>multi-user.target</span>
+<span id="cb6-54"><a href="#cb6-54" tabindex="-1"></a></span>
+<span id="cb6-55"><a href="#cb6-55" tabindex="-1"></a><span class="co"># Edit the shiny-server logrotate file</span></span>
+<span id="cb6-56"><a href="#cb6-56" tabindex="-1"></a><span class="fu">sudo</span> nano /etc/logrotate.d/shiny-server </span>
+<span id="cb6-57"><a href="#cb6-57" tabindex="-1"></a>    <span class="co"># Paste the following content</span></span>
+<span id="cb6-58"><a href="#cb6-58" tabindex="-1"></a>    </span>
+<span id="cb6-59"><a href="#cb6-59" tabindex="-1"></a>    <span class="ex">/var/log/shiny-server.log</span> {</span>
+<span id="cb6-60"><a href="#cb6-60" tabindex="-1"></a>       <span class="ex">rotate</span> 12</span>
+<span id="cb6-61"><a href="#cb6-61" tabindex="-1"></a>       <span class="ex">copytruncate</span></span>
+<span id="cb6-62"><a href="#cb6-62" tabindex="-1"></a>       <span class="ex">compress</span></span>
+<span id="cb6-63"><a href="#cb6-63" tabindex="-1"></a>       <span class="ex">missingok</span></span>
+<span id="cb6-64"><a href="#cb6-64" tabindex="-1"></a>       <span class="fu">size</span> 1M</span>
+<span id="cb6-65"><a href="#cb6-65" tabindex="-1"></a>    <span class="er">}</span></span>
+<span id="cb6-66"><a href="#cb6-66" tabindex="-1"></a></span>
+<span id="cb6-67"><a href="#cb6-67" tabindex="-1"></a><span class="co"># Set permissions for the files</span></span>
+<span id="cb6-68"><a href="#cb6-68" tabindex="-1"></a><span class="fu">sudo</span> chown root:root /etc/systemd/system/shiny-server.service</span>
+<span id="cb6-69"><a href="#cb6-69" tabindex="-1"></a><span class="fu">sudo</span> chmod 644 /etc/systemd/system/shiny-server.service</span>
+<span id="cb6-70"><a href="#cb6-70" tabindex="-1"></a><span class="fu">sudo</span> chown root:root /etc/logrotate.d/shiny-server</span>
+<span id="cb6-71"><a href="#cb6-71" tabindex="-1"></a><span class="fu">sudo</span> chmod 644 /etc/logrotate.d/shiny-server</span>
+<span id="cb6-72"><a href="#cb6-72" tabindex="-1"></a></span>
+<span id="cb6-73"><a href="#cb6-73" tabindex="-1"></a><span class="co"># Start the service</span></span>
+<span id="cb6-74"><a href="#cb6-74" tabindex="-1"></a><span class="fu">sudo</span> systemctl daemon-reload</span>
+<span id="cb6-75"><a href="#cb6-75" tabindex="-1"></a><span class="fu">sudo</span> systemctl enable shiny-server</span>
+<span id="cb6-76"><a href="#cb6-76" tabindex="-1"></a><span class="fu">sudo</span> systemctl start shiny-server</span>
+<span id="cb6-77"><a href="#cb6-77" tabindex="-1"></a></span>
+<span id="cb6-78"><a href="#cb6-78" tabindex="-1"></a><span class="co"># Create symlinks for pandoc and the sample apps</span></span>
+<span id="cb6-79"><a href="#cb6-79" tabindex="-1"></a><span class="fu">sudo</span> ln <span class="at">-s</span> <span class="at">-f</span> /usr/bin/pandoc /usr/local/shiny-server/ext/pandoc/pandoc</span>
+<span id="cb6-80"><a href="#cb6-80" tabindex="-1"></a><span class="fu">sudo</span> ln <span class="at">-s</span> <span class="at">-f</span> /usr/bin/pandoc-citeproc-preamble /usr/local/shiny-server/ext/pandoc/pandoc-citeproc</span>
+<span id="cb6-81"><a href="#cb6-81" tabindex="-1"></a><span class="fu">sudo</span> ln <span class="at">-s</span> /usr/local/shiny-server/samples/sample-apps /srv/shiny-server/sample-apps</span>
+<span id="cb6-82"><a href="#cb6-82" tabindex="-1"></a><span class="fu">sudo</span> ln <span class="at">-s</span> /usr/local/shiny-server/samples/welcome.html /srv/shiny-server/index.html</span>
+<span id="cb6-83"><a href="#cb6-83" tabindex="-1"></a></span>
+<span id="cb6-84"><a href="#cb6-84" tabindex="-1"></a><span class="co"># Set proper user permissions, I&#39;m assuming your user is &quot;pi&quot;, change it if it isn&#39;t</span></span>
+<span id="cb6-85"><a href="#cb6-85" tabindex="-1"></a><span class="fu">sudo</span> groupadd shiny-apps</span>
+<span id="cb6-86"><a href="#cb6-86" tabindex="-1"></a><span class="fu">sudo</span> usermod <span class="at">-aG</span> shiny-apps pi</span>
+<span id="cb6-87"><a href="#cb6-87" tabindex="-1"></a><span class="fu">sudo</span> usermod <span class="at">-aG</span> shiny-apps shiny</span>
+<span id="cb6-88"><a href="#cb6-88" tabindex="-1"></a><span class="bu">cd</span> /srv/shiny-server</span>
+<span id="cb6-89"><a href="#cb6-89" tabindex="-1"></a><span class="fu">sudo</span> chown <span class="at">-R</span> pi:shiny-apps .</span>
+<span id="cb6-90"><a href="#cb6-90" tabindex="-1"></a><span class="fu">sudo</span> chmod g+w .</span>
+<span id="cb6-91"><a href="#cb6-91" tabindex="-1"></a><span class="fu">sudo</span> chmod g+s .</span>
+<span id="cb6-92"><a href="#cb6-92" tabindex="-1"></a><span class="bu">cd</span></span></code></pre></div>
 </div>
 <div id="install-rstudio-server" class="section level2">
 <h2>Install Rstudio Server</h2>
