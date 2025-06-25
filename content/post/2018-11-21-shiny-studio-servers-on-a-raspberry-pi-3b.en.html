@@ -310,7 +310,7 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 </div>
 <div id="extra-steps-optional" class="section level2">
 <h2>Extra Steps (optional)</h2>
-<p>Make pretty URLs for Shiny and Rstudio Server (e.g. <code>http://your-ip/shiny/your-app</code> instead of <code>http://your-ip:3838/your-app</code>) by using Nginx as a reverse proxy, you only need to replace the content this file, <code>sudo nano /etc/nginx/sites-enabled/default</code>, with this:</p>
+<p>Make pretty URLs for Shiny and Rstudio Server (e.g. <code>http://your-ip/shiny/your-app</code> instead of <code>http://your-ip:3838/your-app</code>) by using Nginx as a reverse proxy, you only need to replace the content of this file <code>sudo nano /etc/nginx/sites-enabled/default</code>, with this:</p>
 <div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a><span class="ex">map</span> <span class="va">$http_upgrade</span> <span class="va">$connection_upgrade</span> {</span>
 <span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>    <span class="ex">default</span> upgrade<span class="kw">;</span></span>
 <span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a>    <span class="st">&#39;&#39;</span>      close<span class="kw">;</span></span>

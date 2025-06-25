@@ -271,7 +271,7 @@ sudo apt install postgresql libpq-dev postgresql-client postgresql-client-common
 
 ## Extra Steps (optional)
 
-Make pretty URLs for Shiny and Rstudio Server (e.g. `http://your-ip/shiny/your-app` instead of `http://your-ip:3838/your-app`) by using Nginx as a reverse proxy, you only need to replace the content this file, `sudo nano /etc/nginx/sites-enabled/default`, with this:
+Make pretty URLs for Shiny and Rstudio Server (e.g. `http://your-ip/shiny/your-app` instead of `http://your-ip:3838/your-app`) by using Nginx as a reverse proxy, you only need to replace the content of this file `sudo nano /etc/nginx/sites-enabled/default`, with this:
 
 ```{bash nginx_config, eval=FALSE}
 map $http_upgrade $connection_upgrade {
