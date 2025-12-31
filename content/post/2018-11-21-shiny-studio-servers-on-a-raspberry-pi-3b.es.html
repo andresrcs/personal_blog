@@ -107,7 +107,7 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 </div>
 
 <p>Este artículo se publicó originalmente en 2018 y muchas cosas han cambiado desde entonces, por lo que lo reescribí por completo para tener en cuenta los avances más recientes en la compatibilidad con la arquitectura arm64 dentro del ecosistema R.</p>
-<p>En 2018, participé en un tema de foro en <a href="https://community.rstudio.com/t/raspberry-pi-as-a-viable-shiny-server/18672?u=andresrcs">Community RStudio</a> donde <a href="https://twitter.com/jladata">@jladata</a> preguntaba si una Raspberry Pi 3B+ podría convertirse en un servidor Shiny viable. De hecho, yo uso una Raspberry Pi para ese mismo propósito, así que decidí compartir con la comunidad R mi experiencia al configurar Shiny y Rstudio Server de forma nativa en una Raspberry Pi.</p>
+<p>En 2018, participé en un tema de foro en <a href="https://forum.posit.co/t/raspberry-pi-as-a-viable-shiny-server/18672?u=andresrcs">Posit Community</a> donde <a href="https://twitter.com/jladata">@jladata</a> preguntaba si una Raspberry Pi 3B+ podría convertirse en un servidor Shiny viable. De hecho, yo uso una Raspberry Pi para ese mismo propósito, así que decidí compartir con la comunidad R mi experiencia al configurar Shiny y Rstudio Server de forma nativa en una Raspberry Pi.</p>
 <p>En esos días había casi <strong>cero soporte para arquitecturas ARM</strong> (ya sea x32 o x64), por lo que la mayor parte del software tenía que compilarse desde la fuente en la misma Pi, lo que hace que el proceso de instalación sea un esfuerzo titánico con muchisimas horas de espera.</p>
 <p>Hoy en día, las cosas han cambiado y tenemos un mejor soporte para la arquitectura arm64 debido a los esfuerzos de la comunidad e incluso soporte oficial de RStudio en proceso. En este renovado artículo, te guiaré a través de las opciones de instalación que tenemos disponibles actualmente.</p>
 <blockquote>
@@ -125,9 +125,9 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <p>A continuación, debes configurar una IP estática para que puedas encontrar la Pi fácilmente en tu red.</p>
 <p>Para configurar una IP estática en Raspberry Pi OS, ejecuta estos comandos. Esta es una configuración de IP de muestra para una conexión por cable, modificala de acuerdo a tus propias necesidades:</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="co"># Configuración IP de muestra:</span></span>
-<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">sudo</span> nmcli c mod <span class="st">&#39;Wired connection 1&#39;</span> ipv4.addresses 192.168.3.101/24 ipv4.method manual</span>
-<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="fu">sudo</span> nmcli con mod <span class="st">&#39;Wired connection 1&#39;</span> ipv4.gateway 192.168.3.1</span>
-<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="fu">sudo</span> nmcli con mod <span class="st">&#39;Wired connection 1&#39;</span> ipv4.dns <span class="st">&quot;192.168.3.1&quot;</span></span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">sudo</span> nmcli c mod <span class="st">&#39;Wired connection 1&#39;</span> ipv4.addresses 192.168.1.101/24 ipv4.method manual</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="fu">sudo</span> nmcli con mod <span class="st">&#39;Wired connection 1&#39;</span> ipv4.gateway 192.168.1.1</span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="fu">sudo</span> nmcli con mod <span class="st">&#39;Wired connection 1&#39;</span> ipv4.dns <span class="st">&quot;192.168.1.1&quot;</span></span>
 <span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a><span class="fu">sudo</span> nmcli c down <span class="st">&#39;Wired connection 1&#39;</span> <span class="kw">&amp;&amp;</span> <span class="fu">sudo</span> nmcli c up <span class="st">&#39;Wired connection 1&#39;</span></span></code></pre></div>
 <p>Y para configurar la IP en Ubuntu, debes crear este archivo, <code>sudo nano /etc/netplan/01-netcfg.yaml</code>, agregar este contenido (edítalo según sea necesario) y aplicar la configuración con este comando, <code>sudo netplan apply</code>.</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="ex">network:</span></span>
@@ -137,12 +137,12 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>        <span class="ex">eth0:</span></span>
 <span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>            <span class="ex">dhcp4:</span> false</span>
 <span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>            <span class="ex">addresses:</span></span>
-<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>                <span class="ex">-</span> 192.168.0.101/24</span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>                <span class="ex">-</span> 192.168.1.101/24</span>
 <span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>            <span class="ex">nameservers:</span></span>
-<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a>                <span class="ex">addresses:</span> [8.8.8.8, 8.8.4.4, 192.168.0.1]</span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a>                <span class="ex">addresses:</span> [8.8.8.8, 8.8.4.4, 192.168.1.1]</span>
 <span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a>            <span class="ex">routes:</span></span>
 <span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a>                <span class="ex">-</span> to: default</span>
-<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a>                  <span class="ex">via:</span> 192.168.0.1</span></code></pre></div>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a>                  <span class="ex">via:</span> 192.168.1.1</span></code></pre></div>
 <p>En caso de que tengas un modelo de Raspberry Pi con poca RAM, debes agregar algo de memoria sawp para el proceso de instalación. Para los modelos Pi de 1 GB, 3 GB de sawp serían suficientes, puedes hacerlo con estos comandos:</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">sudo</span> /bin/dd if=/dev/zero of=/var/swap.1 bs=1M count=3072</span>
 <span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="fu">sudo</span> chmod 600 /var/swap.1</span>
@@ -290,13 +290,13 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 </div>
 <div id="instala-rstudio-server" class="section level2">
 <h2>Instala RStudio Server</h2>
-<p>En el pasado, la única forma de instalar RStudio Server en una Pi era compilar desde la fuente y esto requería mucho tiempo (me tomó 3 días la última vez que probé en una Pi 3B+) y era muy propenso a fallar porque RStudio IDE está en desarrollo activo.</p>
-<p>Afortunadamente, en los últimos días, RStudio ha puesto a disposición compilaciones “experimentales” del IDE para arm64 (escribí un <a href="/es/2022/08/22/rstudio_ide_arm/">artículo al respecto</a>), están compiladas para Ubuntu 22, 24 LTS y RedHat 9. Los binarios para Ubuntu 22 y 24 también son compatibles con Raspberry Pi OS. Puedes consultar las compilaciones diarias disponibles <a href="https://dailies.rstudio.com/rstudio/">aquí</a>. Elije un enlace de acuerdo con el sistema operativo que estás utilizando, también ten en cuenta que estas compilaciones están destinadas a pruebas, por lo que es probable que tengan errores o sean inestables, si tienes problemas para instalar la última versión disponible, intenta con una versión anterior .</p>
+<p>En el pasado, la única forma de instalar RStudio Server en una Pi era compilar desde la fuente y esto requería mucho tiempo (me tomó 3 días la última vez que probé en una Pi 3B+) y era muy propenso a fallar porque RStudio IDE estaba en desarrollo activo.</p>
+<p>Afortunadamente, desde entonces, RStudio ha puesto a disposición compilaciones “experimentales” del IDE para arm64 (escribí un <a href="/es/2022/08/22/rstudio_ide_arm/">artículo al respecto</a>), están compiladas para Ubuntu 22, 24 LTS, RedHat 9 y 10. Los binarios para Ubuntu 22 y 24 también son compatibles con Raspberry Pi OS. Puedes consultar las compilaciones diarias disponibles <a href="https://dailies.rstudio.com/rstudio/">aquí</a>. Elije un enlace de acuerdo con el sistema operativo que estás utilizando, también ten en cuenta que estas compilaciones están destinadas a pruebas, por lo que es probable que tengan errores o sean inestables, si tienes problemas para instalar la última versión disponible, intenta con una versión anterior .</p>
 <p>Las siguientes instrucciones usan un enlace para Ubuntu 24 (compatible con Raspberry Pi OS), recuerda cambiar el enlace si deseas usar otro sistema operativo o una versión más reciente del IDE:</p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="fu">sudo</span> apt install gdebi</span>
-<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="fu">wget</span> https://s3.amazonaws.com/rstudio-ide-build/server/jammy/arm64/rstudio-server-2025.08.0-daily-230-arm64.deb</span>
-<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="fu">sudo</span> gdebi rstudio-server-2025.08.0-daily-230-arm64.deb</span>
-<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a><span class="fu">sudo</span> rm rstudio-server-2025.08.0-daily-230-arm64.deb</span></code></pre></div>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="fu">wget</span> https://s3.amazonaws.com/rstudio-ide-build/server/jammy/arm64/rstudio-server-2026.01.0-392-arm64.deb</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="fu">sudo</span> gdebi rstudio-server-2026.01.0-392-arm64.deb</span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a><span class="fu">sudo</span> rm rstudio-server-2026.01.0-392-arm64.deb</span></code></pre></div>
 <blockquote>
 <p>:pencil2: Actualizaré esta sección una vez que el soporte arm64 se convierta en una función estable del RStudio IDE.</p>
 </blockquote>

@@ -30,7 +30,7 @@ output:
 
 Este artículo se publicó originalmente en 2018 y muchas cosas han cambiado desde entonces, por lo que lo reescribí por completo para tener en cuenta los avances más recientes en la compatibilidad con la arquitectura arm64 dentro del ecosistema R.
 
-En 2018, participé en un tema de foro en [Community RStudio](https://community.rstudio.com/t/raspberry-pi-as-a-viable-shiny-server/18672?u=andresrcs) donde [\@jladata](https://twitter.com/jladata) preguntaba si una Raspberry Pi 3B+ podría convertirse en un servidor Shiny viable. De hecho, yo uso una Raspberry Pi para ese mismo propósito, así que decidí compartir con la comunidad R mi experiencia al configurar Shiny y Rstudio Server de forma nativa en una Raspberry Pi.
+En 2018, participé en un tema de foro en [Posit Community](https://forum.posit.co/t/raspberry-pi-as-a-viable-shiny-server/18672?u=andresrcs) donde [\@jladata](https://twitter.com/jladata) preguntaba si una Raspberry Pi 3B+ podría convertirse en un servidor Shiny viable. De hecho, yo uso una Raspberry Pi para ese mismo propósito, así que decidí compartir con la comunidad R mi experiencia al configurar Shiny y Rstudio Server de forma nativa en una Raspberry Pi.
 
 En esos días había casi **cero soporte para arquitecturas ARM** (ya sea x32 o x64), por lo que la mayor parte del software tenía que compilarse desde la fuente en la misma Pi, lo que hace que el proceso de instalación sea un esfuerzo titánico con muchisimas horas de espera.
 
@@ -54,9 +54,9 @@ Para configurar una IP estática en Raspberry Pi OS, ejecuta estos comandos. Est
 
 ```{bash set_ip_rpiOS, eval=FALSE}
 # Configuración IP de muestra:
-sudo nmcli c mod 'Wired connection 1' ipv4.addresses 192.168.3.101/24 ipv4.method manual
-sudo nmcli con mod 'Wired connection 1' ipv4.gateway 192.168.3.1
-sudo nmcli con mod 'Wired connection 1' ipv4.dns "192.168.3.1"
+sudo nmcli c mod 'Wired connection 1' ipv4.addresses 192.168.1.101/24 ipv4.method manual
+sudo nmcli con mod 'Wired connection 1' ipv4.gateway 192.168.1.1
+sudo nmcli con mod 'Wired connection 1' ipv4.dns "192.168.1.1"
 sudo nmcli c down 'Wired connection 1' && sudo nmcli c up 'Wired connection 1'
 ```
 
@@ -70,12 +70,12 @@ network:
         eth0:
             dhcp4: false
             addresses:
-                - 192.168.0.101/24
+                - 192.168.1.101/24
             nameservers:
-                addresses: [8.8.8.8, 8.8.4.4, 192.168.0.1]
+                addresses: [8.8.8.8, 8.8.4.4, 192.168.1.1]
             routes:
                 - to: default
-                  via: 192.168.0.1
+                  via: 192.168.1.1
 ```
 
 En caso de que tengas un modelo de Raspberry Pi con poca RAM, debes agregar algo de memoria sawp para el proceso de instalación. Para los modelos Pi de 1 GB, 3 GB de sawp serían suficientes, puedes hacerlo con estos comandos:
@@ -240,17 +240,17 @@ cd
 
 ## Instala RStudio Server
 
-En el pasado, la única forma de instalar RStudio Server en una Pi era compilar desde la fuente y esto requería mucho tiempo (me tomó 3 días la última vez que probé en una Pi 3B+) y era muy propenso a fallar porque RStudio IDE está en desarrollo activo.
+En el pasado, la única forma de instalar RStudio Server en una Pi era compilar desde la fuente y esto requería mucho tiempo (me tomó 3 días la última vez que probé en una Pi 3B+) y era muy propenso a fallar porque RStudio IDE estaba en desarrollo activo.
 
-Afortunadamente, en los últimos días, RStudio ha puesto a disposición compilaciones "experimentales" del IDE para arm64 (escribí un [artículo al respecto](/es/2022/08/22/rstudio_ide_arm/)), están compiladas para Ubuntu 22, 24 LTS y RedHat 9. Los binarios para Ubuntu 22 y 24 también son compatibles con Raspberry Pi OS. Puedes consultar las compilaciones diarias disponibles [aquí](https://dailies.rstudio.com/rstudio/). Elije un enlace de acuerdo con el sistema operativo que estás utilizando, también ten en cuenta que estas compilaciones están destinadas a pruebas, por lo que es probable que tengan errores o sean inestables, si tienes problemas para instalar la última versión disponible, intenta con una versión anterior .
+Afortunadamente, desde entonces, RStudio ha puesto a disposición compilaciones "experimentales" del IDE para arm64 (escribí un [artículo al respecto](/es/2022/08/22/rstudio_ide_arm/)), están compiladas para Ubuntu 22, 24 LTS, RedHat 9 y 10. Los binarios para Ubuntu 22 y 24 también son compatibles con Raspberry Pi OS. Puedes consultar las compilaciones diarias disponibles [aquí](https://dailies.rstudio.com/rstudio/). Elije un enlace de acuerdo con el sistema operativo que estás utilizando, también ten en cuenta que estas compilaciones están destinadas a pruebas, por lo que es probable que tengan errores o sean inestables, si tienes problemas para instalar la última versión disponible, intenta con una versión anterior .
 
 Las siguientes instrucciones usan un enlace para Ubuntu 24 (compatible con Raspberry Pi OS), recuerda cambiar el enlace si deseas usar otro sistema operativo o una versión más reciente del IDE:
 
 ```{bash install_rstudio, eval=FALSE}
 sudo apt install gdebi
-wget https://s3.amazonaws.com/rstudio-ide-build/server/jammy/arm64/rstudio-server-2025.08.0-daily-230-arm64.deb
-sudo gdebi rstudio-server-2025.08.0-daily-230-arm64.deb
-sudo rm rstudio-server-2025.08.0-daily-230-arm64.deb
+wget https://s3.amazonaws.com/rstudio-ide-build/server/jammy/arm64/rstudio-server-2026.01.0-392-arm64.deb
+sudo gdebi rstudio-server-2026.01.0-392-arm64.deb
+sudo rm rstudio-server-2026.01.0-392-arm64.deb
 ```
 
 > :pencil2: Actualizaré esta sección una vez que el soporte arm64 se convierta en una función estable del RStudio IDE.

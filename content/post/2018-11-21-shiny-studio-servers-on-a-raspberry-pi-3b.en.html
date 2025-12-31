@@ -107,7 +107,7 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 </div>
 
 <p>This article was originally published back in 2018 and a lot has changed since then, so I have completely re-write it to take into account the most recent advancements in support for the arm64 architecture within the R ecosystem.</p>
-<p>Back in 2018, I participated in a forum topic at <a href="https://community.rstudio.com/t/raspberry-pi-as-a-viable-shiny-server/18672?u=andresrcs">Community RStudio</a> where <a href="https://twitter.com/jladata">@jladata</a> was asking if a Raspberry Pi 3B+ could make it as a viable Shiny server. I actually use a Raspberry Pi for that very purpose so I decided to share with the R community, my experience setting up Shiny and Rstudio Server natively on a Raspberry Pi.</p>
+<p>Back in 2018, I participated in a forum topic at <a href="https://forum.posit.co/t/raspberry-pi-as-a-viable-shiny-server/18672?u=andresrcs">Posit Community</a> where <a href="https://twitter.com/jladata">@jladata</a> was asking if a Raspberry Pi 3B+ could make it as a viable Shiny server. I actually use a Raspberry Pi for that very purpose so I decided to share with the R community, my experience setting up Shiny and Rstudio Server natively on a Raspberry Pi.</p>
 <p>In those days there was almost <strong>zero support for ARM</strong> architectures (either x32 or x64) so most of the software had to be compiled from source on the Pi itself, which makes the installation process a titanic effort with lots and lots of waiting hours.</p>
 <p>Nowadays, things have changed and we have better support for the arm64 architecture due to community efforts and even official RStudio support in the works. In this renewed article I’m going to guide you through the installation options we have currently available.</p>
 <blockquote>
@@ -125,9 +125,9 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <p>Next, you need to set a static IP for the Pi so you can easily find it on your network.</p>
 <p>For setting a static IP on Raspberry Pi OS, run these commands. This is a sample IP configuration for a wired connection, modify accordingly with your own needs:</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="co"># Sample static IP configuration:</span></span>
-<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">sudo</span> nmcli c mod <span class="st">&#39;Wired connection 1&#39;</span> ipv4.addresses 192.168.3.101/24 ipv4.method manual</span>
-<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="fu">sudo</span> nmcli con mod <span class="st">&#39;Wired connection 1&#39;</span> ipv4.gateway 192.168.3.1</span>
-<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="fu">sudo</span> nmcli con mod <span class="st">&#39;Wired connection 1&#39;</span> ipv4.dns <span class="st">&quot;192.168.3.1&quot;</span></span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">sudo</span> nmcli c mod <span class="st">&#39;Wired connection 1&#39;</span> ipv4.addresses 192.168.1.101/24 ipv4.method manual</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="fu">sudo</span> nmcli con mod <span class="st">&#39;Wired connection 1&#39;</span> ipv4.gateway 192.168.1.1</span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="fu">sudo</span> nmcli con mod <span class="st">&#39;Wired connection 1&#39;</span> ipv4.dns <span class="st">&quot;192.168.1.1&quot;</span></span>
 <span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a><span class="fu">sudo</span> nmcli c down <span class="st">&#39;Wired connection 1&#39;</span> <span class="kw">&amp;&amp;</span> <span class="fu">sudo</span> nmcli c up <span class="st">&#39;Wired connection 1&#39;</span></span></code></pre></div>
 <p>And for setting the IP on Ubuntu you have to create this file, <code>sudo nano /etc/netplan/01-netcfg.yaml</code>,add this content (edit as needed) and apply the configuration with this command, <code>sudo netplan apply</code>.</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="ex">network:</span></span>
@@ -137,12 +137,12 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>        <span class="ex">eth0:</span></span>
 <span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>            <span class="ex">dhcp4:</span> false</span>
 <span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>            <span class="ex">addresses:</span></span>
-<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>                <span class="ex">-</span> 192.168.0.101/24</span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>                <span class="ex">-</span> 192.168.1.101/24</span>
 <span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>            <span class="ex">nameservers:</span></span>
-<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a>                <span class="ex">addresses:</span> [8.8.8.8, 8.8.4.4, 192.168.0.1]</span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a>                <span class="ex">addresses:</span> [8.8.8.8, 8.8.4.4, 192.168.1.1]</span>
 <span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a>            <span class="ex">routes:</span></span>
 <span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a>                <span class="ex">-</span> to: default</span>
-<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a>                  <span class="ex">via:</span> 192.168.0.1</span></code></pre></div>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a>                  <span class="ex">via:</span> 192.168.1.1</span></code></pre></div>
 <p>In case you have a low-RAM Raspberry Pi model, you have to add some swap memory for the installation process. For 1GB Pi models, 3GB of swap would be enough, you can do it with these commands:</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">sudo</span> /bin/dd if=/dev/zero of=/var/swap.1 bs=1M count=3072</span>
 <span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="fu">sudo</span> chmod 600 /var/swap.1</span>
@@ -290,13 +290,13 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 </div>
 <div id="install-rstudio-server" class="section level2">
 <h2>Install Rstudio Server</h2>
-<p>In the past, the only way to install RStudio Server on a Pi was to compile from source and this was extremely time-consuming (took me 3 days the last time I tried on a Pi 3B+) and very prone to failure because the RStudio IDE is under active development.</p>
-<p>Luckily, in recent days, RStudio has made available “experimental” builds of the IDE for arm64 (I wrote an <a href="/2022/08/22/rstudio_ide_arm/">article about it</a>), they are compiled for Ubuntu 22, 24 LTS and RedHat 9. The Ubuntu 22 and 24 binaries are compatible with Raspberry Pi OS as well. You can check the available daily builds <a href="https://dailies.rstudio.com/rstudio/">here</a>. Choose a link accordingly to the operating system you are using, also, have in mind that these builds are meant for testing so they are likely to have bugs or be unstable, if you have problems installing the latest one available, try with an older version.</p>
+<p>In the past, the only way to install RStudio Server on a Pi was to compile from source and this was extremely time-consuming (took me 3 days the last time I tried on a Pi 3B+) and very prone to failure because the RStudio IDE was under active development.</p>
+<p>Luckily, since then, RStudio has made available “experimental” builds of the IDE for arm64 (I wrote an <a href="/2022/08/22/rstudio_ide_arm/">article about it</a>), they are compiled for Ubuntu 22, 24 LTS, RedHat 9 and 10. The Ubuntu 22 and 24 binaries are compatible with Raspberry Pi OS as well. You can check the available daily builds <a href="https://dailies.rstudio.com/rstudio/">here</a>. Choose a link accordingly to the operating system you are using, also, have in mind that these builds are meant for testing so they are likely to have bugs or be unstable, if you have problems installing the latest one available, try with an older version.</p>
 <p>The following instructions use a link for Ubuntu 24 (Raspberry Pi OS compatible), remember to change the link if you want to use another OS or a more recent IDE version:</p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="fu">sudo</span> apt install gdebi</span>
-<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="fu">wget</span> https://s3.amazonaws.com/rstudio-ide-build/server/jammy/arm64/rstudio-server-2025.08.0-daily-230-arm64.deb</span>
-<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="fu">sudo</span> gdebi rstudio-server-2025.08.0-daily-230-arm64.deb</span>
-<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a><span class="fu">sudo</span> rm rstudio-server-2025.08.0-daily-230-arm64.deb</span></code></pre></div>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="fu">wget</span> https://s3.amazonaws.com/rstudio-ide-build/server/jammy/arm64/rstudio-server-2026.01.0-392-arm64.deb</span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="fu">sudo</span> gdebi rstudio-server-2026.01.0-392-arm64.deb</span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a><span class="fu">sudo</span> rm rstudio-server-2026.01.0-392-arm64.deb</span></code></pre></div>
 <blockquote>
 <p>:pencil2: I’ll update this section once the arm64 support becomes a stable feature for the RStudio IDE.</p>
 </blockquote>
@@ -386,7 +386,7 @@ code span.wa { color: #7f9f7f; font-weight: bold; } /* Warning */
 <li>Make sure you have “Block WAN traffic” disabled on your router/modem.</li>
 </ul></li>
 </ul>
-<p>If you are interested, I have an <a href="/2021/08/16/port_forwarding/">article</a> that provides an example of how to configure port forwarding at home.</p>
+<p>If you are interested, I have an <a href="/2021/08/16/port_forwarding/">article</a> that provides an example on how to configure port forwarding at home.</p>
 </div>
 <div id="final-comments" class="section level2">
 <h2>Final Comments</h2>
